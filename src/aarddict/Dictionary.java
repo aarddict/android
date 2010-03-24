@@ -5,16 +5,17 @@ import java.io.EOFException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 
 public class Dictionary {
 
-	final static Charset ASCII = Charset.forName("ascii");
 	final static Charset UTF8 = Charset.forName("utf8");
 
 	class RandomAccessFile extends java.io.RandomAccessFile {
@@ -64,34 +65,66 @@ public class Dictionary {
 
 		byte[] rawMeta = new byte[(int) meta_length];
 		file.read(rawMeta);
-		BZip2CompressorInputStream bzIn = new BZip2CompressorInputStream(
-				new ByteArrayInputStream(rawMeta));
-
-		int n = 0;
-		List<Integer> metaBytes = new ArrayList<Integer>();
-		while (-1 != (n = bzIn.read())) {
-			metaBytes.add(n);
-		}
-		bzIn.close();
-
-		byte[] decompressedMeta = new byte[metaBytes.size()];
-		for (int i = metaBytes.size() - 1; i > -1; i--) {
-			decompressedMeta[i] = metaBytes.get(i).byteValue();
-		}
-
+		
+		String metadataStr = decompress(rawMeta);
+		
 		String s = String
 				.format(
 						"signature: %s\nsha1: %s\nversion: %d\nuuid: %s\nvolume: %d of %d\nmeta length: %d\nindex_count: %d\narticle offset: %d\n index1_item_format: %s\nkey_length_format: %s\narticle_length_format: %s\n\nmetadata:\n%s",
-						new String(signature, ASCII),
-						new String(sha1sum, ASCII), version, toUUID(uuid),
+						new String(signature, UTF8),
+						new String(sha1sum, UTF8), version, toUUID(uuid),
 						volume, of, meta_length, index_count, article_offset,
-						new String(index1_item_format, ASCII), new String(
-								key_length_format, ASCII), new String(
-								article_length_format, ASCII), new String(
-								decompressedMeta, UTF8));
+						new String(index1_item_format, UTF8), new String(
+								key_length_format, UTF8), new String(
+								article_length_format, UTF8), metadataStr);
 
 		System.out.println(s);
 
+	}
+
+	static String decompress(byte[] bytes) {
+		String decompressed = null;
+		try {
+			decompressed = decompressGz(bytes);
+		}
+		catch (IOException e1) {
+			try {
+				decompressed = decompressBz2(bytes);
+			}
+			catch (IOException e2) {
+				decompressed = new String(bytes, UTF8);
+			}
+		}		
+		return decompressed;
+	}
+	
+	static String decompressGz(byte[] bytes) throws IOException {
+		GzipCompressorInputStream in = new GzipCompressorInputStream(
+				new ByteArrayInputStream(bytes));
+		return readUTF8(in);
+	}
+
+	static String decompressBz2(byte[] bytes) throws IOException {
+		BZip2CompressorInputStream in = new BZip2CompressorInputStream(
+				new ByteArrayInputStream(bytes));
+		return readUTF8(in);
+	}
+	
+	static String readUTF8(InputStream inputStream) throws IOException {
+		int n = 0;
+		List<Integer> bytesList = new ArrayList<Integer>();
+		try {
+			while (-1 != (n = inputStream.read())) {
+				bytesList.add(n);
+			}
+		} finally {
+			inputStream.close();
+		}
+		byte[] bytes = new byte[bytesList.size()];
+		for (int i = bytesList.size() - 1; i > -1; i--) {
+			bytes[i] = bytesList.get(i).byteValue();
+		}
+		return new String(bytes, UTF8);
 	}
 
 	static UUID toUUID(byte[] data) {

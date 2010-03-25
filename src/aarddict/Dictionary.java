@@ -15,7 +15,7 @@ import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 
 public class Dictionary {
-
+		
 	final static Charset UTF8 = Charset.forName("utf8");
 
 	class RandomAccessFile extends java.io.RandomAccessFile {
@@ -40,30 +40,55 @@ public class Dictionary {
 			return ((long) (ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4 << 0)) & 0xFFFFFFFFL;
 		}
 
+		public final String readUTF8(int length) throws IOException {
+			byte[] s = new byte[length];
+			this.read(s);
+			return utf8(s);			
+		}
+
+		public final UUID readUUID() throws IOException {
+			byte[] s = new byte[16];
+			this.read(s);
+			return uuid(s);			
+		}
+		
 	}
 
-	public Dictionary(String fileName) throws IOException {
+	class Header {
+		
+		public final String signature;
+		public final String sha1sum;
+		public final UUID uuid;
+		public final int version;
+		public final int volume;
+		public final int of;
+		public final long metaLength;
+		public final long indexCount;
+		public final long articleOffset;
+		public final String index1ItemFormat;
+		public final String keyLengthFormat;
+		public final String articleLengthFormat;
+		
+		Header(RandomAccessFile file) throws IOException {
+			this.signature = file.readUTF8(4);
+			this.sha1sum = file.readUTF8(40);
+			this.version = file.readUnsignedShort();
+			this.uuid = file.readUUID();
+			this.volume = file.readUnsignedShort();
+			this.of = file.readUnsignedShort();
+			this.metaLength = file.readUnsignedInt();
+			this.indexCount = file.readUnsignedInt();
+			this.articleOffset = file.readUnsignedInt();	
+			this.index1ItemFormat = file.readUTF8(4);
+			this.keyLengthFormat = file.readUTF8(2);
+			this.articleLengthFormat = file.readUTF8(2);
+		}
+	}
+	
+	public Dictionary(String fileName) throws IOException {		
 		RandomAccessFile file = new RandomAccessFile(fileName, "r");
-		byte[] signature = new byte[4];
-		file.read(signature);
-		byte[] sha1sum = new byte[40];
-		file.read(sha1sum);
-		int version = file.readUnsignedShort();
-		byte[] uuid = new byte[16];
-		file.read(uuid);
-		int volume = file.readUnsignedShort();
-		int of = file.readUnsignedShort();
-		long meta_length = file.readUnsignedInt();
-		long index_count = file.readUnsignedInt();
-		long article_offset = file.readUnsignedInt();
-		byte[] index1_item_format = new byte[4];
-		file.read(index1_item_format);
-		byte[] key_length_format = new byte[2];
-		file.read(key_length_format);
-		byte[] article_length_format = new byte[2];
-		file.read(article_length_format);
-
-		byte[] rawMeta = new byte[(int) meta_length];
+		Header header = new Header(file);
+		byte[] rawMeta = new byte[(int) header.metaLength];
 		file.read(rawMeta);
 		
 		String metadataStr = decompress(rawMeta);
@@ -71,10 +96,12 @@ public class Dictionary {
 		String s = String
 				.format(
 						"signature: %s\nsha1: %s\nversion: %d\nuuid: %s\nvolume: %d of %d\nmeta length: %d\nindex_count: %d\narticle offset: %d\n index1_item_format: %s\nkey_length_format: %s\narticle_length_format: %s\n\nmetadata:\n%s",
-						utf8(signature),
-						utf8(sha1sum), version, uuid(uuid),
-						volume, of, meta_length, index_count, article_offset,
-						utf8(index1_item_format), utf8(key_length_format), utf8(article_length_format), metadataStr);
+						header.signature,
+						header.sha1sum, header.version, header.uuid,
+						header.volume, header.of, header.metaLength, 
+						header.indexCount, header.articleOffset,
+						header.index1ItemFormat, header.keyLengthFormat, 
+						header.articleLengthFormat, metadataStr);
 
 		System.out.println(s);
 

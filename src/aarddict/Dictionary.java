@@ -71,15 +71,17 @@ public class Dictionary {
 		String s = String
 				.format(
 						"signature: %s\nsha1: %s\nversion: %d\nuuid: %s\nvolume: %d of %d\nmeta length: %d\nindex_count: %d\narticle offset: %d\n index1_item_format: %s\nkey_length_format: %s\narticle_length_format: %s\n\nmetadata:\n%s",
-						new String(signature, UTF8),
-						new String(sha1sum, UTF8), version, toUUID(uuid),
+						utf8(signature),
+						utf8(sha1sum), version, uuid(uuid),
 						volume, of, meta_length, index_count, article_offset,
-						new String(index1_item_format, UTF8), new String(
-								key_length_format, UTF8), new String(
-								article_length_format, UTF8), metadataStr);
+						utf8(index1_item_format), utf8(key_length_format), utf8(article_length_format), metadataStr);
 
 		System.out.println(s);
 
+	}
+
+	static String utf8(byte[] signature) {
+		return new String(signature, UTF8);
 	}
 
 	static String decompress(byte[] bytes) {
@@ -92,7 +94,7 @@ public class Dictionary {
 				decompressed = decompressBz2(bytes);
 			}
 			catch (IOException e2) {
-				decompressed = new String(bytes, UTF8);
+				decompressed = utf8(bytes);
 			}
 		}		
 		return decompressed;
@@ -124,10 +126,10 @@ public class Dictionary {
 		for (int i = bytesList.size() - 1; i > -1; i--) {
 			bytes[i] = bytesList.get(i).byteValue();
 		}
-		return new String(bytes, UTF8);
+		return utf8(bytes);
 	}
 
-	static UUID toUUID(byte[] data) {
+	static UUID uuid(byte[] data) {
 		long msb = 0;
 		long lsb = 0;
 		assert data.length == 16;

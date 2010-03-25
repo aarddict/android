@@ -14,6 +14,9 @@ import java.util.UUID;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 public class Dictionary {
 		
 	final static Charset UTF8 = Charset.forName("utf8");
@@ -84,27 +87,20 @@ public class Dictionary {
 			this.articleLengthFormat = file.readUTF8(2);
 		}
 	}
+
+	public JsonObject metadata;
+	public Header header;
 	
 	public Dictionary(String fileName) throws IOException {		
 		RandomAccessFile file = new RandomAccessFile(fileName, "r");
-		Header header = new Header(file);
+		this.header = new Header(file);
 		byte[] rawMeta = new byte[(int) header.metaLength];
 		file.read(rawMeta);
 		
 		String metadataStr = decompress(rawMeta);
 		
-		String s = String
-				.format(
-						"signature: %s\nsha1: %s\nversion: %d\nuuid: %s\nvolume: %d of %d\nmeta length: %d\nindex_count: %d\narticle offset: %d\n index1_item_format: %s\nkey_length_format: %s\narticle_length_format: %s\n\nmetadata:\n%s",
-						header.signature,
-						header.sha1sum, header.version, header.uuid,
-						header.volume, header.of, header.metaLength, 
-						header.indexCount, header.articleOffset,
-						header.index1ItemFormat, header.keyLengthFormat, 
-						header.articleLengthFormat, metadataStr);
-
-		System.out.println(s);
-
+		JsonParser json = new JsonParser();
+		this.metadata = json.parse(metadataStr).getAsJsonObject();		
 	}
 
 	static String utf8(byte[] signature) {
@@ -168,6 +164,19 @@ public class Dictionary {
 	}
 
 	public static void main(String[] args) throws IOException {
-		new Dictionary(args[0]);
+		Dictionary d = new Dictionary(args[0]);
+		Header header = d.header; 
+		String s = String
+		.format(
+				"signature: %s\nsha1: %s\nversion: %d\nuuid: %s\nvolume: %d of %d\nmeta length: %d\nindex_count: %d\narticle offset: %d\n index1_item_format: %s\nkey_length_format: %s\narticle_length_format: %s",
+				header.signature,
+				header.sha1sum, header.version, header.uuid,
+				header.volume, header.of, header.metaLength, 
+				header.indexCount, header.articleOffset,
+				header.index1ItemFormat, header.keyLengthFormat, 
+				header.articleLengthFormat);
+
+		System.out.println(s);	
+		System.out.println(d.metadata);
 	}
 }

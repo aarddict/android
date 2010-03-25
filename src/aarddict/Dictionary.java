@@ -71,20 +71,49 @@ public class Dictionary {
 		public final String index1ItemFormat;
 		public final String keyLengthFormat;
 		public final String articleLengthFormat;
+		public final long index1Offset;
+		public final long index2Offset;
 		
 		Header(RandomAccessFile file) throws IOException {
+			int specLen = 0;
 			this.signature = file.readUTF8(4);
+			specLen += 4;
+			
 			this.sha1sum = file.readUTF8(40);
+			specLen += 40;
+			
 			this.version = file.readUnsignedShort();
+			specLen += 2;
+			
 			this.uuid = file.readUUID();
+			specLen += 16;
+			
 			this.volume = file.readUnsignedShort();
+			specLen += 2;
+			
 			this.of = file.readUnsignedShort();
+			specLen += 2;
+			
 			this.metaLength = file.readUnsignedInt();
+			specLen += 4;
+			
 			this.indexCount = file.readUnsignedInt();
-			this.articleOffset = file.readUnsignedInt();	
+			specLen += 4;
+			
+			this.articleOffset = file.readUnsignedInt();
+			specLen += 4;
+			
 			this.index1ItemFormat = file.readUTF8(4);
+			specLen += 4;
+			
 			this.keyLengthFormat = file.readUTF8(2);
-			this.articleLengthFormat = file.readUTF8(2);
+			specLen += 2;
+			
+			this.articleLengthFormat = file.readUTF8(2);						  
+			specLen += 2;
+			
+			this.index1Offset = specLen + this.metaLength;
+			this.index2Offset = this.index1Offset + this.indexCount*8;
 		}
 	}
 
@@ -168,15 +197,16 @@ public class Dictionary {
 		Header header = d.header; 
 		String s = String
 		.format(
-				"signature: %s\nsha1: %s\nversion: %d\nuuid: %s\nvolume: %d of %d\nmeta length: %d\nindex_count: %d\narticle offset: %d\n index1_item_format: %s\nkey_length_format: %s\narticle_length_format: %s",
+				"signature: %s\nsha1: %s\nversion: %d\nuuid: %s\nvolume: %d of %d\nmeta length: %d\nindex_count: %d\narticle offset: %d\nindex1_item_format: %s\nkey_length_format: %s\narticle_length_format: %s\nindex1 offset: %d\nindex 2 offset: %d",
 				header.signature,
 				header.sha1sum, header.version, header.uuid,
 				header.volume, header.of, header.metaLength, 
 				header.indexCount, header.articleOffset,
 				header.index1ItemFormat, header.keyLengthFormat, 
-				header.articleLengthFormat);
-
-		System.out.println(s);	
+				header.articleLengthFormat,
+				header.index1Offset, header.index2Offset);
 		System.out.println(d.metadata);
+		System.out.println(s);	
+		
 	}
 }

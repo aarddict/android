@@ -8,10 +8,13 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.AbstractList;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
@@ -170,7 +173,10 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         }
     }
 
-    static class Entry {
+    /**
+     * @author itkach
+     */
+    public static class Entry {
 
         String     title;
         long       articlePointer;
@@ -188,7 +194,6 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
 
 
         public Article getArticle() throws IOException {
-            System.out.println(String.format("Reading article \"%s\"", this.title));
             Article a = dictionary.readArticle(articlePointer);
             a.title = this.title;
             return a;
@@ -198,16 +203,168 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         public String toString() {
             return title;
         }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + (int) (articlePointer ^ (articlePointer >>> 32));
+            result = prime * result + ((dictionary == null) ? 0 : dictionary.hashCode());
+            result = prime * result + ((title == null) ? 0 : title.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            Entry other = (Entry) obj;
+            if (articlePointer != other.articlePointer)
+                return false;
+            if (dictionary == null) {
+                if (other.dictionary != null)
+                    return false;
+            }
+            else if (!dictionary.equals(other.dictionary))
+                return false;
+            if (title == null) {
+                if (other.title != null)
+                    return false;
+            }
+            else if (!title.equals(other.title))
+                return false;
+            return true;
+        }
+
     }
-    
+
+    static class EntryComparator implements Comparator<Entry> {
+
+        Collator collator;
+
+        EntryComparator(int strength) {
+            collator = Collator.getInstance(ROOT);
+            collator.setStrength(strength);
+        }
+
+        @Override
+        public int compare(Entry e1, Entry e2) {
+            return collator.compare(e1.title, e2.title);
+        }
+    }
+
+    static class EntryStartComparator extends EntryComparator {
+
+        EntryStartComparator(int strength) {
+            super(strength);
+        }
+
+        @Override
+        public int compare(Entry e1, Entry e2) {
+            String k2 = e2.title;
+            String k1 = k2.length() < e1.title.length() ? e1.title.substring(0,
+                    k2.length()) : e1.title;
+            int result = collator.compare(k1, k2);
+            return result;
+        }
+    }
+
+    static Comparator<Entry>[] comparators = new Comparator[] {
+            new EntryComparator(Collator.QUATERNARY),
+            new EntryComparator(Collator.TERTIARY),
+            new EntryComparator(Collator.SECONDARY),
+            new EntryComparator(Collator.PRIMARY),
+            new EntryStartComparator(Collator.QUATERNARY),
+            new EntryStartComparator(Collator.TERTIARY),
+            new EntryStartComparator(Collator.SECONDARY),
+            new EntryStartComparator(Collator.PRIMARY)
+            };
+
+
+    public static class Collection {
+
+        private List<Dictionary> dictionaries = new ArrayList<Dictionary>();
+        int                      maxFromVol = 50;
+
+        public void add(Dictionary d) {
+            dictionaries.add(d);
+        }
+
+        public Iterator<Entry> bestMatch(final String word) {
+            return new Iterator<Entry>() {
+
+                Entry                 next;
+                int                   currentVolCount = 0;
+                Set<Entry>            seen            = new HashSet<Entry>();
+                List<Iterator<Entry>> iterators       = new ArrayList<Iterator<Entry>>();
+                {
+                    for (Comparator<Entry> c : comparators) {
+                        for (Dictionary vol : dictionaries) {
+                            iterators.add(vol.lookup(word, c));
+                        }
+                    }
+                    prepareNext();
+                }
+
+                private void prepareNext() {
+                    if (!iterators.isEmpty()) {
+                        Iterator<Entry> i = iterators.get(0);
+                        if (i.hasNext() && currentVolCount <= maxFromVol) {
+                            next = i.next();
+                            if (!seen.contains(next)) {
+                                seen.add(next);
+                                currentVolCount++;
+                            }
+                            else {
+                                next = null;
+                                prepareNext();
+                            }
+                        }
+                        else {
+                            currentVolCount = 0;
+                            iterators.remove(0);
+                            prepareNext();
+                        }
+                    }
+                    else {
+                        next = null;
+                    }
+                }
+
+                @Override
+                public boolean hasNext() {
+                    return next != null;
+                }
+
+                @Override
+                public Entry next() {
+                    Entry current = next;
+                    prepareNext();
+                    return current;
+                }
+
+                @Override
+                public void remove() {
+                    throw new UnsupportedOperationException();
+                }
+            };
+        }
+    }
+
     JsonObject       metadata;
     Header           header;
     RandomAccessFile file;
+    String           sha1sum;
 
     public Dictionary(String fileName) throws IOException {
         RandomAccessFile file = new RandomAccessFile(fileName, "r");
         this.file = file;
         this.header = new Header(file);
+        this.sha1sum = header.sha1sum;
         byte[] rawMeta = new byte[(int) header.metaLength];
         file.read(rawMeta);
 
@@ -215,6 +372,29 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
 
         JsonParser json = new JsonParser();
         this.metadata = json.parse(metadataStr).getAsJsonObject();
+    }
+
+    @Override
+    public int hashCode() {
+        return sha1sum.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (!super.equals(obj))
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        Dictionary other = (Dictionary) obj;
+        if (sha1sum == null) {
+            if (other.sha1sum != null)
+                return false;
+        }
+        else if (!sha1sum.equals(other.sha1sum))
+            return false;
+        return true;
     }
 
     IndexItem readIndexItem(long i) throws IOException {
@@ -245,43 +425,15 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
             return Article.fromJsonStr(serializedArticle);
         }
         catch (JsonParseException e) {
-            System.err.println(String.format("Failed to deserialize:\n%s", serializedArticle));
+            System.err.println(String.format("Failed to deserialize:\n%s",
+                    serializedArticle));
             throw e;
         }
     }
-    
-    public Iterator<Entry> lookup(final String word, final int strength, boolean startsWith) {
 
-        final Comparator<Entry> c;
-
-        final Collator collator = Collator.getInstance(ROOT);
-        collator.setStrength(strength);        
-
+    Iterator<Entry> lookup(final String word, final Comparator<Entry> comparator) {
         final Entry lookupEntry = new Entry(this, word);
-
-        if (!startsWith) {
-            c = new Comparator<Entry>() {
-                @Override
-                public int compare(Entry e1, Entry e2) {
-                    int result = collator.compare(e1.title, e2.title);
-                    return result;
-                }
-            };
-        }
-        else {
-            c = new Comparator<Entry>() {
-
-                @Override
-                public int compare(Entry e1, Entry e2) {
-                    String k2 = e2.title;
-                    String k1 = k2.length() < e1.title.length() ? e1.title.substring(0, k2.length()) : e1.title;
-                    int result = collator.compare(k1, k2);
-                    return result;
-                }
-            };
-        }
-
-        final int initialIndex = binarySearch(this, lookupEntry, c);
+        final int initialIndex = binarySearch(this, lookupEntry, comparator);
         Iterator<Entry> iterator = new Iterator<Entry>() {
 
             int   index = initialIndex;
@@ -291,14 +443,9 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
                 prepareNext();
             }
 
-            private void prepareNext() {                
+            private void prepareNext() {
                 Entry matchedEntry = get(index);
-                if (0 == c.compare(matchedEntry, lookupEntry)) {
-                    nextEntry = matchedEntry;
-                }
-                else {
-                    nextEntry = null;
-                }
+                nextEntry = (0 == comparator.compare(matchedEntry, lookupEntry)) ? matchedEntry : null;
                 index++;
             }
 
@@ -309,7 +456,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
 
             @Override
             public Entry next() {
-                Entry current = nextEntry;                
+                Entry current = nextEntry;
                 prepareNext();
                 return current;
             }
@@ -349,7 +496,8 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
     }
 
     static String decompress(byte[] bytes) {
-        if (bytes.length == 0) return "";
+        if (bytes.length == 0)
+            return "";
         try {
             return decompressZlib(bytes);
         }
@@ -381,7 +529,8 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
     }
 
     static String decompressBz2(byte[] bytes) throws IOException {
-        BZip2CompressorInputStream in = new BZip2CompressorInputStream(new ByteArrayInputStream(bytes));
+        BZip2CompressorInputStream in = new BZip2CompressorInputStream(
+                new ByteArrayInputStream(bytes));
         int n = 0;
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         byte[] buf = new byte[1024];
@@ -412,7 +561,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         int lo = 0;
         int hi = l.size();
         while (lo < hi) {
-            int mid = (lo + hi)/2;
+            int mid = (lo + hi) / 2;
             T midVal = l.get(mid);
             int cmp = c.compare(midVal, key);
             if (cmp < 0) {
@@ -424,35 +573,20 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         }
         return lo;
     }
-    
+
     public static void main(String[] args) throws IOException {
         Dictionary d = new Dictionary(args[0]);
         
-        Header header = d.header;
-        String s =
-        String.format("signature: %s\nsha1: %s\nversion: %d\nuuid: %s\nvolume: %d of %d\nmeta length: %d\nindex_count: %d\narticle offset: %d\nindex1_item_format: %s\nkey_length_format: %s\narticle_length_format: %s\nindex1 offset: %d\nindex 2 offset: %d",
-        header.signature, header.sha1sum, header.version, header.uuid,
-        header.volume, header.of, header.metaLength, header.indexCount,
-        header.articleOffset, header.index1ItemFormat,
-        header.keyLengthFormat, header.articleLengthFormat,
-        header.index1Offset, header.index2Offset);
-        System.out.println(d.metadata);
-        System.out.println(s);        
-        
-        int count = 0;
-        for (Iterator<Entry> result = d.lookup("A B", Collator.PRIMARY, true); result.hasNext(); count++) {
-            try {
-                Entry entry = result.next();
-                System.out.println(entry.title);
-                Article a = entry.getArticle();
-                System.out.println(String.format("%s (redirect? %s) \n----------------------\n%s\n===================",
-                a.title, a.redirect, a.text));
-                if (count > 30)
-                    break;
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
+        Collection dicts = new Collection();
+        dicts.add(d);
+
+        for (Iterator<Entry> result = dicts.bestMatch("a"); result.hasNext();) {
+            Entry entry = result.next();
+            System.out.println(entry.title);
+//            Article a = entry.getArticle();
+//            System.out.println(String.format(
+//                    "%s (redirect? %s) \n----------------------\n%s\n===================",
+//                    a.title, a.redirect, a.text));
+        }   
     }
 }

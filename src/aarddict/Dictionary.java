@@ -179,6 +179,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
     public static class Entry {
 
         String     title;
+        String     section;
         long       articlePointer;
         Dictionary dictionary;
 
@@ -196,6 +197,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         public Article getArticle() throws IOException {
             Article a = dictionary.readArticle(articlePointer);
             a.title = this.title;
+            a.section = this.section;
             return a;
         }
 
@@ -281,14 +283,13 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
             new EntryStartComparator(Collator.QUATERNARY),
             new EntryStartComparator(Collator.TERTIARY),
             new EntryStartComparator(Collator.SECONDARY),
-            new EntryStartComparator(Collator.PRIMARY)
-            };
+            new EntryStartComparator(Collator.PRIMARY)};
 
 
     public static class Collection {
 
         private List<Dictionary> dictionaries = new ArrayList<Dictionary>();
-        int                      maxFromVol = 50;
+        int                      maxFromVol   = 50;
 
         public void add(Dictionary d) {
             dictionaries.add(d);
@@ -431,8 +432,16 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         }
     }
 
+    static Iterator<Entry> EMPTY_ITERATOR = new ArrayList<Entry>().iterator();
+
     Iterator<Entry> lookup(final String word, final Comparator<Entry> comparator) {
-        final Entry lookupEntry = new Entry(this, word);
+        if (isBlank(word)) {
+            return EMPTY_ITERATOR;
+        }
+        String[] parts = splitWord(word);        
+        final String lookupWord = parts[0];
+        final String section = parts[1];
+        final Entry lookupEntry = new Entry(this, lookupWord);
         final int initialIndex = binarySearch(this, lookupEntry, comparator);
         Iterator<Entry> iterator = new Iterator<Entry>() {
 
@@ -457,6 +466,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
             @Override
             public Entry next() {
                 Entry current = nextEntry;
+                current.section = section;
                 prepareNext();
                 return current;
             }
@@ -574,19 +584,33 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         return lo;
     }
 
+    static String[] splitWord(String word) {
+        if (word.equals("#")) {
+            return new String[] {"", ""};
+        }
+        String[] parts = word.split("#", 2);        
+        String section = parts.length == 1 ? "" : parts[1];
+        String lookupWord = (!isBlank(parts[0]) || !isBlank(section)) ? parts[0] : word;
+        return new String[] {lookupWord, section};
+    }
+
+    static boolean isBlank(String s) {
+        return s == null || s.equals("");
+    }
+
     public static void main(String[] args) throws IOException {
         Dictionary d = new Dictionary(args[0]);
-        
+
         Collection dicts = new Collection();
         dicts.add(d);
 
-        for (Iterator<Entry> result = dicts.bestMatch("a"); result.hasNext();) {
+        for (Iterator<Entry> result = dicts.bestMatch("a#b"); result.hasNext();) {
             Entry entry = result.next();
             System.out.println(entry.title);
-//            Article a = entry.getArticle();
-//            System.out.println(String.format(
-//                    "%s (redirect? %s) \n----------------------\n%s\n===================",
-//                    a.title, a.redirect, a.text));
-        }   
+            // Article a = entry.getArticle();
+            // System.out.println(String.format(
+            // "%s (redirect? %s) \n----------------------\n%s\n===================",
+            // a.title, a.redirect, a.text));
+        }
     }
 }

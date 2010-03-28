@@ -286,16 +286,12 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
             new EntryStartComparator(Collator.PRIMARY)};
 
 
-    public static class Collection {
+    public static class Collection extends ArrayList<Dictionary> {
 
-        private List<Dictionary> dictionaries = new ArrayList<Dictionary>();
         int                      maxFromVol   = 50;
-
-        public void add(Dictionary d) {
-            dictionaries.add(d);
-        }
-
+        
         public Iterator<Entry> bestMatch(final String word) {
+       
             return new Iterator<Entry>() {
 
                 Entry                 next;
@@ -304,7 +300,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
                 List<Iterator<Entry>> iterators       = new ArrayList<Iterator<Entry>>();
                 {
                     for (Comparator<Entry> c : comparators) {
-                        for (Dictionary vol : dictionaries) {
+                        for (Dictionary vol : Collection.this) {
                             iterators.add(vol.lookup(word, c));
                         }
                     }
@@ -612,5 +608,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
             // "%s (redirect? %s) \n----------------------\n%s\n===================",
             // a.title, a.redirect, a.text));
         }
+        
+        dicts.remove(d);
     }
 }

@@ -134,15 +134,15 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         long articlePointer;
     }
 
-    static class Article {
+    public static class Article {
 
-        Dictionary        dictionary;
-        String            title;
-        String            section;
+        public Dictionary dictionary;
+        public String     title;
+        public String     section;
         long              position;
-        String            redirect;
-        String            text;
-        
+        public String     redirect;
+        public String     text;
+
 
         static Article fromJsonStr(String serializedArticle) throws JSONException {
             JSONArray articleTuple = new JSONArray(serializedArticle);
@@ -177,8 +177,8 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
 
         public String     title;
         public String     section;
-        long       articlePointer;
-        public  Dictionary dictionary;
+        long              articlePointer;
+        public Dictionary dictionary;
 
         Entry(Dictionary dictionary, String title) {
             this(dictionary, title, -1);
@@ -285,10 +285,10 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
 
     public static class Collection extends ArrayList<Dictionary> {
 
-        int                      maxFromVol   = 50;
-        
+        int maxFromVol = 50;
+
         public Iterator<Entry> bestMatch(final String word) {
-       
+
             return new Iterator<Entry>() {
 
                 Entry                 next;
@@ -353,6 +353,14 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
     Header           header;
     RandomAccessFile file;
     String           sha1sum;
+    String           title;
+    String           version;
+    String           description;
+    String           copyright;
+    String           license;
+    String           source;
+    String           lang;
+    String           sitelang;
 
     public Dictionary(String fileName) throws IOException, JSONException {
         RandomAccessFile file = new RandomAccessFile(fileName, "r");
@@ -363,8 +371,16 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         file.read(rawMeta);
 
         String metadataStr = decompress(rawMeta);
-
         this.metadata = new JSONObject(metadataStr);
+        this.title = this.metadata.getString("title");
+        this.version = this.metadata.getString("version");
+        this.description = this.metadata.getString("description");
+        this.copyright = this.metadata.getString("copyright");
+        this.license = this.metadata.getString("license");
+        this.source = this.metadata.getString("source");
+
+        this.lang = this.metadata.getString("lang");
+        this.sitelang = this.metadata.getString("sitelang");
     }
 
     @Override
@@ -423,7 +439,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         if (isBlank(word)) {
             return EMPTY_ITERATOR;
         }
-        String[] parts = splitWord(word);        
+        String[] parts = splitWord(word);
         final String lookupWord = parts[0];
         final String section = parts[1];
         final Entry lookupEntry = new Entry(this, lookupWord);
@@ -488,11 +504,12 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
 
     static String utf8(byte[] signature) {
         try {
-			return new String(signature, "UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-			return "";
-		}
+            return new String(signature, "UTF-8");
+        }
+        catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return "";
+        }
     }
 
     static String decompress(byte[] bytes) {
@@ -578,7 +595,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         if (word.equals("#")) {
             return new String[] {"", ""};
         }
-        String[] parts = word.split("#", 2);        
+        String[] parts = word.split("#", 2);
         String section = parts.length == 1 ? "" : parts[1];
         String lookupWord = (!isBlank(parts[0]) || !isBlank(section)) ? parts[0] : word;
         return new String[] {lookupWord, section};
@@ -602,7 +619,22 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
             // "%s (redirect? %s) \n----------------------\n%s\n===================",
             // a.title, a.redirect, a.text));
         }
-        
+
         dicts.remove(d);
+    }
+
+    public CharSequence getDisplayTitle() {
+        StringBuilder s = new StringBuilder(this.title);
+        if (this.lang != null) {
+            s.append(String.format(" (%s)", this.lang));
+        }
+        else {
+            if (this.sitelang != null) {
+                s.append(String.format(" (%s)", this.sitelang));
+            }
+        }
+        if (this.header.of > 1) 
+               s.append(String.format(" Vol. %s", this.header.volume));        
+        return s.toString();
     }
 }

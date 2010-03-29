@@ -6,6 +6,7 @@ import java.io.EOFException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.AbstractList;
 import java.util.ArrayList;
@@ -178,10 +179,10 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
      */
     public static class Entry {
 
-        String     title;
-        String     section;
+        public String     title;
+        public String     section;
         long       articlePointer;
-        Dictionary dictionary;
+        public  Dictionary dictionary;
 
         Entry(Dictionary dictionary, String title) {
             this(dictionary, title, -1);
@@ -498,7 +499,12 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
     };
 
     static String utf8(byte[] signature) {
-        return new String(signature, UTF8);
+        try {
+			return new String(signature, "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+			return "";
+		}
     }
 
     static String decompress(byte[] bytes) {

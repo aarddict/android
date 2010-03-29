@@ -21,12 +21,10 @@ import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonParser;
 import com.ibm.icu.text.Collator;
 
 
@@ -144,21 +142,19 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         long              position;
         String            redirect;
         String            text;
+        
 
-        static JsonParser json = new JsonParser();
-
-        static Article fromJsonStr(String serializedArticle) {
-            JsonElement je = json.parse(serializedArticle);
-            JsonArray articleTuple = je.getAsJsonArray();
+        static Article fromJsonStr(String serializedArticle) throws JSONException {
+            JSONArray articleTuple = new JSONArray(serializedArticle);
             Article article = new Article();
-            article.text = articleTuple.get(0).getAsString();
-            if (articleTuple.size() == 3) {
-                JsonObject metadata = articleTuple.get(2).getAsJsonObject();
+            article.text = articleTuple.getString(0);
+            if (articleTuple.length() == 3) {
+                JSONObject metadata = articleTuple.getJSONObject(2);
                 if (metadata.has("r")) {
-                    article.redirect = metadata.get("r").getAsString();
+                    article.redirect = metadata.getString("r");
                 }
                 else if (metadata.has("redirect")) {
-                    article.redirect = metadata.get("redirect").getAsString();
+                    article.redirect = metadata.getString("redirect");
                 }
             }
             return article;
@@ -195,7 +191,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         }
 
 
-        public Article getArticle() throws IOException {
+        public Article getArticle() throws IOException, JSONException {
             Article a = dictionary.readArticle(articlePointer);
             a.title = this.title;
             a.section = this.section;
@@ -353,12 +349,12 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         }
     }
 
-    JsonObject       metadata;
+    JSONObject       metadata;
     Header           header;
     RandomAccessFile file;
     String           sha1sum;
 
-    public Dictionary(String fileName) throws IOException {
+    public Dictionary(String fileName) throws IOException, JSONException {
         RandomAccessFile file = new RandomAccessFile(fileName, "r");
         this.file = file;
         this.header = new Header(file);
@@ -368,8 +364,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
 
         String metadataStr = decompress(rawMeta);
 
-        JsonParser json = new JsonParser();
-        this.metadata = json.parse(metadataStr).getAsJsonObject();
+        this.metadata = new JSONObject(metadataStr);
     }
 
     @Override
@@ -411,7 +406,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         return this.file.readUTF8(keyLength);
     }
 
-    Article readArticle(long pointer) throws IOException {
+    Article readArticle(long pointer) throws IOException, JSONException {
         long pos = this.header.articleOffset + pointer;
         this.file.seek(pos);
         long articleLength = this.file.readUnsignedInt();
@@ -419,14 +414,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         byte[] articleBytes = new byte[(int) articleLength];
         this.file.read(articleBytes);
         String serializedArticle = decompress(articleBytes);
-        try {
-            return Article.fromJsonStr(serializedArticle);
-        }
-        catch (JsonParseException e) {
-            System.err.println(String.format("Failed to deserialize:\n%s",
-                    serializedArticle));
-            throw e;
-        }
+        return Article.fromJsonStr(serializedArticle);
     }
 
     static Iterator<Entry> EMPTY_ITERATOR = new ArrayList<Entry>().iterator();
@@ -600,7 +588,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         return s == null || s.equals("");
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, JSONException {
         Dictionary d = new Dictionary(args[0]);
 
         Collection dicts = new Collection();

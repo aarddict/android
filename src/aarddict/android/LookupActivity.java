@@ -5,6 +5,8 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Iterator;
 
+import org.json.JSONException;
+
 import aarddict.Dictionary;
 import android.app.Activity;
 import android.os.Bundle;
@@ -35,7 +37,11 @@ public class LookupActivity extends Activity {
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}        	        
+			}
+            catch (JSONException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }        	        
         }
         
         Iterator<Dictionary.Entry> dictEntries = dicts.bestMatch("a");

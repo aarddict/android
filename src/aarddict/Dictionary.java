@@ -168,6 +168,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
                 return this.section;
             }
         }
+        
     }
 
     /**
@@ -274,12 +275,12 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
 
     static Comparator<Entry>[] comparators = new Comparator[] {
             new EntryComparator(Collator.QUATERNARY),
-            new EntryComparator(Collator.TERTIARY),
-            new EntryComparator(Collator.SECONDARY),
-            new EntryComparator(Collator.PRIMARY),
             new EntryStartComparator(Collator.QUATERNARY),
+            new EntryComparator(Collator.TERTIARY),
             new EntryStartComparator(Collator.TERTIARY),
+            new EntryComparator(Collator.SECONDARY),
             new EntryStartComparator(Collator.SECONDARY),
+            new EntryComparator(Collator.PRIMARY),
             new EntryStartComparator(Collator.PRIMARY)};
 
 

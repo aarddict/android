@@ -10,6 +10,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.AbstractList;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -140,7 +141,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         public String     title;
         public String     section;
         long              position;
-        public String     redirect;
+        private String    redirect;
         public String     text;
 
 
@@ -156,19 +157,17 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
                 else if (metadata.has("redirect")) {
                     article.redirect = metadata.getString("redirect");
                 }
-            }
+            }            
             return article;
         }
 
-        String getRedirect() {
-            if (this.section != null) {
+        public String getRedirect() {
+            if (this.redirect != null && this.section != null) {
                 return this.redirect + "#" + this.section;
             }
-            else {
-                return this.section;
-            }
+            return this.redirect;
         }
-        
+                
     }
 
     /**
@@ -273,6 +272,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         }
     }
 
+    @SuppressWarnings("unchecked")
     static Comparator<Entry>[] comparators = new Comparator[] {
             new EntryComparator(Collator.QUATERNARY),
             new EntryStartComparator(Collator.QUATERNARY),
@@ -284,22 +284,30 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
             new EntryStartComparator(Collator.PRIMARY)};
 
 
+    public static class RedirectError extends Exception {}
+    public static class RedirectNotFound extends RedirectError {}
+    public static class RedirectTooManyLevels extends RedirectError {}
+    
     public static class Collection extends ArrayList<Dictionary> {
 
         int maxFromVol = 50;
-
-        public Iterator<Entry> bestMatch(final String word) {
-
+        int maxRedirectLevels = 5;
+        
+        public Iterator<Entry> bestMatch(final String word, UUID ... dictUUIDs) {
+            final Set<UUID> dictUUIDSet = new HashSet<UUID>();
+            dictUUIDSet.addAll(Arrays.asList(dictUUIDs));            
             return new Iterator<Entry>() {
 
                 Entry                 next;
                 int                   currentVolCount = 0;
                 Set<Entry>            seen            = new HashSet<Entry>();
-                List<Iterator<Entry>> iterators       = new ArrayList<Iterator<Entry>>();
+                List<Iterator<Entry>> iterators       = new ArrayList<Iterator<Entry>>();                
                 {
                     for (Comparator<Entry> c : comparators) {
                         for (Dictionary vol : Collection.this) {
-                            iterators.add(vol.lookup(word, c));
+                            if (dictUUIDSet.size() == 0 || dictUUIDSet.contains(vol.header.uuid)) { 
+                                iterators.add(vol.lookup(word, c));
+                            }
                         }
                     }
                     prepareNext();
@@ -347,6 +355,36 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
                     throw new UnsupportedOperationException();
                 }
             };
+        }
+        
+        Article redirect(Article article, int level) throws RedirectError, 
+                                                            IOException, 
+                                                            JSONException {            
+            if (level > maxRedirectLevels) {
+                throw new RedirectTooManyLevels();
+            }
+            
+            Iterator<Entry> result = bestMatch(article.redirect, 
+                                               article.dictionary.header.uuid);
+            if (result.hasNext()) {
+                Entry redirectEntry = result.next();
+                Article redirectArticle = redirectEntry.getArticle();
+                if (redirectArticle.getRedirect() != null) {
+                    return redirect(redirectArticle, level+1);
+                }
+                else {
+                    return redirectArticle;
+                }
+            }
+            else {
+                throw new RedirectNotFound();
+            }
+        }
+        
+        public Article redirect(Article article) throws RedirectError, 
+                                                        IOException, 
+                                                        JSONException {
+            return redirect(article, 0);
         }
     }
 
@@ -438,7 +476,9 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         byte[] articleBytes = new byte[(int) articleLength];
         this.file.read(articleBytes);
         String serializedArticle = decompress(articleBytes);
-        return Article.fromJsonStr(serializedArticle);
+        Article a = Article.fromJsonStr(serializedArticle);
+        a.dictionary = this;
+        return a;
     }
 
     static Iterator<Entry> EMPTY_ITERATOR = new ArrayList<Entry>().iterator();
@@ -611,24 +651,6 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
 
     static boolean isBlank(String s) {
         return s == null || s.equals("");
-    }
-
-    public static void main(String[] args) throws IOException, JSONException {
-        Dictionary d = new Dictionary(args[0]);
-
-        Collection dicts = new Collection();
-        dicts.add(d);
-
-        for (Iterator<Entry> result = dicts.bestMatch("a#b"); result.hasNext();) {
-            Entry entry = result.next();
-            System.out.println(entry.title);
-            // Article a = entry.getArticle();
-            // System.out.println(String.format(
-            // "%s (redirect? %s) \n----------------------\n%s\n===================",
-            // a.title, a.redirect, a.text));
-        }
-
-        dicts.remove(d);
     }
 
     public CharSequence getDisplayTitle() {

@@ -2,11 +2,15 @@ package aarddict.android;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.json.JSONException;
+
 import aarddict.Dictionary;
+import aarddict.Dictionary.RedirectError;
 
 
 public class Dictionaries {
@@ -60,6 +64,10 @@ public class Dictionaries {
         return dicts.bestMatch(word.toString());
     }
 
+    public Dictionary.Article redirect(Dictionary.Article article) throws RedirectError, IOException, JSONException {
+        return dicts.redirect(article);
+    }
+    
     public static Dictionaries getInstance() {
         return instance;
     }

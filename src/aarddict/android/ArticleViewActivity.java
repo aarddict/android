@@ -7,6 +7,8 @@ import java.io.Reader;
 import java.util.Iterator;
 
 import aarddict.Dictionary;
+import aarddict.Dictionary.RedirectNotFound;
+import aarddict.Dictionary.RedirectTooManyLevels;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
@@ -45,8 +47,7 @@ public class ArticleViewActivity extends Activity {
                 
         articleView = new WebView(this);        
         articleView.getSettings().setBuiltInZoomControls(true);
-        articleView.getSettings().setJavaScriptEnabled(true);
-        
+        articleView.getSettings().setJavaScriptEnabled(true);        
         articleView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
@@ -65,26 +66,52 @@ public class ArticleViewActivity extends Activity {
                 if (a.hasNext()) {
                     Dictionary.Entry entry = a.next();
                     try {
-                        
-                        String articleText = entry.getArticle().text;                        
-                        view.loadDataWithBaseURL("", wrap(articleText), "text/html", "utf-8", null);
+                        showArticle(view, entry.getArticle());
                     }
                     catch (Exception e) {
-                        view.loadDataWithBaseURL("", String.format("<html><body style=\"color: red;\">There was an error loading article <em>%s</em></body></html>", entry.title), 
-                                "text/html", "utf-8", null);                        
+                        showError(view, String.format("There was an error loading article <em>%s</em>", entry.title));
                     }                    
                 }                
                 else {
-                    view.loadData(String.format("<html><body>Article <em>%s</em> not found</body></html>", url), "text/html", "utf-8");
+                    showMessage(view, String.format("Article <em>%s</em> not found", url) );
                 }
                 return true;
             }
         });        
-        
-        articleView.loadDataWithBaseURL("", wrap(definition), "text/html", "utf-8", null);        
         setContentView(articleView);
+        showArticle(articleView, definition);
     }
 
+    private void showArticle(WebView view, String articleText) {
+        view.loadDataWithBaseURL("", wrap(articleText), "text/html", "utf-8", null);        
+    }
+
+    private void showArticle(WebView view, Dictionary.Article a) {
+        if (a.getRedirect() != null) {
+            try {
+                a = Dictionaries.getInstance().redirect(a);
+            }            
+            catch (RedirectNotFound e) {
+                showMessage(view, String.format("Redirect <em>%s</em> not found", a.getRedirect()));
+            }
+            catch (RedirectTooManyLevels e) {
+                showMessage(view, String.format("Too many redirects for <em>%s</em>", a.getRedirect()));
+            }            
+            catch (Exception e) {
+                showError(view, String.format("There was an error following redirect <em>%s</em>", a.getRedirect()));
+            }
+        }
+        showArticle(view, a.text);
+    }
+    
+    private void showMessage(WebView view, String message) {
+        view.loadDataWithBaseURL("", message, "text/html", "utf-8", null);        
+    }
+
+    private void showError(WebView view, String message) {
+        showMessage(view, String.format("<span style=\"color: red;\">%s</span>", message)); 
+    }
+    
     private String wrap(String articleText) {
         return new StringBuilder("<html>")
         .append("<head>")

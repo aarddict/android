@@ -1,13 +1,8 @@
 package aarddict.android;
 
-import java.io.File;
-import java.io.FilenameFilter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
-import org.json.JSONException;
 
 import aarddict.Dictionary;
 import android.app.Activity;
@@ -46,7 +41,6 @@ public class LookupActivity extends Activity {
         final ListView listView = new ListView(this);
         
         EditText editText = new EditText(this);
-//        editText.setSingleLine();
         editText.setHint("Type word");
         editText.setInputType(InputType.TYPE_CLASS_TEXT | 
                               InputType.TYPE_TEXT_FLAG_AUTO_COMPLETE |
@@ -79,9 +73,14 @@ public class LookupActivity extends Activity {
     private void launchWord(Dictionary.Entry theWord) {
         Intent next = new Intent();
         next.setClass(this, ArticleViewActivity.class);
+                        
         next.putExtra("word", theWord.title);        
-        try {
-            next.putExtra("definition", theWord.getArticle().text);
+        try {            
+            Dictionary.Article a = theWord.getArticle();            
+            if (a.getRedirect() != null) {
+                    a = Dictionaries.getInstance().redirect(a);
+            }                        
+            next.putExtra("definition", a.text);                                    
         }
         catch (Exception e) {
             Log.e("aarddict.lookup", "Failed to read article " + theWord, e);

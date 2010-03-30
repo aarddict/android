@@ -363,7 +363,14 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
     String           sitelang;
 
     public Dictionary(String fileName) throws IOException, JSONException {
-        RandomAccessFile file = new RandomAccessFile(fileName, "r");
+        init(new RandomAccessFile(fileName, "r"));
+    }
+
+    public Dictionary(File file) throws IOException, JSONException {
+        init(new RandomAccessFile(file, "r"));
+    }
+    
+    private void init(RandomAccessFile file) throws IOException, JSONException {
         this.file = file;
         this.header = new Header(file);
         this.sha1sum = header.sha1sum;

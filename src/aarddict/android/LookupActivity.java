@@ -35,40 +35,8 @@ public class LookupActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
-        File f = new File("/sdcard");
-        FilenameFilter fileFilter = new FilenameFilter() {			
-			@Override
-			public boolean accept(File dir, String filename) {
-				return filename.toLowerCase().endsWith(".aar");
-			}
-		};
-		    
-		final Dictionary.Collection dicts = new Dictionary.Collection();
-		
-        for (String name : f.list(fileFilter)) {
-        	
-        	Dictionary d;
-			try {
-				d = new Dictionary("/sdcard/"+name);
-				dicts.add(d);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-            catch (JSONException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }        	        
-        }
-        
-        Iterator<Dictionary.Entry> dictEntries = dicts.bestMatch("a");
-        StringBuilder s = new StringBuilder();
-        
-        for (;dictEntries.hasNext();) {
-        	Dictionary.Entry entry = dictEntries.next(); 
-        	s.append(entry.title + "\n");
-        }
+                
+        Dictionaries.getInstance().discover();
         
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
@@ -83,13 +51,12 @@ public class LookupActivity extends Activity {
         editText.setInputType(InputType.TYPE_CLASS_TEXT | 
                               InputType.TYPE_TEXT_FLAG_AUTO_COMPLETE |
                               InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS | 
-                              InputType.TYPE_TEXT_VARIATION_SHORT_MESSAGE
-                              );         
+                              InputType.TYPE_TEXT_VARIATION_SHORT_MESSAGE);         
         editText.setOnEditorActionListener(new OnEditorActionListener() {            
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 CharSequence text = v.getText();
-                Iterator<Dictionary.Entry> results = dicts.bestMatch(text.toString());
+                Iterator<Dictionary.Entry> results = Dictionaries.getInstance().lookup(text);
                 List<Dictionary.Entry> words = new ArrayList<Dictionary.Entry>();
                 int count = 0;                
                 while (results.hasNext() && count < 20) {

@@ -1,0 +1,31 @@
+a[href ^="sftp://"],
+a[href ^="ftp://"],
+a[href ^="http://"],
+a[href ^="https://"] {
+    background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAMAAAC67D+PAAAAFVBMVEVmmcwzmcyZzP8AZswAZv////////9E6giVAAAAB3RSTlP///////8AGksDRgAAADhJREFUGFcly0ESAEAEA0Ei6/9P3sEcVB8kmrwFyni0bOeyyDpy9JTLEaOhQq7Ongf5FeMhHS/4AVnsAZubxDVmAAAAAElFTkSuQmCC") center right no-repeat;
+    padding: 0 13px 0 0;
+}
+
+a[id ^="_r"] {
+    vertical-align: super;
+    font-size: x-small;
+    text-decoration: none;
+}
+
+li[id ^="_n"] {
+    font-size: small;
+}
+
+a[href ^="#_r"] {
+    font-weight: bold;
+    text-decoration: none;
+}
+
+pre:empty,
+.thumbinner, .thumbcaption, .magnify, 
+.vertical-navbox, .tmbox, .maptable,
+.printonly  {
+    display: none;
+}
+
+

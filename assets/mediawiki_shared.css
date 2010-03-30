@@ -1,0 +1,194 @@
+/**
+ * CSS in this file is used by *all* skins (that have any CSS at all).  Be
+ * careful what you put in here, since what looks good in one skin may not in
+ * another, but don't ignore the poor non-Monobook users either.
+ */
+
+/* Math */
+.texvc { direction: ltr; unicode-bidi: embed; }
+img.tex { vertical-align: middle; }
+span.texhtml { font-family: serif; }
+
+/* add a bit of margin space between the preview and the toolbar */
+/* this replaces the ugly <p><br /></p> we used to insert into the page source */
+#wikiPreview.ontop { margin-bottom: 1em; }
+
+/* Stop floats from intruding into edit area in previews */
+#editform, #toolbar, #wpTextbox1 { clear: both; }
+
+div#mw-js-message {
+	margin: 1em 5%;
+	padding: 0.5em 2.5%;
+	border: solid 1px #ddd;
+	background-color: #fcfcfc;
+}
+
+/* Edit section links */
+.editsection {
+	float: right;
+	margin-left: 5px;
+}
+
+
+/**
+ * Image captions
+ *
+body.rtl .thumbcaption { text-align:right; }
+body.rtl .magnify { float:left; }
+
+body.ltr .thumbcaption { text-align:left; }
+body.ltr .magnify { float:right; }
+*/
+
+/* Plainlinks - this can be used to switch 
+ * off special external link styling */
+.plainlinks a {
+		background: none !important;
+		padding: 0 !important;
+}
+
+/* wikitable class for skinning normal tables */
+table.wikitable {
+    margin: 1em 1em 1em 0;
+    background: #f9f9f9;
+    border: 1px #aaa solid;
+    border-collapse: collapse;
+}
+.wikitable th, .wikitable td {
+    border: 1px #aaa solid;
+    padding: 0.2em;
+}
+.wikitable th {
+    background: #f2f2f2;
+    text-align: center;
+}
+.wikitable caption {
+    font-weight: bold;
+}
+
+/* hide initially collapsed collapsable tables */
+table.collapsed tr.collapsable {
+	display: none;
+}
+
+/* success and error messages */
+.success {
+	color: green;
+	font-size: larger;
+}
+.error {
+	color: red;
+	font-size: larger;
+}
+.errorbox, .successbox {
+	font-size: larger;
+	border: 2px solid;
+	padding: .5em 1em;
+	float: left;
+	margin-bottom: 2em;
+	color: #000;
+}
+.errorbox {
+	border-color: red;
+	background-color: #fff2f2;
+}
+.successbox {
+	border-color: green;
+	background-color: #dfd;
+}
+.errorbox h2, .successbox h2 {
+	font-size: 1em;
+	font-weight: bold;
+	display: inline;
+	margin: 0 .5em 0 0;
+	border: none;
+}
+
+.visualClear {
+	clear: both;
+}
+
+
+/*
+  Table pager (e.g. Special:Imagelist)
+  - remove underlines from the navigation link
+  - collapse borders
+  - set the borders to outsets (similar to Special:Allmessages)
+  - remove line wrapping for all td and th, set background color
+  - restore line wrapping for the last two table cells (description and size)
+*/
+.TablePager { min-width: 80%; }
+.TablePager_nav a { text-decoration: none; }
+.TablePager { border-collapse: collapse; }
+.TablePager, .TablePager td, .TablePager th { 
+	border: 1px solid #aaaaaa;
+	padding: 0 0.15em 0 0.15em;
+}
+.TablePager th { background-color: #eeeeff }
+.TablePager td { background-color: #ffffff }
+.TablePager tr:hover td { background-color: #eeeeff }
+
+.imagelist td, .imagelist th { white-space: nowrap }
+.imagelist .TablePager_col_links { background-color: #eeeeff }
+.imagelist .TablePager_col_img_description { white-space: normal }
+.imagelist th.TablePager_sort { background-color: #ccccff }
+
+
+/* filetoc */
+ul#filetoc {
+	text-align: center;
+	border: 1px solid #aaaaaa;
+	background-color: #f9f9f9;
+	padding: 5px;
+	font-size: 95%;
+	margin-bottom: 0.5em;
+	margin-left: 0;
+	margin-right: 0;
+}
+
+#filetoc li {
+	display: inline;
+	list-style-type: none;
+	padding-right: 2em;
+}
+
+/* Classes for EXIF data display */
+table.mw_metadata {
+	font-size: 0.8em;
+	margin-left: 0.5em;
+	margin-bottom: 0.5em;
+	width: 300px;
+}
+
+table.mw_metadata caption {
+	font-weight: bold;
+}
+
+table.mw_metadata th {
+	font-weight: normal;
+}
+
+table.mw_metadata td {
+	padding: 0.1em;
+}
+
+table.mw_metadata {
+	border: none;
+	border-collapse: collapse;
+}
+
+table.mw_metadata td, table.mw_metadata th {
+	text-align: center;
+	border: 1px solid #aaaaaa;
+	padding-left: 0.1em;
+	padding-right: 0.1em;
+}
+
+table.mw_metadata th {
+	background-color: #f9f9f9;
+}
+
+table.mw_metadata td {
+	background-color: #fcfcfc;
+}
+

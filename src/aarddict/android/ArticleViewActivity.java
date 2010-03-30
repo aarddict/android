@@ -9,6 +9,7 @@ import java.util.Iterator;
 import aarddict.Dictionary;
 import android.app.Activity;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.webkit.WebView;
@@ -55,7 +56,10 @@ public class ArticleViewActivity extends Activity {
                     urlLower.startsWith("ftp://") ||
                     urlLower.startsWith("sftp://") ||
                     urlLower.startsWith("mailto:")) {
-                    return false;
+                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, 
+                                                Uri.parse(url)); 
+                    startActivity(browserIntent);                     
+                    return true;
                 }
                 Iterator<Dictionary.Entry> a = Dictionaries.getInstance().lookup(url);
                 if (a.hasNext()) {

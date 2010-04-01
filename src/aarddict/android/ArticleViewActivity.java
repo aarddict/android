@@ -5,6 +5,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 import aarddict.Dictionary;
 import aarddict.Dictionary.RedirectNotFound;
@@ -14,6 +16,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -25,14 +28,30 @@ public class ArticleViewActivity extends Activity {
     private String sharedCSS;
     private String mediawikiSharedCSS;
     private String mediawikiMonobookCSS;
-    private String js;    
+    private String js;
+    
+    class HistoryItem {
+        public String dictionaryId;
+        public long articlePointer;
+        public String word;
+                
+        public HistoryItem(String dictionaryId, long articlePointer, String word) {
+            this.dictionaryId = dictionaryId;
+            this.articlePointer = articlePointer;
+            this.word = word;
+        }
+    }
+    
+    private List<HistoryItem> history; 
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         loadAssets();
-                        
+
+        history = new LinkedList<HistoryItem>();
+        
         articleView = new WebView(this);        
         articleView.getSettings().setBuiltInZoomControls(true);
         articleView.getSettings().setJavaScriptEnabled(true);        
@@ -69,13 +88,16 @@ public class ArticleViewActivity extends Activity {
         setContentView(articleView);
         
         Intent intent = getIntent();
-        String word = intent.getStringExtra("word");        
-        Log.d(TAG, "word: " + word);
-        
+        String word = intent.getStringExtra("word");                
         getWindow().setTitle(word);        
         String dictionaryId = intent.getStringExtra("dictionaryId");
-        Log.d(TAG, "dictionaryId: " + dictionaryId);
         long articlePointer = intent.getLongExtra("articlePointer", -1);
+        showArticle(dictionaryId, articlePointer, word);
+    }
+
+    private void showArticle(String dictionaryId, long articlePointer, String word) {
+        Log.d(TAG, "word: " + word);
+        Log.d(TAG, "dictionaryId: " + dictionaryId);
         Log.d(TAG, "articlePointer: " + articlePointer);
         if (articlePointer > -1) {
             try {
@@ -96,6 +118,17 @@ public class ArticleViewActivity extends Activity {
         }
     }
 
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if ((keyCode == KeyEvent.KEYCODE_BACK) && history.size() > 1) {
+            history.remove(history.size() - 1); //corresponds to current article
+            HistoryItem prev = history.remove(history.size() - 1);
+            showArticle(prev.dictionaryId, prev.articlePointer, prev.word);
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }    
+    
     private void showArticle(WebView view, String articleText) {
         view.loadDataWithBaseURL("", wrap(articleText), "text/html", "utf-8", null);        
     }
@@ -115,6 +148,7 @@ public class ArticleViewActivity extends Activity {
                 showError(view, String.format("There was an error following redirect <em>%s</em>", a.getRedirect()));
             }
         }
+        history.add(new HistoryItem(a.dictionary.getId(), a.pointer, a.title));
         showArticle(view, a.text);
     }
     

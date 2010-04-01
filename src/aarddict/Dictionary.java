@@ -140,7 +140,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         public Dictionary dictionary;
         public String     title;
         public String     section;
-        long              position;
+        public long       pointer;
         private String    redirect;
         public String     text;
 
@@ -491,6 +491,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         String serializedArticle = decompress(articleBytes);
         Article a = Article.fromJsonStr(serializedArticle);
         a.dictionary = this;
+        a.pointer = pointer;
         return a;
     }
 

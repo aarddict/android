@@ -68,6 +68,10 @@ public class Dictionaries {
         return dicts.redirect(article);
     }
     
+    public Dictionary.Article getArticle(String dictionaryId, long articlePointer) throws IOException, JSONException {
+        return dicts.getArticle(dictionaryId, articlePointer);
+    }
+    
     public static Dictionaries getInstance() {
         return instance;
     }

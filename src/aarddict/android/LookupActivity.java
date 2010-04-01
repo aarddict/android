@@ -70,7 +70,7 @@ public class LookupActivity extends Activity {
                 return true;
             }
         };
-        editText.setHint("Type word");
+        editText.setHint("Start typing");
         editText.setInputType(InputType.TYPE_CLASS_TEXT | 
                               InputType.TYPE_TEXT_FLAG_AUTO_COMPLETE |
                               InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS | 
@@ -109,20 +109,10 @@ public class LookupActivity extends Activity {
     
     private void launchWord(Dictionary.Entry theWord) {
         Intent next = new Intent();
-        next.setClass(this, ArticleViewActivity.class);
-                        
+        next.setClass(this, ArticleViewActivity.class);                       
         next.putExtra("word", theWord.title);        
-        try {            
-            Dictionary.Article a = theWord.getArticle();            
-            if (a.getRedirect() != null) {
-                    a = Dictionaries.getInstance().redirect(a);
-            }                        
-            next.putExtra("definition", a.text);                                    
-        }
-        catch (Exception e) {
-            Log.e("aarddict.lookup", "Failed to read article " + theWord, e);
-            next.putExtra("definition", Log.getStackTraceString(e));
-        }
+        next.putExtra("dictionaryId", theWord.dictionary.getId());
+        next.putExtra("articlePointer", theWord.articlePointer);
         startActivity(next);
     }
     

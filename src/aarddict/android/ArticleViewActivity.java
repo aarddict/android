@@ -32,19 +32,7 @@ public class ArticleViewActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         loadAssets();
-        
-        Intent intent = getIntent();
-
-        String word = intent.getStringExtra("word");
-        
-        Log.d(TAG, "word: " + word);
-                
-        getWindow().setTitle(word);
-        
-        String definition = intent.getStringExtra("definition");
-        
-        Log.d(TAG, "definition: " + definition);
-                
+                        
         articleView = new WebView(this);        
         articleView.getSettings().setBuiltInZoomControls(true);
         articleView.getSettings().setJavaScriptEnabled(true);        
@@ -79,7 +67,33 @@ public class ArticleViewActivity extends Activity {
             }
         });        
         setContentView(articleView);
-        showArticle(articleView, definition);
+        
+        Intent intent = getIntent();
+        String word = intent.getStringExtra("word");        
+        Log.d(TAG, "word: " + word);
+        
+        getWindow().setTitle(word);        
+        String dictionaryId = intent.getStringExtra("dictionaryId");
+        Log.d(TAG, "dictionaryId: " + dictionaryId);
+        long articlePointer = intent.getLongExtra("articlePointer", -1);
+        Log.d(TAG, "articlePointer: " + articlePointer);
+        if (articlePointer > -1) {
+            try {
+                Dictionary.Article article = Dictionaries.getInstance().getArticle(dictionaryId, articlePointer);
+                if (article == null) {
+                    showMessage(articleView, String.format("Article <em>%s</em> not found", word) );
+                }
+                else {
+                    showArticle(articleView, article);
+                }
+            }
+            catch (Exception e){
+                showError(articleView, String.format("There was an error loading article <em>%s</em>", word));
+            }
+        }
+        else {
+            showError(articleView, String.format("Invalid article pointer for article <em>%s</em> in dictionary %s", word, dictionaryId));
+        }
     }
 
     private void showArticle(WebView view, String articleText) {

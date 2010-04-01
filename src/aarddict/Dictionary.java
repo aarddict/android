@@ -177,7 +177,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
 
         public String     title;
         public String     section;
-        long              articlePointer;
+        public long       articlePointer;
         public Dictionary dictionary;
 
         Entry(Dictionary dictionary, String title) {
@@ -386,6 +386,15 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
                                                         JSONException {
             return redirect(article, 0);
         }
+        
+        public Article getArticle(String dictionaryId, long articlePointer) throws IOException, JSONException {
+            for (Dictionary d : this) {
+                if (d.sha1sum.equals(dictionaryId)) {
+                    return d.readArticle(articlePointer);
+                }
+            }
+            return null;
+        }
     }
 
     JSONObject       metadata;
@@ -429,6 +438,10 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         this.sitelang = this.metadata.getString("sitelang");
     }
 
+    public String getId() {
+        return sha1sum;
+    }
+    
     @Override
     public int hashCode() {
         return sha1sum.hashCode();

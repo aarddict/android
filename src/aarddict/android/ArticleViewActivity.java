@@ -129,6 +129,15 @@ public class ArticleViewActivity extends Activity {
         return super.onKeyDown(keyCode, event);
     }    
     
+    @Override
+    public boolean onKeyLongPress(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            finish();
+            return true;
+        }
+        return super.onKeyLongPress(keyCode, event);
+    }
+    
     private void showArticle(WebView view, String articleText) {
         view.loadDataWithBaseURL("", wrap(articleText), "text/html", "utf-8", null);        
     }

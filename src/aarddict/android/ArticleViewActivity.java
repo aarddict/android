@@ -17,6 +17,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -120,13 +122,20 @@ public class ArticleViewActivity extends Activity {
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if ((keyCode == KeyEvent.KEYCODE_BACK) && history.size() > 1) {
+        if ((keyCode == KeyEvent.KEYCODE_BACK)) {
+            return goBack();
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    private boolean goBack() {
+        if (history.size() > 1) {
             history.remove(history.size() - 1); //corresponds to current article
             HistoryItem prev = history.remove(history.size() - 1);
             showArticle(prev.dictionaryId, prev.articlePointer, prev.word);
-            return true;
+            return true;            
         }
-        return super.onKeyDown(keyCode, event);
+        return false;
     }    
 
     @Override
@@ -134,7 +143,38 @@ public class ArticleViewActivity extends Activity {
         finish();
         return true;
     }
-        
+    
+    final static int MENU_BACK = 1;
+    final static int MENU_FORWARD = 2;
+    final static int MENU_VIEW_ONLINE = 3;
+    final static int MENU_NEW_LOOKUP = 4;
+    
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        menu.add(0, MENU_BACK, 0, null).setIcon(android.R.drawable.ic_media_previous);        
+        menu.add(0, MENU_FORWARD, 0, null).setIcon(android.R.drawable.ic_media_next);
+        menu.add(0, MENU_VIEW_ONLINE, 0, null).setIcon(android.R.drawable.ic_menu_view);
+        menu.add(0, MENU_NEW_LOOKUP, 0, null).setIcon(android.R.drawable.ic_menu_search);
+        return true;
+    }
+    
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+        case MENU_BACK:
+            goBack();
+            break;
+        case MENU_FORWARD:            
+            break;
+        case MENU_VIEW_ONLINE:            
+            break;            
+        case MENU_NEW_LOOKUP:
+            onSearchRequested();
+            break;                        
+        }
+        return true;
+    }
+    
     private void showArticle(WebView view, String articleText) {
         view.loadDataWithBaseURL("", wrap(articleText), "text/html", "utf-8", null);        
     }

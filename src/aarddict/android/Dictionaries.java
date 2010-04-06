@@ -11,11 +11,14 @@ import org.json.JSONException;
 
 import aarddict.Dictionary;
 import aarddict.Dictionary.RedirectError;
+import android.util.Log;
 
 
 public class Dictionaries {
 
-    private final static Dictionaries instance = new Dictionaries();
+    private final static String TAG = "aarddict.Dictionaries";
+    
+    private static Dictionaries instance;
 
     private Dictionary.Collection     dicts;
 
@@ -72,7 +75,23 @@ public class Dictionaries {
         return dicts.getArticle(dictionaryId, articlePointer);
     }
     
-    public static Dictionaries getInstance() {
+    public static synchronized Dictionaries getInstance() {
+        if (instance == null) {
+            instance = new Dictionaries();
+        }
         return instance;
+    }
+    
+    public synchronized void close() {
+        instance = null;
+        for (Dictionary d : dicts) {
+            try {
+                d.close();
+            }
+            catch (IOException e) {
+                Log.e(TAG, "Failed to close " + d, e);
+            }
+        }
+        dicts.clear();
     }
 }

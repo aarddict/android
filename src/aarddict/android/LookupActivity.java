@@ -8,6 +8,7 @@ import java.util.TimerTask;
 
 import aarddict.Dictionary;
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -24,20 +25,22 @@ import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ProgressBar;
+import android.widget.Toast;
 import android.widget.TwoLineListItem;
 
 public class LookupActivity extends Activity {
     
-    final static String TAG = "aarddict.LookupActivity";    
-    Timer timer = new Timer();
-    ListView listView;
-    final Handler handler = new Handler();
+    final static String TAG     = "aarddict.LookupActivity";
+    Timer               timer;
+    ListView            listView;
+    final Handler       handler = new Handler();
         
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-                
-        Dictionaries.getInstance().discover();
+        
+        timer = new Timer();
         
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
@@ -77,9 +80,46 @@ public class LookupActivity extends Activity {
                               InputType.TYPE_TEXT_VARIATION_SHORT_MESSAGE);
                         
       layout.addView(editText);                        
-        layout.addView(listView);
-        
+        layout.addView(listView);        
         setContentView(layout);
+        openDictionaries();
+    }
+    
+    void openDictionaries() {
+        final ProgressDialog progressDialog = new ProgressDialog(this);
+        progressDialog.setIndeterminate(true);
+        progressDialog.setMessage("Looking for dictionaries");
+        Runnable open = new Runnable() {            
+            @Override
+            public void run() {
+                while (!progressDialog.isShowing()) {
+                    Thread.yield();
+                    try {
+                        Thread.sleep(10);
+                    }
+                    catch (InterruptedException e) {
+                        Log.e(TAG, "Sombody interrupted my slumber", e);
+                    }
+                }
+                Dictionaries.getInstance().discover();
+                handler.post(new Runnable() {                    
+                    @Override
+                    public void run() {
+                        progressDialog.cancel();
+                    }
+                });
+            }
+        };
+        Thread t = new Thread(open);
+        t.start();
+        progressDialog.show();
+    }
+    
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        timer.cancel();
+        Dictionaries.getInstance().close();
     }
     
     private void updateWordListUI(WordAdapter wordAdapter) {

@@ -465,6 +465,11 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         return true;
     }
 
+    public String toString() {
+        return String.format("%s %s/%s(%s)", this.title, this.header.volume, 
+                this.header.of, this.sha1sum);
+    };
+    
     IndexItem readIndexItem(long i) throws IOException {
         long pos = this.header.index1Offset + i * 8;
         this.file.seek(pos);

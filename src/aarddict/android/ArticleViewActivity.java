@@ -106,6 +106,7 @@ public class ArticleViewActivity extends Activity {
         if (articlePointer > -1) {
             try {
                 Dictionary.Article article = Dictionaries.getInstance().getArticle(dictionaryId, articlePointer);
+                article.title = word;
                 if (article == null) {
                     showMessage(articleView, String.format("Article <em>%s</em> not found", word));
                 }
@@ -180,13 +181,26 @@ public class ArticleViewActivity extends Activity {
         case MENU_FORWARD:
             goForward();
             break;
-        case MENU_VIEW_ONLINE:            
+        case MENU_VIEW_ONLINE:
+            viewOnline();
             break;            
         case MENU_NEW_LOOKUP:
             onSearchRequested();
             break;                        
         }
         return true;
+    }
+    
+    private void viewOnline() {
+        if (this.backItems.size() > 0) {            
+            HistoryItem current = this.backItems.get(this.backItems.size() - 1);
+            String url = Dictionaries.getInstance().getArticleURL(current.dictionaryId, current.word);
+            if (url != null) {
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, 
+                        Uri.parse(url)); 
+                startActivity(browserIntent);                                         
+            }
+        }
     }
     
     private void showArticle(WebView view, String articleText) {

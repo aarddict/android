@@ -26,6 +26,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.util.Log;
+
 import com.ibm.icu.text.Collator;
 
 
@@ -387,14 +389,25 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
             return redirect(article, 0);
         }
         
-        public Article getArticle(String dictionaryId, long articlePointer) throws IOException, JSONException {
+        public Dictionary getDictionary(String dictionaryId) {
             for (Dictionary d : this) {
                 if (d.sha1sum.equals(dictionaryId)) {
-                    return d.readArticle(articlePointer);
+                    return d;
                 }
             }
-            return null;
+            return null;            
         }
+            
+        public Article getArticle(String dictionaryId, long articlePointer) throws IOException, JSONException {
+            Dictionary d = getDictionary(dictionaryId);
+            return d == null ? null : d.readArticle(articlePointer); 
+        }
+        
+        public String getArticleURL(String dictionaryId, String title) {
+            Dictionary d = getDictionary(dictionaryId);
+            return d == null ? null : d.getArticleURL(title); 
+        }
+        
     }
 
     JSONObject       metadata;
@@ -548,6 +561,40 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         return iterator;
     }
 
+//    try:
+//        siteinfo = dictionary.metadata['siteinfo']
+//    except KeyError:
+//        logging.debug('No site info in dictionary %r', dictionary_key)
+//        if 'lang' in dictionary.metadata and 'sitelang' in dictionary.metadata:
+//            url = u'http://%s.wikipedia.org/wiki/%s' % (dictionary.metadata['lang'],
+//                                                        article_title)
+//            return url
+//    else:
+//        try:
+//            general = siteinfo['general']
+//            server = general['server']
+//            articlepath = general['articlepath']
+//        except KeyError:
+//            logging.debug('Site info for %s is incomplete', dictionary_key)
+//        else:
+//            url = ''.join((server, articlepath.replace(u'$1', article_title)))
+//            return url
+    
+    
+    public String getArticleURL(String title) {
+        try {
+            JSONObject siteinfo = this.metadata.getJSONObject("siteinfo");
+            JSONObject general = siteinfo.getJSONObject("general");
+            String server = general.getString("server");
+            String articlePath = general.getString("articlepath");
+            return server + articlePath.replace("$1", title); 
+        }
+        catch (JSONException e) {
+            Log.d("aarddict", "Failed to obtain url for title " + title, e);
+            return null;
+        }        
+    }
+    
     @Override
     public Entry get(int index) {
         try {

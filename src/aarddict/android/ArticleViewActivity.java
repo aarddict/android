@@ -165,10 +165,10 @@ public class ArticleViewActivity extends Activity {
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        menu.add(0, MENU_BACK, 0, null).setIcon(android.R.drawable.ic_media_previous);        
-        menu.add(0, MENU_FORWARD, 0, null).setIcon(android.R.drawable.ic_media_next);
-        menu.add(0, MENU_VIEW_ONLINE, 0, null).setIcon(android.R.drawable.ic_menu_view);
-        menu.add(0, MENU_NEW_LOOKUP, 0, null).setIcon(android.R.drawable.ic_menu_search);
+        menu.add(0, MENU_BACK, 0, "Back").setIcon(android.R.drawable.ic_media_previous);        
+        menu.add(0, MENU_FORWARD, 0, "Forward").setIcon(android.R.drawable.ic_media_next);
+        menu.add(0, MENU_VIEW_ONLINE, 0, "View Online").setIcon(android.R.drawable.ic_menu_view);
+        menu.add(0, MENU_NEW_LOOKUP, 0, "New Lookup").setIcon(android.R.drawable.ic_menu_search);
         return true;
     }
     

@@ -22,20 +22,46 @@ function headings(level)
 
 function scrollToMatch(text, matchStrength) {
   for (var j=1; j <=6; j++) {
-     var h = headings(j)
+     var h = headings(j);
      for (var k=0; k < h.length; k++) {
-       heading = h[k]
-       headingText = heading[0]
-       matcher.match(headingText, text, matchStrength)
-       if (matcher.result) {
-          headingElem = heading[1]
-          headingElem.scrollIntoView(true)
-          return true
+       heading = h[k];
+       headingText = heading[0];       
+       if (matcher.match(headingText, text, matchStrength)) {    	  
+          headingElem = heading[1];
+          headingElem.scrollIntoView(true);
+          matcher.setFound(true);
+          return;
        }
      }
   }
-  return false
+  matcher.setFound(false);
 }
+
+function scrollToMatch(text) {
+	var comparators = matcher.getNumberOfComparators();	
+	for (var comparator = 0; comparator < comparators; comparator++) {
+		for (var j=1; j <=6; j++) {
+			var h = headings(j);
+			for (var k=0; k < h.length; k++) {
+				heading = h[k];
+				headingText = heading[0];
+				if (matcher.match(headingText, text, comparator)) {    	  
+					headingElem = heading[1];
+					 var x = 0;
+					 var y = 0;
+					 while (headingElem != null) {
+						 x += headingElem.offsetLeft;
+						 y += headingElem.offsetTop;
+						 headingElem = headingElem.offsetParent;
+					 }
+					 window.scrollTo(x, y);					
+					return;
+				}
+			}
+		}		
+	}
+}	
+
 
 function s(elementId) {
     document.getElementById(elementId).scrollIntoView(true);

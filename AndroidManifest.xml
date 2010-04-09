@@ -12,8 +12,10 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".ArticleViewActivity"
-                android:theme="@android:style/Theme.NoTitleBar"/>
+<!--        <activity android:name=".ArticleViewActivity"-->
+<!--                android:theme="@android:style/Theme.NoTitleBar"/>-->
+
+        <activity android:name=".ArticleViewActivity"/>
         
     </application>
 

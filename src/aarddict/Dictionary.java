@@ -182,11 +182,11 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         public long       articlePointer;
         public Dictionary dictionary;
 
-        Entry(Dictionary dictionary, String title) {
+        public Entry(Dictionary dictionary, String title) {
             this(dictionary, title, -1);
         }
 
-        Entry(Dictionary dictionary, String title, long articlePointer) {
+        public  Entry(Dictionary dictionary, String title, long articlePointer) {
             this.dictionary = dictionary;
             this.title = title;
             this.articlePointer = articlePointer;
@@ -243,7 +243,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
 
     }
 
-    static class EntryComparator implements Comparator<Entry> {
+    public static class EntryComparator implements Comparator<Entry> {
 
         Collator collator;
 
@@ -258,7 +258,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         }
     }
 
-    static class EntryStartComparator extends EntryComparator {
+    public static class EntryStartComparator extends EntryComparator {
 
         EntryStartComparator(int strength) {
             super(strength);
@@ -275,7 +275,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
     }
 
     @SuppressWarnings("unchecked")
-    static Comparator<Entry>[] comparators = new Comparator[] {
+    public static Comparator<Entry>[] comparators = new Comparator[] {
             new EntryComparator(Collator.QUATERNARY),
             new EntryStartComparator(Collator.QUATERNARY),
             new EntryComparator(Collator.TERTIARY),
@@ -366,12 +366,12 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
                 throw new RedirectTooManyLevels();
             }
             
-            Iterator<Entry> result = bestMatch(article.redirect, 
+            Iterator<Entry> result = bestMatch(article.getRedirect(), 
                                                article.dictionary.header.uuid);
             if (result.hasNext()) {
                 Entry redirectEntry = result.next();
                 Article redirectArticle = redirectEntry.getArticle();
-                if (redirectArticle.getRedirect() != null) {
+                if (redirectArticle.redirect != null) {
                     return redirect(redirectArticle, level+1);
                 }
                 else {

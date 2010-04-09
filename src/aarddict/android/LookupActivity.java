@@ -25,8 +25,6 @@ import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.ProgressBar;
-import android.widget.Toast;
 import android.widget.TwoLineListItem;
 
 public class LookupActivity extends Activity {
@@ -76,8 +74,7 @@ public class LookupActivity extends Activity {
         editText.setHint("Start typing");
         editText.setInputType(InputType.TYPE_CLASS_TEXT | 
                               InputType.TYPE_TEXT_FLAG_AUTO_COMPLETE |
-                              InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS | 
-                              InputType.TYPE_TEXT_VARIATION_SHORT_MESSAGE);
+                              InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
                         
       layout.addView(editText);                        
         layout.addView(listView);        
@@ -151,6 +148,7 @@ public class LookupActivity extends Activity {
         Intent next = new Intent();
         next.setClass(this, ArticleViewActivity.class);                       
         next.putExtra("word", theWord.title);        
+        next.putExtra("section", theWord.section);
         next.putExtra("dictionaryId", theWord.dictionary.getId());
         next.putExtra("articlePointer", theWord.articlePointer);
         startActivity(next);

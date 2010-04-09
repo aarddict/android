@@ -19,6 +19,8 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.Window;
+import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -36,11 +38,13 @@ public class ArticleViewActivity extends Activity {
         public String dictionaryId;
         public long articlePointer;
         public String word;
+        public String section;
                 
-        public HistoryItem(String dictionaryId, long articlePointer, String word) {
+        public HistoryItem(String dictionaryId, long articlePointer, String word, String section) {
             this.dictionaryId = dictionaryId;
             this.articlePointer = articlePointer;
             this.word = word;
+            this.section = section;
         }
     }
     
@@ -56,12 +60,52 @@ public class ArticleViewActivity extends Activity {
         backItems = new LinkedList<HistoryItem>();
         forwardItems = new LinkedList<HistoryItem>();
         
+        getWindow().requestFeature(Window.FEATURE_PROGRESS);        
+                
         articleView = new WebView(this);        
         articleView.getSettings().setBuiltInZoomControls(true);
-        articleView.getSettings().setJavaScriptEnabled(true);        
+        articleView.getSettings().setJavaScriptEnabled(true);
+        
+        articleView.addJavascriptInterface(new SectionMatcher(), "matcher");
+        
+        articleView.setWebChromeClient(new WebChromeClient(){
+            @Override
+            public void onConsoleMessage(String message, int lineNumber, String sourceID) {
+                Log.d(TAG + ".js", String.format("%d [%s]: %s", lineNumber, sourceID, message));
+            }
+            
+            @Override
+            public void onProgressChanged(WebView view, int newProgress) {
+                Log.d(TAG, "Progress: " + newProgress);
+                setProgress(newProgress * 1000);
+            }
+        });
+                       
         articleView.setWebViewClient(new WebViewClient() {
+            
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                Log.d(TAG, "Page finished: " + url);
+                String section = null;
+                
+                if (url.contains("#")) {
+                    String[] parts = url.split("#", 2);
+                    section = parts[1];
+                }
+                else if (backItems.size() > 0) {
+                    HistoryItem current = backItems.get(backItems.size() - 1);
+                    section = current.section;
+                }
+                
+                if (section != null && !section.trim().equals("")) {
+                    articleView.loadUrl(String.format("javascript:scrollToMatch(\"%s\")", section));
+                }     
+                
+            }
+            
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                Log.d(TAG, "URL clicked: " + url);
                 String urlLower = url.toLowerCase(); 
                 if (urlLower.startsWith("http://") ||
                     urlLower.startsWith("https://") ||
@@ -89,28 +133,32 @@ public class ArticleViewActivity extends Activity {
                 return true;
             }
         });        
-        setContentView(articleView);
-        
+                
         Intent intent = getIntent();
         String word = intent.getStringExtra("word");                
-        getWindow().setTitle(word);        
+        String section = intent.getStringExtra("section");
         String dictionaryId = intent.getStringExtra("dictionaryId");
         long articlePointer = intent.getLongExtra("articlePointer", -1);
-        showArticle(dictionaryId, articlePointer, word, true);
+        
+        setContentView(articleView);
+        setProgressBarVisibility(true);
+        showArticle(dictionaryId, articlePointer, word, section, true);
     }
 
-    private void showArticle(String dictionaryId, long articlePointer, String word, boolean clearForward) {
+    private void showArticle(String dictionaryId, long articlePointer, String word, String section, boolean clearForward) {
         Log.d(TAG, "word: " + word);
         Log.d(TAG, "dictionaryId: " + dictionaryId);
         Log.d(TAG, "articlePointer: " + articlePointer);
+        Log.d(TAG, "section: " + section);
         if (articlePointer > -1) {
             try {
                 Dictionary.Article article = Dictionaries.getInstance().getArticle(dictionaryId, articlePointer);
-                article.title = word;
                 if (article == null) {
-                    showMessage(articleView, String.format("Article <em>%s</em> not found", word));
+                    showMessage(articleView, String.format("Article <em>%s</em> not found", word));                    
                 }
                 else {
+                    article.title = word;
+                    article.section = section;                    
                     showArticle(articleView, article, clearForward);
                 }
             }
@@ -138,7 +186,7 @@ public class ArticleViewActivity extends Activity {
             HistoryItem current = backItems.remove(backItems.size() - 1); 
             forwardItems.add(0, current);
             HistoryItem prev = backItems.remove(backItems.size() - 1);
-            showArticle(prev.dictionaryId, prev.articlePointer, prev.word, false);
+            showArticle(prev.dictionaryId, prev.articlePointer, prev.word, prev.section, false);
             return true;            
         }
         return false;
@@ -147,7 +195,7 @@ public class ArticleViewActivity extends Activity {
     private boolean goForward() {
         if (forwardItems.size() > 0){  
             HistoryItem next = forwardItems.remove(0);
-            showArticle(next.dictionaryId, next.articlePointer, next.word, false);
+            showArticle(next.dictionaryId, next.articlePointer, next.word, next.section, false);
         }
         return false;
     }
@@ -205,8 +253,9 @@ public class ArticleViewActivity extends Activity {
         }
     }
     
-    private void showArticle(WebView view, String articleText) {
-        view.loadDataWithBaseURL("", wrap(articleText), "text/html", "utf-8", null);        
+    private void showArticle(WebView view, String articleText, String section) {
+        Log.d(TAG, "Show article: " + articleText);        
+        view.loadDataWithBaseURL("", wrap(articleText), "text/html", "utf-8", null);
     }
 
     private void showArticle(WebView view, Dictionary.Article a, boolean clearForward) {
@@ -227,8 +276,10 @@ public class ArticleViewActivity extends Activity {
         if (clearForward) {
             forwardItems.clear();
         }
-        backItems.add(new HistoryItem(a.dictionary.getId(), a.pointer, a.title));
-        showArticle(view, a.text);
+        backItems.add(new HistoryItem(a.dictionary.getId(), a.pointer, a.title, a.section));
+        setProgress(0);
+        setTitle(a.title);
+        showArticle(view, a.text, a.section);
     }
     
     private void showMessage(WebView view, String message) {
@@ -289,6 +340,5 @@ public class ArticleViewActivity extends Activity {
           }
         } while (read>=0);
         return out.toString();
-    }
-    
+    }                
 }

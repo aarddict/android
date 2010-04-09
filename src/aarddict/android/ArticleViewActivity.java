@@ -176,7 +176,9 @@ public class ArticleViewActivity extends Activity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
         case MENU_BACK:
-            goBack();
+            if (!goBack()) {
+                finish();
+            };
             break;
         case MENU_FORWARD:
             goForward();

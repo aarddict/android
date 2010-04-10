@@ -57,22 +57,26 @@ public class LookupActivity extends Activity {
             
             @Override
             public boolean onKeyUp(int keyCode, KeyEvent event) {
+                                                
                 if (currentLookupTask != null) {
                     currentLookupTask.cancel();
                 }
                 
-                final CharSequence textToLookup = getText(); 
-                
-                currentLookupTask = new TimerTask() {                    
-                    @Override
-                    public void run() {
-                        Log.d(TAG, "running lookup task for " + textToLookup + " in " + Thread.currentThread());
-                        if (textToLookup.equals(getText())) {
-                            doLookup(textToLookup);
+                if (keyCode != KeyEvent.KEYCODE_BACK) {
+                    
+                    final CharSequence textToLookup = getText(); 
+                    
+                    currentLookupTask = new TimerTask() {                    
+                        @Override
+                        public void run() {
+                            Log.d(TAG, "running lookup task for " + textToLookup + " in " + Thread.currentThread());
+                            if (textToLookup.equals(getText())) {
+                                doLookup(textToLookup);
+                            }
                         }
-                    }
-                };                 
-                timer.schedule(currentLookupTask, 600);                
+                    };                 
+                    timer.schedule(currentLookupTask, 600);
+                }
                 return true;
             }
         };

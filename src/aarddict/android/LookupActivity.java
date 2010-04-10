@@ -11,11 +11,13 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.InputType;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,8 +25,11 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.TwoLineListItem;
 
 public class LookupActivity extends Activity {
@@ -76,7 +81,7 @@ public class LookupActivity extends Activity {
                               InputType.TYPE_TEXT_FLAG_AUTO_COMPLETE |
                               InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
                         
-      layout.addView(editText);                        
+        layout.addView(editText);                        
         layout.addView(listView);        
         setContentView(layout);
         openDictionaries();
@@ -121,19 +126,15 @@ public class LookupActivity extends Activity {
     
     private void updateWordListUI(WordAdapter wordAdapter) {
         Log.d(TAG, "updating word list in " + Thread.currentThread());        
-        listView.setAdapter(wordAdapter);
+        int pos = listView.getLastVisiblePosition();        
+        listView.setAdapter(wordAdapter);        
         listView.setOnItemClickListener(wordAdapter);
+        listView.setSelection(pos-1);
     }    
     
     private void doLookup(CharSequence word) {        
         Iterator<Dictionary.Entry> results = Dictionaries.getInstance().lookup(word);
-        List<Dictionary.Entry> words = new ArrayList<Dictionary.Entry>();
-        int count = 0;                
-        while (results.hasNext() && count < 20) {
-            count++;
-            words.add(results.next());
-        }                
-        final WordAdapter wordAdapter = new WordAdapter(words);
+        final WordAdapter wordAdapter = new WordAdapter(results);
         final Runnable updateWordList = new Runnable() {            
             @Override
             public void run() {
@@ -158,16 +159,38 @@ public class LookupActivity extends Activity {
     class WordAdapter extends BaseAdapter implements AdapterView.OnItemClickListener {
 
         private final List<Dictionary.Entry> words;
-        private final LayoutInflater mInflater;
+        private final LayoutInflater         mInflater;
+        private int                          itemCount;
+        private LinearLayout                 more;
+        private Iterator<Dictionary.Entry>   results;
+        private boolean                      displayMore;
 
-        public WordAdapter(List<Dictionary.Entry> words) {
-            this.words = words;
+        public WordAdapter(Iterator<Dictionary.Entry> results) {
+            this.results = results;                        
+            this.words = new ArrayList<Dictionary.Entry>();                        
+            loadBatch();
             mInflater = (LayoutInflater) LookupActivity.this.getSystemService(
                     Context.LAYOUT_INFLATER_SERVICE);
+
+            more = new LinearLayout(mInflater.getContext());
+            ImageView moreImage = new ImageView(mInflater.getContext());
+            moreImage.setImageResource(android.R.drawable.ic_menu_more);
+            more.setGravity(Gravity.CENTER);
+            more.addView(moreImage);
         }
 
+        private void loadBatch() {
+            int count = 0;                
+            while (results.hasNext() && count < 20) {
+                count++;
+                words.add(results.next());
+            }                                        
+            displayMore = results.hasNext();
+            itemCount = displayMore  ? words.size() + 1 : words.size();              
+        }
+        
         public int getCount() {
-            return words.size();
+            return itemCount;
         }
 
         public Object getItem(int position) {
@@ -178,9 +201,25 @@ public class LookupActivity extends Activity {
             return position;
         }
 
+        @Override
+        public int getViewTypeCount() {
+            return displayMore ? 2 : 1;
+        }
+        
+        @Override
+        public int getItemViewType(int position) {
+            if (displayMore)
+                return position == itemCount - 1 ? 1 : 0;
+            else
+                return 0;
+        }
+        
         public View getView(int position, View convertView, ViewGroup parent) {
+            if (displayMore && position == itemCount - 1) {
+                return more;
+            }
             TwoLineListItem view = (convertView != null) ? (TwoLineListItem) convertView :
-                    createView(parent);
+                    createView(parent);            
             bindView(view, words.get(position));
             return view;
         }
@@ -199,7 +238,15 @@ public class LookupActivity extends Activity {
         }
 
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            launchWord(words.get(position));
+            if (position == itemCount - 1) {
+                Toast t = Toast.makeText(LookupActivity.this, "More", Toast.LENGTH_SHORT);
+                t.show();
+                loadBatch();
+                updateWordListUI(this);
+            }            
+            else {
+                launchWord(words.get(position));
+            }
         }
     }
     

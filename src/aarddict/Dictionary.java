@@ -147,6 +147,18 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         private String  redirect;
         public String   text;
 
+        public Article() {            
+        }
+        
+        public Article(Article that) {
+            this.dictionaryUUID = that.dictionaryUUID;
+            this.volumeId = that.volumeId;
+            this.title = that.title;
+            this.section = that.section;
+            this.pointer = that.pointer;
+            this.redirect = that.redirect;
+            this.text = that.text;
+        }
 
         static Article fromJsonStr(String serializedArticle) throws JSONException {
             JSONArray articleTuple = new JSONArray(serializedArticle);

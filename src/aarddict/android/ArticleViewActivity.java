@@ -64,7 +64,6 @@ public class ArticleViewActivity extends Activity {
                 Log.d(TAG + ".js", String.format("%d [%s]: %s", lineNumber, sourceID, message));
             }
             
-            @Override
             public void onProgressChanged(WebView view, int newProgress) {
                 Log.d(TAG, "Progress: " + newProgress);
                 setProgress(newProgress * 1000);
@@ -81,6 +80,12 @@ public class ArticleViewActivity extends Activity {
                 if (url.contains("#")) {
                     String[] parts = url.split("#", 2);
                     section = parts[1];
+                    if (backItems.size() > 0) {
+                        Dictionary.Article current = backItems.get(backItems.size() - 1);
+                        Dictionary.Article a = new Dictionary.Article(current);
+                        a.section = section;
+                        backItems.add(a);
+                    }
                 }
                 else if (backItems.size() > 0) {
                     Dictionary.Article current = backItems.get(backItems.size() - 1);

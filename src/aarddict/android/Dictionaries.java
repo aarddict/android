@@ -70,15 +70,11 @@ public class Dictionaries {
     public Dictionary.Article redirect(Dictionary.Article article) throws RedirectError, IOException, JSONException {
         return dicts.redirect(article);
     }
-    
-    public Dictionary.Article getArticle(String dictionaryId, long articlePointer) throws IOException, JSONException {
-        return dicts.getArticle(dictionaryId, articlePointer);
-    }
 
-    public String getArticleURL(String dictionaryId, String title) {
-        return dicts.getArticleURL(dictionaryId, title);
-    }    
-    
+    public Dictionary getDictionary(String dictionaryId) {
+        return dicts.getDictionary(dictionaryId);
+    }
+        
     public static synchronized Dictionaries getInstance() {
         if (instance == null) {
             instance = new Dictionaries();

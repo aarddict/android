@@ -139,12 +139,13 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
 
     public static class Article {
 
-        public Dictionary dictionary;
-        public String     title;
-        public String     section;
-        public long       pointer;
-        private String    redirect;
-        public String     text;
+        public UUID     dictionaryUUID;  
+        public String   volumeId;
+        public String   title;
+        public String   section;
+        public long     pointer;
+        private String  redirect;
+        public String   text;
 
 
         static Article fromJsonStr(String serializedArticle) throws JSONException {
@@ -169,7 +170,10 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
             }
             return this.redirect;
         }
-                
+        
+        public boolean isRedirect() {
+            return this.redirect != null;
+        }
     }
 
     /**
@@ -366,17 +370,16 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
                 throw new RedirectTooManyLevels();
             }
             
+            if (!article.isRedirect()) {
+                return article;
+            }
+            
             Iterator<Entry> result = bestMatch(article.getRedirect(), 
-                                               article.dictionary.header.uuid);
+                                               article.dictionaryUUID);
             if (result.hasNext()) {
                 Entry redirectEntry = result.next();
                 Article redirectArticle = redirectEntry.getArticle();
-                if (redirectArticle.redirect != null) {
-                    return redirect(redirectArticle, level+1);
-                }
-                else {
-                    return redirectArticle;
-                }
+                return redirect(redirectArticle, level+1);
             }
             else {
                 throw new RedirectNotFound();
@@ -397,17 +400,6 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
             }
             return null;            
         }
-            
-        public Article getArticle(String dictionaryId, long articlePointer) throws IOException, JSONException {
-            Dictionary d = getDictionary(dictionaryId);
-            return d == null ? null : d.readArticle(articlePointer); 
-        }
-        
-        public String getArticleURL(String dictionaryId, String title) {
-            Dictionary d = getDictionary(dictionaryId);
-            return d == null ? null : d.getArticleURL(title); 
-        }
-        
     }
 
     JSONObject       metadata;
@@ -508,7 +500,8 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         this.file.read(articleBytes);
         String serializedArticle = decompress(articleBytes);
         Article a = Article.fromJsonStr(serializedArticle);
-        a.dictionary = this;
+        a.dictionaryUUID = this.header.uuid;
+        a.volumeId = this.header.sha1sum;
         a.pointer = pointer;
         return a;
     }
@@ -560,25 +553,6 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
 
         return iterator;
     }
-
-//    try:
-//        siteinfo = dictionary.metadata['siteinfo']
-//    except KeyError:
-//        logging.debug('No site info in dictionary %r', dictionary_key)
-//        if 'lang' in dictionary.metadata and 'sitelang' in dictionary.metadata:
-//            url = u'http://%s.wikipedia.org/wiki/%s' % (dictionary.metadata['lang'],
-//                                                        article_title)
-//            return url
-//    else:
-//        try:
-//            general = siteinfo['general']
-//            server = general['server']
-//            articlepath = general['articlepath']
-//        except KeyError:
-//            logging.debug('Site info for %s is incomplete', dictionary_key)
-//        else:
-//            url = ''.join((server, articlepath.replace(u'$1', article_title)))
-//            return url
     
     
     public String getArticleURL(String title) {

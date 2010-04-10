@@ -12,7 +12,10 @@ import aarddict.Dictionary;
 import aarddict.Dictionary.RedirectNotFound;
 import aarddict.Dictionary.RedirectTooManyLevels;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.DialogInterface.OnClickListener;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -23,6 +26,7 @@ import android.view.Window;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Toast;
 
 
 public class ArticleViewActivity extends Activity {
@@ -33,23 +37,9 @@ public class ArticleViewActivity extends Activity {
     private String mediawikiSharedCSS;
     private String mediawikiMonobookCSS;
     private String js;
-    
-    class HistoryItem {
-        public String dictionaryId;
-        public long articlePointer;
-        public String word;
-        public String section;
-                
-        public HistoryItem(String dictionaryId, long articlePointer, String word, String section) {
-            this.dictionaryId = dictionaryId;
-            this.articlePointer = articlePointer;
-            this.word = word;
-            this.section = section;
-        }
-    }
-    
-    private List<HistoryItem> backItems; 
-    private List<HistoryItem> forwardItems;
+        
+    private List<Dictionary.Article> backItems; 
+    private List<Dictionary.Article> forwardItems;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,8 +47,8 @@ public class ArticleViewActivity extends Activity {
 
         loadAssets();
 
-        backItems = new LinkedList<HistoryItem>();
-        forwardItems = new LinkedList<HistoryItem>();
+        backItems = new LinkedList<Dictionary.Article>();
+        forwardItems = new LinkedList<Dictionary.Article>();
         
         getWindow().requestFeature(Window.FEATURE_PROGRESS);        
                 
@@ -93,7 +83,7 @@ public class ArticleViewActivity extends Activity {
                     section = parts[1];
                 }
                 else if (backItems.size() > 0) {
-                    HistoryItem current = backItems.get(backItems.size() - 1);
+                    Dictionary.Article current = backItems.get(backItems.size() - 1);
                     section = current.section;
                 }
                 
@@ -120,15 +110,10 @@ public class ArticleViewActivity extends Activity {
                 Iterator<Dictionary.Entry> a = Dictionaries.getInstance().lookup(url);
                 if (a.hasNext()) {
                     Dictionary.Entry entry = a.next();
-                    try {
-                        showArticle(view, entry.getArticle(), true);
-                    }
-                    catch (Exception e) {
-                        showError(view, String.format("There was an error loading article <em>%s</em>", entry.title));
-                    }                    
+                    showArticle(entry, true);
                 }                
                 else {
-                    showMessage(view, String.format("Article <em>%s</em> not found", url) );
+                    showMessage(String.format("Article \"%s\" not found", url));
                 }
                 return true;
             }
@@ -145,32 +130,6 @@ public class ArticleViewActivity extends Activity {
         showArticle(dictionaryId, articlePointer, word, section, true);
     }
 
-    private void showArticle(String dictionaryId, long articlePointer, String word, String section, boolean clearForward) {
-        Log.d(TAG, "word: " + word);
-        Log.d(TAG, "dictionaryId: " + dictionaryId);
-        Log.d(TAG, "articlePointer: " + articlePointer);
-        Log.d(TAG, "section: " + section);
-        if (articlePointer > -1) {
-            try {
-                Dictionary.Article article = Dictionaries.getInstance().getArticle(dictionaryId, articlePointer);
-                if (article == null) {
-                    showMessage(articleView, String.format("Article <em>%s</em> not found", word));                    
-                }
-                else {
-                    article.title = word;
-                    article.section = section;                    
-                    showArticle(articleView, article, clearForward);
-                }
-            }
-            catch (Exception e){
-                showError(articleView, String.format("There was an error loading article <em>%s</em>", word));
-            }
-        }
-        else {
-            showError(articleView, String.format("Invalid article pointer for article <em>%s</em> in dictionary %s", word, dictionaryId));
-        }
-    }
-
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if ((keyCode == KeyEvent.KEYCODE_BACK)) {
@@ -183,10 +142,10 @@ public class ArticleViewActivity extends Activity {
 
     private boolean goBack() {
         if (backItems.size() > 1) {
-            HistoryItem current = backItems.remove(backItems.size() - 1); 
+            Dictionary.Article current = backItems.remove(backItems.size() - 1); 
             forwardItems.add(0, current);
-            HistoryItem prev = backItems.remove(backItems.size() - 1);
-            showArticle(prev.dictionaryId, prev.articlePointer, prev.word, prev.section, false);
+            Dictionary.Article prev = backItems.remove(backItems.size() - 1);
+            showArticle(prev, false);
             return true;            
         }
         return false;
@@ -194,8 +153,8 @@ public class ArticleViewActivity extends Activity {
     
     private boolean goForward() {
         if (forwardItems.size() > 0){  
-            HistoryItem next = forwardItems.remove(0);
-            showArticle(next.dictionaryId, next.articlePointer, next.word, next.section, false);
+            Dictionary.Article next = forwardItems.remove(0);
+            showArticle(next, false);
         }
         return false;
     }
@@ -243,8 +202,9 @@ public class ArticleViewActivity extends Activity {
     
     private void viewOnline() {
         if (this.backItems.size() > 0) {            
-            HistoryItem current = this.backItems.get(this.backItems.size() - 1);
-            String url = Dictionaries.getInstance().getArticleURL(current.dictionaryId, current.word);
+            Dictionary.Article current = this.backItems.get(this.backItems.size() - 1);
+            Dictionary d = Dictionaries.getInstance().getDictionary(current.volumeId);
+            String url = d == null ? null : d.getArticleURL(current.title);
             if (url != null) {
                 Intent browserIntent = new Intent(Intent.ACTION_VIEW, 
                         Uri.parse(url)); 
@@ -253,41 +213,82 @@ public class ArticleViewActivity extends Activity {
         }
     }
     
-    private void showArticle(WebView view, String articleText, String section) {
-        Log.d(TAG, "Show article: " + articleText);        
-        view.loadDataWithBaseURL("", wrap(articleText), "text/html", "utf-8", null);
+    private void showArticle(String dictionaryId, long articlePointer, String word, String section, boolean clearForward) {
+        Log.d(TAG, "word: " + word);
+        Log.d(TAG, "dictionaryId: " + dictionaryId);
+        Log.d(TAG, "articlePointer: " + articlePointer);
+        Log.d(TAG, "section: " + section);
+        
+//        if (articlePointer > -1) {
+//            showError(String.format("Invalid article pointer for article \"%s\" in dictionary %s", word, dictionaryId));
+//            return;
+//        }
+        
+        Dictionary d = Dictionaries.getInstance().getDictionary(dictionaryId);
+        if (d == null) {
+            showError(String.format("Dictionary %s not found", dictionaryId));
+            return;
+        }
+        
+        Dictionary.Entry entry = new Dictionary.Entry(d, word, articlePointer);
+        entry.section = section;
+        showArticle(entry, clearForward);
+    }    
+    
+    private void showArticle(Dictionary.Entry entry, boolean clearForward) {
+        try {
+            showArticle(entry.getArticle(), true);
+        }
+        catch (Exception e) {
+            showError(String.format("There was an error loading article \"%s\"", entry.title));
+        }
     }
-
-    private void showArticle(WebView view, Dictionary.Article a, boolean clearForward) {
-        if (a.getRedirect() != null) {
-            try {
-                a = Dictionaries.getInstance().redirect(a);
-            }            
-            catch (RedirectNotFound e) {
-                showMessage(view, String.format("Redirect <em>%s</em> not found", a.getRedirect()));
-            }
-            catch (RedirectTooManyLevels e) {
-                showMessage(view, String.format("Too many redirects for <em>%s</em>", a.getRedirect()));
-            }            
-            catch (Exception e) {
-                showError(view, String.format("There was an error following redirect <em>%s</em>", a.getRedirect()));
-            }
+    
+    private void showArticle(Dictionary.Article a, boolean clearForward) {
+        try {
+            a = Dictionaries.getInstance().redirect(a);
+        }            
+        catch (RedirectNotFound e) {
+            showMessage(String.format("Redirect \"%s\" not found", a.getRedirect()));
+            return;
+        }
+        catch (RedirectTooManyLevels e) {
+            showMessage(String.format("Too many redirects for \"%s\"", a.getRedirect()));
+            return;
+        }
+        catch (Exception e) {
+            showError(String.format("There was an error loading article \"%s\"", a.title));
+            return;
         }
         if (clearForward) {
             forwardItems.clear();
         }
-        backItems.add(new HistoryItem(a.dictionary.getId(), a.pointer, a.title, a.section));
+        backItems.add(a);
         setProgress(0);
         setTitle(a.title);
-        showArticle(view, a.text, a.section);
+        Log.d(TAG, "Show article: " + a.text);        
+        articleView.loadDataWithBaseURL("", wrap(a.text), "text/html", "utf-8", null);
     }
     
-    private void showMessage(WebView view, String message) {
-        view.loadDataWithBaseURL("", message, "text/html", "utf-8", null);        
+    private void showMessage(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+        if (backItems.size() == 0) {
+            finish();
+        }        
     }
 
-    private void showError(WebView view, String message) {
-        showMessage(view, String.format("<span style=\"color: red;\">%s</span>", message)); 
+    private void showError(String message) {
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+        dialogBuilder.setTitle("Error").setMessage(message).setNeutralButton("Dismiss", new OnClickListener() {            
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+                if (backItems.size() == 0) {
+                    finish();
+                }
+            }
+        });
+        dialogBuilder.show();
     }
     
     private String wrap(String articleText) {

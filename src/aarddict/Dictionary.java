@@ -186,6 +186,10 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         public boolean isRedirect() {
             return this.redirect != null;
         }
+        
+        public boolean eqalsIgnoreSection(Article other) {
+            return volumeId.equals(other.volumeId) && pointer == other.pointer;
+        }
     }
 
     /**

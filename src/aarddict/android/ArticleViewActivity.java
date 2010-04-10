@@ -93,7 +93,7 @@ public class ArticleViewActivity extends Activity {
                 }
                 
                 if (section != null && !section.trim().equals("")) {
-                    articleView.loadUrl(String.format("javascript:scrollToMatch(\"%s\")", section));
+                    goToSection(section);
                 }     
                 
             }
@@ -135,6 +135,10 @@ public class ArticleViewActivity extends Activity {
         showArticle(dictionaryId, articlePointer, word, section, true);
     }
 
+    private void goToSection(String section) {
+        articleView.loadUrl(String.format("javascript:scrollToMatch(\"%s\")", section));
+    }    
+    
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if ((keyCode == KeyEvent.KEYCODE_BACK)) {
@@ -150,16 +154,29 @@ public class ArticleViewActivity extends Activity {
             Dictionary.Article current = backItems.remove(backItems.size() - 1); 
             forwardItems.add(0, current);
             Dictionary.Article prev = backItems.remove(backItems.size() - 1);
-            showArticle(prev, false);
+            
+            if (prev.eqalsIgnoreSection(current)) {
+                backItems.add(prev);
+                goToSection(prev.section);
+            }   
+            else {
+                showArticle(prev, false);
+            }
             return true;            
         }
         return false;
     }
     
     private boolean goForward() {
-        if (forwardItems.size() > 0){  
+        if (forwardItems.size() > 0){              
             Dictionary.Article next = forwardItems.remove(0);
-            showArticle(next, false);
+            Dictionary.Article current = backItems.get(backItems.size() - 1);
+            if (next.eqalsIgnoreSection(current)) {
+                backItems.add(next);
+                goToSection(next.section);                
+            } else {
+                showArticle(next, false);
+            }
         }
         return false;
     }

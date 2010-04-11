@@ -4,8 +4,10 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.json.JSONException;
 
@@ -36,28 +38,35 @@ public class Dictionaries {
                                   }
                               };
 
-    public List<String> discover() {
+    public List<File> discover() {
         String sdCardPath = "/sdcard";
         File f = new File(sdCardPath);
         return scanDir(f);
     }
 
-    private List<String> scanDir(File dir) {
-        List<String> errors = new ArrayList<String>();
+    private List<File> scanDir(File dir) {
+        List<File> candidates = new ArrayList<File>();
         for (File file : dir.listFiles(fileFilter)) {
             if (file.isDirectory()) {
-                errors.addAll(scanDir(file));
+                candidates.addAll(scanDir(file));
             }
             else {
-                Dictionary d;
-                try {
-                    d = new Dictionary(file);
-                    this.dicts.add(d);
-                }
-                catch (Exception e) {
-                    errors.add(String.format("%s %s", file.getAbsolutePath(),
-                            e.getMessage()));
-                }
+                candidates.add(file);
+            }
+        }
+        return candidates;
+    }
+    
+    public Map<File, Exception> open(List<File> files) {
+        Map<File, Exception> errors = new HashMap<File, Exception>();
+        for (File file : files) {
+            try {
+                Dictionary d = new Dictionary(file);
+                dicts.add(d);
+            }
+            catch (Exception e) {
+                Log.e(TAG, "Failed to open " + file, e);
+                errors.put(file, e);
             }
         }
         return errors;

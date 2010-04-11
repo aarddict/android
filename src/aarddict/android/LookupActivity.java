@@ -1,5 +1,6 @@
 package aarddict.android;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -107,13 +108,30 @@ public class LookupActivity extends Activity {
                         Log.e(TAG, "Sombody interrupted my slumber", e);
                     }
                 }
-                Dictionaries.getInstance().discover();
+                final long t0 = System.currentTimeMillis();
+                final List<File> dictionaryFiles = Dictionaries.getInstance().discover();
                 handler.post(new Runnable() {                    
                     @Override
                     public void run() {
-                        progressDialog.cancel();
+                        Log.d(TAG, "Volumes found in " + (System.currentTimeMillis() - t0));
+                        progressDialog.setMessage(String.format("Volumes found: %d", dictionaryFiles.size()));                        
                     }
                 });
+                handler.post(new Runnable() {                    
+                    @Override
+                    public void run() {
+                        progressDialog.setMessage("Loading dictionaries");
+                    }
+                });                
+                final long t1 = System.currentTimeMillis();
+                Dictionaries.getInstance().open(dictionaryFiles);
+                handler.post(new Runnable() {                    
+                    @Override
+                    public void run() {
+                        Log.d(TAG, "Opened dicts in " + (System.currentTimeMillis() - t1));
+                        progressDialog.cancel();                        
+                    }
+                });                                                
             }
         };
         Thread t = new Thread(open);

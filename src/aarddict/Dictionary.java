@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.zip.DataFormatException;
@@ -418,7 +419,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         }
     }
 
-    JSONObject       metadata;
+    public JSONObject       metadata;
     Header           header;
     RandomAccessFile file;
     String           sha1sum;
@@ -431,36 +432,44 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
     String           lang;
     String           sitelang;
 
-    public Dictionary(String fileName) throws IOException, JSONException {
-        init(new RandomAccessFile(fileName, "r"));
+    public Dictionary(String fileName, Map<String, JSONObject> metadataCache) throws IOException, JSONException {
+        init(new RandomAccessFile(fileName, "r"), metadataCache);
     }
 
-    public Dictionary(File file) throws IOException, JSONException {
-        init(new RandomAccessFile(file, "r"));
+    public Dictionary(File file, Map<String, JSONObject> metadataCache) throws IOException, JSONException {
+        init(new RandomAccessFile(file, "r"), metadataCache);
     }
     
-    private void init(RandomAccessFile file) throws IOException, JSONException {
+    private void init(RandomAccessFile file, Map<String, JSONObject> metadataCache) throws IOException, JSONException {
         this.file = file;
         this.header = new Header(file);
         this.sha1sum = header.sha1sum;
-        byte[] rawMeta = new byte[(int) header.metaLength];
-        file.read(rawMeta);
-
-        String metadataStr = decompress(rawMeta);
-        this.metadata = new JSONObject(metadataStr);
+        String uuidStr = header.uuid.toString();
+        if (metadataCache.containsKey(uuidStr)) {
+        	this.metadata = metadataCache.get(uuidStr);
+        }
+        else {
+        	byte[] rawMeta = new byte[(int) header.metaLength];
+        	file.read(rawMeta);
+        	String metadataStr = decompress(rawMeta);
+        	this.metadata = new JSONObject(metadataStr);
+        }
         this.title = this.metadata.getString("title");
         this.version = this.metadata.getString("version");
         this.description = this.metadata.getString("description");
         this.copyright = this.metadata.getString("copyright");
         this.license = this.metadata.getString("license");
         this.source = this.metadata.getString("source");
-
         this.lang = this.metadata.getString("lang");
         this.sitelang = this.metadata.getString("sitelang");
     }
 
     public String getId() {
         return sha1sum;
+    }
+    
+    public UUID getDictionaryId() {
+    	return header.uuid;
     }
     
     @Override
@@ -617,19 +626,28 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
     }
 
     static String decompress(byte[] bytes) {
-        if (bytes.length == 0)
-            return "";
-        try {
-            return decompressZlib(bytes);
+    	String type = null;
+    	long t0 = System.currentTimeMillis();
+        try {        	
+            String result = decompressZlib(bytes);
+            type = "zlib";
+            return result;
         }
         catch (Exception e1) {
             try {
-                return decompressBz2(bytes);
+                String result = decompressBz2(bytes);
+                type = "bz2";
+                return result;
             }
             catch (IOException e2) {
-                return utf8(bytes);
+                String result = utf8(bytes);
+                type = "uncompressed";
+                return result;
             }
         }
+    	finally {
+    		Log.d("d", "Decompressed " + type + " in " + (System.currentTimeMillis() - t0));
+    	}
     }
 
     static String decompressZlib(byte[] bytes) throws IOException, DataFormatException {
@@ -650,10 +668,10 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
     }
 
     static String decompressBz2(byte[] bytes) throws IOException {
-        BZip2CompressorInputStream in = new BZip2CompressorInputStream(
-                new ByteArrayInputStream(bytes));
+        BZip2CompressorInputStream in = new BZip2CompressorInputStream(new ByteArrayInputStream(bytes));
+    	
         int n = 0;
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ByteArrayOutputStream out = new ByteArrayOutputStream(bytes.length*5);
         byte[] buf = new byte[1024];
         try {
             while (-1 != (n = in.read(buf))) {

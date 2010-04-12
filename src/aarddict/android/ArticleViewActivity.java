@@ -13,11 +13,14 @@ import aarddict.Dictionary.RedirectNotFound;
 import aarddict.Dictionary.RedirectTooManyLevels;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.DialogInterface.OnClickListener;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -41,6 +44,9 @@ public class ArticleViewActivity extends Activity {
     private List<Dictionary.Article> backItems; 
     private List<Dictionary.Article> forwardItems;
     
+    DictionaryService 	dictionaryService;
+    ServiceConnection 	connection;
+        
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -112,7 +118,7 @@ public class ArticleViewActivity extends Activity {
                     startActivity(browserIntent);                     
                     return true;
                 }
-                Iterator<Dictionary.Entry> a = Dictionaries.getInstance().lookup(url);
+                Iterator<Dictionary.Entry> a = dictionaryService.lookup(url);
                 if (a.hasNext()) {
                     Dictionary.Entry entry = a.next();
                     showArticle(entry, true);
@@ -123,16 +129,31 @@ public class ArticleViewActivity extends Activity {
                 return true;
             }
         });        
-                
-        Intent intent = getIntent();
-        String word = intent.getStringExtra("word");                
-        String section = intent.getStringExtra("section");
-        String dictionaryId = intent.getStringExtra("dictionaryId");
-        long articlePointer = intent.getLongExtra("articlePointer", -1);
-        
+                        
         setContentView(articleView);
         setProgressBarVisibility(true);
-        showArticle(dictionaryId, articlePointer, word, section, true);
+                
+        connection = new ServiceConnection() {
+            public void onServiceConnected(ComponentName className, IBinder service) {
+            	dictionaryService = ((DictionaryService.LocalBinder)service).getService();
+                Intent intent = getIntent();
+                String word = intent.getStringExtra("word");                
+                String section = intent.getStringExtra("section");
+                String dictionaryId = intent.getStringExtra("dictionaryId");
+                long articlePointer = intent.getLongExtra("articlePointer", -1);            	
+            	showArticle(dictionaryId, articlePointer, word, section, true);
+            }
+
+            public void onServiceDisconnected(ComponentName className) {
+            	dictionaryService = null;
+                Toast.makeText(ArticleViewActivity.this, "Dictionary service disconnected, quitting...",
+                        Toast.LENGTH_LONG).show();
+                ArticleViewActivity.this.finish();
+            }
+        };                
+        
+        Intent dictServiceIntent = new Intent(this, DictionaryService.class);
+        bindService(dictServiceIntent, connection, 0);                                
     }
 
     private void goToSection(String section) {
@@ -225,7 +246,7 @@ public class ArticleViewActivity extends Activity {
     private void viewOnline() {
         if (this.backItems.size() > 0) {            
             Dictionary.Article current = this.backItems.get(this.backItems.size() - 1);
-            Dictionary d = Dictionaries.getInstance().getDictionary(current.volumeId);
+            Dictionary d = dictionaryService.getDictionary(current.volumeId);
             String url = d == null ? null : d.getArticleURL(current.title);
             if (url != null) {
                 Intent browserIntent = new Intent(Intent.ACTION_VIEW, 
@@ -246,7 +267,7 @@ public class ArticleViewActivity extends Activity {
 //            return;
 //        }
         
-        Dictionary d = Dictionaries.getInstance().getDictionary(dictionaryId);
+        Dictionary d = dictionaryService.getDictionary(dictionaryId);
         if (d == null) {
             showError(String.format("Dictionary %s not found", dictionaryId));
             return;
@@ -268,7 +289,7 @@ public class ArticleViewActivity extends Activity {
     
     private void showArticle(Dictionary.Article a, boolean clearForward) {
         try {
-            a = Dictionaries.getInstance().redirect(a);
+            a = dictionaryService.redirect(a);
         }            
         catch (RedirectNotFound e) {
             showMessage(String.format("Redirect \"%s\" not found", a.getRedirect()));
@@ -363,5 +384,11 @@ public class ArticleViewActivity extends Activity {
           }
         } while (read>=0);
         return out.toString();
-    }                
+    }
+    
+    @Override
+    protected void onDestroy() {
+    	super.onDestroy();
+    	unbindService(connection);  
+    }
 }

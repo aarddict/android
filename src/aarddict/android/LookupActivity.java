@@ -1,6 +1,5 @@
 package aarddict.android;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -10,11 +9,15 @@ import java.util.TimerTask;
 import aarddict.Dictionary;
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Rect;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.text.InputType;
 import android.text.TextUtils;
 import android.util.Log;
@@ -23,13 +26,13 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.TwoLineListItem;
 
@@ -39,13 +42,30 @@ public class LookupActivity extends Activity {
     Timer               timer;
     ListView            listView;
     final Handler       handler = new Handler();
-        
+    BroadcastReceiver 	broadcastReceiver;
+    DictionaryService 	dictionaryService;
+
+    private ServiceConnection connection = new ServiceConnection() {
+        public void onServiceConnected(ComponentName className, IBinder service) {
+        	dictionaryService = ((DictionaryService.LocalBinder)service).getService();
+        	Log.d(TAG, "Service connected: " + dictionaryService);
+        }
+
+        public void onServiceDisconnected(ComponentName className) {
+        	Log.d(TAG, "Service disconnected: " + dictionaryService);
+        	dictionaryService = null;
+            Toast.makeText(LookupActivity.this, "Dictionary service disconnected, quitting...",
+                    Toast.LENGTH_LONG).show();
+            LookupActivity.this.finish();
+        }
+    };    
+    
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+                        
         timer = new Timer();
-        
+                
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
         layout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT, 
@@ -89,61 +109,60 @@ public class LookupActivity extends Activity {
         layout.addView(editText);                        
         layout.addView(listView);        
         setContentView(layout);
-        openDictionaries();
+                                        
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(DictionaryService.DICT_OPEN_FAILED);
+        intentFilter.addAction(DictionaryService.DISCOVERY_STARTED);
+        intentFilter.addAction(DictionaryService.DISCOVERY_FINISHED);
+        intentFilter.addAction(DictionaryService.OPEN_FINISHED);
+        intentFilter.addAction(DictionaryService.OPEN_STARTED);
+        intentFilter.addAction(DictionaryService.OPENED_DICT);
+        
+        
+        
+        broadcastReceiver = new BroadcastReceiver() {
+        
+        	ProgressDialog progressDialog;
+        	
+			@Override
+			public void onReceive(Context context, Intent intent) {
+				String a = intent.getAction();
+				if (a.equals(DictionaryService.DISCOVERY_STARTED)) {
+					progressDialog = ProgressDialog.show(LookupActivity.this, null, "Looking for dictionaries...");
+				}
+				if (a.equals(DictionaryService.DISCOVERY_FINISHED)) {
+			        progressDialog.dismiss();			        
+				}				
+				if (a.equals(DictionaryService.OPEN_STARTED)) {
+					int count = intent.getIntExtra("count", 0);
+					progressDialog = new ProgressDialog(LookupActivity.this);
+					progressDialog.setIndeterminate(false);
+			        progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+			        progressDialog.setMessage("Loading dictionaries...");
+			        progressDialog.setMax(count);
+			        progressDialog.show();
+				}
+				if (a.equals(DictionaryService.DICT_OPEN_FAILED)  || a.equals(DictionaryService.OPENED_DICT)) {
+					progressDialog.incrementProgressBy(1);
+				}
+				if (a.equals(DictionaryService.OPEN_FINISHED)) {
+					progressDialog.dismiss();
+				}								
+			}
+		};
+		registerReceiver(broadcastReceiver, intentFilter);
+		
+    	final Intent dictServiceIntent = new Intent(this, DictionaryService.class);
+    	startService(dictServiceIntent);
+    	bindService(dictServiceIntent, connection, 0);
     }
-    
-    void openDictionaries() {
-        final ProgressDialog progressDialog = new ProgressDialog(this);
-        progressDialog.setIndeterminate(true);
-        progressDialog.setMessage("Looking for dictionaries");
-        Runnable open = new Runnable() {            
-            @Override
-            public void run() {
-                while (!progressDialog.isShowing()) {
-                    Thread.yield();
-                    try {
-                        Thread.sleep(10);
-                    }
-                    catch (InterruptedException e) {
-                        Log.e(TAG, "Sombody interrupted my slumber", e);
-                    }
-                }
-                final long t0 = System.currentTimeMillis();
-                final List<File> dictionaryFiles = Dictionaries.getInstance().discover();
-                handler.post(new Runnable() {                    
-                    @Override
-                    public void run() {
-                        Log.d(TAG, "Volumes found in " + (System.currentTimeMillis() - t0));
-                        progressDialog.setMessage(String.format("Volumes found: %d", dictionaryFiles.size()));                        
-                    }
-                });
-                handler.post(new Runnable() {                    
-                    @Override
-                    public void run() {
-                        progressDialog.setMessage("Loading dictionaries");
-                    }
-                });                
-                final long t1 = System.currentTimeMillis();
-                Dictionaries.getInstance().open(dictionaryFiles);
-                handler.post(new Runnable() {                    
-                    @Override
-                    public void run() {
-                        Log.d(TAG, "Opened dicts in " + (System.currentTimeMillis() - t1));
-                        progressDialog.cancel();                        
-                    }
-                });                                                
-            }
-        };
-        Thread t = new Thread(open);
-        t.start();
-        progressDialog.show();
-    }
-    
+        
     @Override
     protected void onDestroy() {
         super.onDestroy();
         timer.cancel();
-        Dictionaries.getInstance().close();
+        unregisterReceiver(broadcastReceiver);
+        unbindService(connection);
     }
     
     private void updateWordListUI(WordAdapter wordAdapter) {
@@ -154,18 +173,17 @@ public class LookupActivity extends Activity {
         listView.setSelection(pos-1);
     }    
     
-    private void doLookup(CharSequence word) {        
-        Iterator<Dictionary.Entry> results = Dictionaries.getInstance().lookup(word);
+    private void doLookup(CharSequence word) {
+        Iterator<Dictionary.Entry> results = dictionaryService.lookup(word);
         final WordAdapter wordAdapter = new WordAdapter(results);
         final Runnable updateWordList = new Runnable() {            
             @Override
             public void run() {
                 updateWordListUI(wordAdapter);
             }
-
         };        
         handler.post(updateWordList);
-    }
+    }           
     
     private void launchWord(Dictionary.Entry theWord) {
         Intent next = new Intent();
@@ -271,5 +289,4 @@ public class LookupActivity extends Activity {
             }
         }
     }
-    
 }

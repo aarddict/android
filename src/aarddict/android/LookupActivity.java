@@ -64,6 +64,8 @@ public class LookupActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
                         
+        getWindow().requestFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+                
         timer = new Timer();
                 
         LinearLayout layout = new LinearLayout(this);
@@ -109,6 +111,8 @@ public class LookupActivity extends Activity {
         layout.addView(editText);                        
         layout.addView(listView);        
         setContentView(layout);
+        
+        setProgressBarIndeterminate(true);        
                                         
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(DictionaryService.DICT_OPEN_FAILED);
@@ -175,12 +179,21 @@ public class LookupActivity extends Activity {
     }    
     
     private void doLookup(CharSequence word) {
+        final Runnable updateProgress = new Runnable() {            
+            @Override
+            public void run() {
+                setProgressBarIndeterminateVisibility(true);
+            }
+        };        
+        handler.post(updateProgress);
+    	    	
         Iterator<Dictionary.Entry> results = dictionaryService.lookup(word);
         final WordAdapter wordAdapter = new WordAdapter(results);
         final Runnable updateWordList = new Runnable() {            
             @Override
             public void run() {
                 updateWordListUI(wordAdapter);
+                setProgressBarIndeterminateVisibility(false);
             }
         };        
         handler.post(updateWordList);

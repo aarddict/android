@@ -170,12 +170,14 @@ public class LookupActivity extends Activity {
         unbindService(connection);
     }
     
-    private void updateWordListUI(WordAdapter wordAdapter) {
+    private void updateWordListUI(WordAdapter wordAdapter, boolean scrollToLastVisible) {
         Log.d(TAG, "updating word list in " + Thread.currentThread());        
         int pos = listView.getLastVisiblePosition();        
         listView.setAdapter(wordAdapter);        
         listView.setOnItemClickListener(wordAdapter);
-        listView.setSelection(pos-1);
+        if (scrollToLastVisible) {
+        	listView.setSelection(pos-1);
+        }
     }    
     
     private void doLookup(CharSequence word) {
@@ -192,7 +194,7 @@ public class LookupActivity extends Activity {
         final Runnable updateWordList = new Runnable() {            
             @Override
             public void run() {
-                updateWordListUI(wordAdapter);
+                updateWordListUI(wordAdapter, false);
                 setProgressBarIndeterminateVisibility(false);
             }
         };        
@@ -296,7 +298,7 @@ public class LookupActivity extends Activity {
                 Toast t = Toast.makeText(LookupActivity.this, "More", Toast.LENGTH_SHORT);
                 t.show();
                 loadBatch();
-                updateWordListUI(this);
+                updateWordListUI(this, true);
             }            
             else {
                 launchWord(words.get(position));

@@ -128,19 +128,20 @@ public class LookupActivity extends Activity {
 			public void onReceive(Context context, Intent intent) {
 				String a = intent.getAction();
 				if (a.equals(DictionaryService.DISCOVERY_STARTED)) {
-					progressDialog = ProgressDialog.show(LookupActivity.this, null, "Looking for dictionaries...");
+					progressDialog = new ProgressDialog(LookupActivity.this);
+					progressDialog.setIndeterminate(true);
+			        progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+			        progressDialog.setMessage("Looking for dictionaries...");
+			        progressDialog.show();					
 				}
 				if (a.equals(DictionaryService.DISCOVERY_FINISHED)) {
-			        progressDialog.dismiss();			        
 				}				
 				if (a.equals(DictionaryService.OPEN_STARTED)) {
-					int count = intent.getIntExtra("count", 0);
-					progressDialog = new ProgressDialog(LookupActivity.this);
+					int count = intent.getIntExtra("count", 0);					
 					progressDialog.setIndeterminate(false);
-			        progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+					progressDialog.setProgress(0);			        
 			        progressDialog.setMessage("Loading dictionaries...");
 			        progressDialog.setMax(count);
-			        progressDialog.show();
 				}
 				if (a.equals(DictionaryService.DICT_OPEN_FAILED)  || a.equals(DictionaryService.OPENED_DICT)) {
 					progressDialog.incrementProgressBy(1);

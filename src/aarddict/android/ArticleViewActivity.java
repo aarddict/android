@@ -57,7 +57,8 @@ public class ArticleViewActivity extends Activity {
         forwardItems = new LinkedList<Dictionary.Article>();
         
         getWindow().requestFeature(Window.FEATURE_PROGRESS);        
-                
+        getWindow().requestFeature(Window.FEATURE_LEFT_ICON);
+        
         articleView = new WebView(this);        
         articleView.getSettings().setBuiltInZoomControls(true);
         articleView.getSettings().setJavaScriptEnabled(true);
@@ -132,7 +133,8 @@ public class ArticleViewActivity extends Activity {
                         
         setContentView(articleView);
         setProgressBarVisibility(true);
-                
+        getWindow().setFeatureDrawableResource(Window.FEATURE_LEFT_ICON, R.drawable.aarddict);
+        
         connection = new ServiceConnection() {
             public void onServiceConnected(ComponentName className, IBinder service) {
             	dictionaryService = ((DictionaryService.LocalBinder)service).getService();

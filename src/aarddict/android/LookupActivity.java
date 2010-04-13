@@ -8,22 +8,32 @@ import java.util.TimerTask;
 
 import aarddict.Dictionary;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.DialogInterface.OnClickListener;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.text.InputType;
 import android.text.TextUtils;
+import android.text.util.Linkify;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -33,6 +43,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.TwoLineListItem;
 
@@ -65,7 +76,8 @@ public class LookupActivity extends Activity {
         super.onCreate(savedInstanceState);
                         
         getWindow().requestFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
-                
+        getWindow().requestFeature(Window.FEATURE_LEFT_ICON);
+        
         timer = new Timer();
                 
         LinearLayout layout = new LinearLayout(this);
@@ -80,13 +92,11 @@ public class LookupActivity extends Activity {
             
             @Override
             public boolean onKeyUp(int keyCode, KeyEvent event) {
-                                                
-                if (currentLookupTask != null) {
-                    currentLookupTask.cancel();
-                }
-                
-                if (keyCode != KeyEvent.KEYCODE_BACK) {
-                    
+            	if (event.isPrintingKey()) {
+                    if (currentLookupTask != null) {
+                        currentLookupTask.cancel();
+                    }
+                                        
                     final CharSequence textToLookup = getText(); 
                     
                     currentLookupTask = new TimerTask() {                    
@@ -99,8 +109,9 @@ public class LookupActivity extends Activity {
                         }
                     };                 
                     timer.schedule(currentLookupTask, 600);
-                }
-                return true;
+                    return true;
+            	}            	
+            	return super.onKeyUp(keyCode, event);
             }
         };
         editText.setHint("Start typing");
@@ -110,9 +121,9 @@ public class LookupActivity extends Activity {
                         
         layout.addView(editText);                        
         layout.addView(listView);        
-        setContentView(layout);
-        
-        setProgressBarIndeterminate(true);        
+        setContentView(layout);        
+        setProgressBarIndeterminate(true);
+        getWindow().setFeatureDrawableResource(Window.FEATURE_LEFT_ICON, R.drawable.aarddict);
                                         
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(DictionaryService.DICT_OPEN_FAILED);
@@ -305,4 +316,75 @@ public class LookupActivity extends Activity {
             }
         }
     }
+    
+    
+    final static int MENU_DICT_INFO = 1;
+    final static int MENU_ABOUT = 2;
+    
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        menu.add(0, MENU_DICT_INFO, 0, "Info").setIcon(android.R.drawable.ic_menu_info_details);        
+        menu.add(0, MENU_ABOUT, 0, "About").setIcon(R.drawable.aarddict);
+        return true;
+    }
+    
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+        case MENU_DICT_INFO:
+        	
+            break;
+        case MENU_ABOUT:
+            showAbout();
+            break;
+        }
+        return true;
+    }
+
+	private void showAbout() {        
+        PackageManager manager = getPackageManager();
+        String versionMame = "";
+        try {
+			PackageInfo info = manager.getPackageInfo(getPackageName(), 0);
+			versionMame = info.versionName;
+		} catch (NameNotFoundException e) {
+			Log.e(TAG, "Failed to load package info for " + getPackageName(), e) ;
+		}        
+        ApplicationInfo applicationInfo = getApplicationInfo();        
+		StringBuilder message = new StringBuilder().        		
+        append(applicationInfo.loadLabel(getPackageManager())).
+        append(" ").
+        append(versionMame).
+        append("\n").
+        append("(C) 2010 Igor Tkach").append("\n").append("http://aarddict.org");
+		
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.HORIZONTAL);
+        layout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT, 
+                    LinearLayout.LayoutParams.FILL_PARENT, 1));
+        layout.setPadding(10, 10, 10, 10);
+        ImageView logo = new ImageView(this);
+        logo.setImageResource(R.drawable.aarddict);
+        logo.setPadding(0, 0, 20, 0);
+        logo.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.FILL_PARENT));
+        TextView textView = new TextView(this);
+        textView.setGravity(Gravity.CENTER_HORIZONTAL);
+        textView.setLineSpacing(2f, 1);
+        textView.setAutoLinkMask(Linkify.WEB_URLS);
+        textView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.FILL_PARENT));
+        textView.setText(message);
+        
+        layout.addView(logo);
+        layout.addView(textView);
+		
+		AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+        dialogBuilder.setTitle("About").setView(layout).setNeutralButton("Dismiss", new OnClickListener() {            
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        dialogBuilder.show();
+	}
+    
 }

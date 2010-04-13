@@ -1,5 +1,7 @@
 package aarddict;
 
+import static java.lang.String.format;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
@@ -12,6 +14,7 @@ import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -23,9 +26,7 @@ import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.codehaus.jackson.map.ObjectMapper;
 
 import android.util.Log;
 
@@ -34,6 +35,8 @@ import com.ibm.icu.text.Collator;
 
 public class Dictionary extends AbstractList<Dictionary.Entry> {
 
+	private final static String TAG = Dictionary.class.getName();
+	
     final static Charset UTF8 = Charset.forName("utf8");
 
     final static Locale  ROOT = new Locale("", "", "");
@@ -161,17 +164,18 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
             this.text = that.text;
         }
 
-        static Article fromJsonStr(String serializedArticle) throws JSONException {
-            JSONArray articleTuple = new JSONArray(serializedArticle);
+        @SuppressWarnings("unchecked")
+        static Article fromJsonStr(String serializedArticle) throws IOException {
+        	Object[] articleTuple = mapper.readValue(serializedArticle, Object[].class);
             Article article = new Article();
-            article.text = articleTuple.getString(0);
-            if (articleTuple.length() == 3) {
-                JSONObject metadata = articleTuple.getJSONObject(2);
-                if (metadata.has("r")) {
-                    article.redirect = metadata.getString("r");
+            article.text = String.valueOf(articleTuple[0]);
+            if (articleTuple.length == 3) {
+            	Map metadata = (Map)articleTuple[2];                
+                if (metadata.containsKey("r")) {
+                    article.redirect = String.valueOf(metadata.get("r"));
                 }
-                else if (metadata.has("redirect")) {
-                    article.redirect = metadata.getString("redirect");
+                else if (metadata.containsKey("redirect")) {
+                    article.redirect = String.valueOf(metadata.get("redirect"));
                 }
             }            
             return article;
@@ -214,7 +218,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         }
 
 
-        public Article getArticle() throws IOException, JSONException {
+        public Article getArticle() throws IOException {
             Article a = dictionary.readArticle(articlePointer);
             a.title = this.title;
             a.section = this.section;
@@ -381,8 +385,8 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         }
         
         Article redirect(Article article, int level) throws RedirectError, 
-                                                            IOException, 
-                                                            JSONException {            
+                                                            IOException 
+                                                             {            
             if (level > maxRedirectLevels) {
                 throw new RedirectTooManyLevels();
             }
@@ -404,8 +408,8 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         }
         
         public Article redirect(Article article) throws RedirectError, 
-                                                        IOException, 
-                                                        JSONException {
+                                                        IOException 
+                                                         {
             return redirect(article, 0);
         }
         
@@ -419,49 +423,79 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         }
     }
 
-    public JSONObject       metadata;
+    public Metadata  metadata;
     Header           header;
     RandomAccessFile file;
     String           sha1sum;
-    String           title;
-    String           version;
-    String           description;
-    String           copyright;
-    String           license;
-    String           source;
-    String           lang;
-    String           sitelang;
-
-    public Dictionary(String fileName, Map<String, JSONObject> metadataCache) throws IOException, JSONException {
-        init(new RandomAccessFile(fileName, "r"), metadataCache);
-    }
-
-    public Dictionary(File file, Map<String, JSONObject> metadataCache) throws IOException, JSONException {
-        init(new RandomAccessFile(file, "r"), metadataCache);
+    
+    public static class Metadata {
+		public String title;
+		public String version;
+		public int update;
+		public String description;
+		public String copyright;
+		public String license;
+		public String source;
+		public String lang;
+		public String sitelang;
+		public String aardtools;
+		public String ver;
+		public int article_count;
+		public String article_format;
+		public String article_language;
+		public String index_language;
+		public String name;
+		public String mwlib;
+		public String[] language_links;
+		public HashMap<String, Object> siteinfo;
     }
     
-    private void init(RandomAccessFile file, Map<String, JSONObject> metadataCache) throws IOException, JSONException {
+    static ObjectMapper mapper = new ObjectMapper();
+    static {
+    	mapper.getDeserializationConfig().set(org.codehaus.jackson.map.DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
+    
+    public Dictionary(File file, File cacheDir, Map<UUID, Metadata> knownMeta) throws IOException {
+        init(new RandomAccessFile(file, "r"), cacheDir, knownMeta);
+    }
+    
+    private void init(RandomAccessFile file, File cacheDir, Map<UUID, Metadata> knownMeta) throws IOException {
         this.file = file;
         this.header = new Header(file);
         this.sha1sum = header.sha1sum;
-        String uuidStr = header.uuid.toString();
-        if (metadataCache.containsKey(uuidStr)) {
-        	this.metadata = metadataCache.get(uuidStr);
-        }
-        else {
-        	byte[] rawMeta = new byte[(int) header.metaLength];
-        	file.read(rawMeta);
-        	String metadataStr = decompress(rawMeta);
-        	this.metadata = new JSONObject(metadataStr);
-        }
-        this.title = this.metadata.getString("title");
-        this.version = this.metadata.getString("version");
-        this.description = this.metadata.getString("description");
-        this.copyright = this.metadata.getString("copyright");
-        this.license = this.metadata.getString("license");
-        this.source = this.metadata.getString("source");
-        this.lang = this.metadata.getString("lang");
-        this.sitelang = this.metadata.getString("sitelang");
+        if (knownMeta.containsKey(header.uuid)) {
+        	this.metadata = knownMeta.get(header.uuid);  
+        } else {
+            String uuidStr = header.uuid.toString();            
+            File metadataCacheFile = new File(cacheDir, uuidStr);
+            if (metadataCacheFile.exists()) {
+            	try {
+            		long t0 = System.currentTimeMillis();
+            		this.metadata = mapper.readValue(metadataCacheFile, Metadata.class);
+            		knownMeta.put(header.uuid, this.metadata);
+            		Log.d(TAG, format("Loaded meta for %s from cache in %s", metadataCacheFile.getName(), (System.currentTimeMillis() - t0)));
+            	}
+	        	catch(Exception e) {
+	        		Log.e(TAG, format("Failed to restore meta from cache file %s ", metadataCacheFile.getName()), e);
+	        	}            	
+            }
+            if (this.metadata == null) {
+            	long t0 = System.currentTimeMillis();
+            	byte[] rawMeta = new byte[(int) header.metaLength];
+            	file.read(rawMeta);
+            	String metadataStr = decompress(rawMeta);
+            	this.metadata = mapper.readValue(metadataStr, Metadata.class);
+            	Log.d(TAG, format("Read meta for in %s", header.uuid, (System.currentTimeMillis() - t0)));
+            	knownMeta.put(header.uuid, this.metadata);
+            	try {
+            		mapper.writeValue(metadataCacheFile, this.metadata);
+            		Log.d(TAG, format("Wrote metadata to cache file %s", metadataCacheFile.getName()));
+            	}
+            	catch (IOException e) {
+            		Log.e(TAG, format("Failed to write metadata to cache file %s", metadataCacheFile.getName()), e);
+            	}            	
+            }                    
+        }        
     }
 
     public String getId() {
@@ -496,7 +530,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
     }
 
     public String toString() {
-        return String.format("%s %s/%s(%s)", this.title, this.header.volume, 
+        return String.format("%s %s/%s(%s)", this.metadata.title, this.header.volume, 
                 this.header.of, this.sha1sum);
     };
     
@@ -516,7 +550,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         return this.file.readUTF8(keyLength);
     }
 
-    Article readArticle(long pointer) throws IOException, JSONException {
+    Article readArticle(long pointer) throws IOException {
         long pos = this.header.articleOffset + pointer;
         this.file.seek(pos);
         long articleLength = this.file.readUnsignedInt();
@@ -579,19 +613,20 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         return iterator;
     }
     
-    
+    @SuppressWarnings("unchecked")
     public String getArticleURL(String title) {
-        try {
-            JSONObject siteinfo = this.metadata.getJSONObject("siteinfo");
-            JSONObject general = siteinfo.getJSONObject("general");
-            String server = general.getString("server");
-            String articlePath = general.getString("articlepath");
-            return server + articlePath.replace("$1", title); 
-        }
-        catch (JSONException e) {
-            Log.d("aarddict", "Failed to obtain url for title " + title, e);
-            return null;
-        }        
+    	if (metadata.siteinfo != null){
+        	Map <String, Object> general = (Map <String, Object>)this.metadata.siteinfo.get("general");
+        	if (general != null) {
+        		Object server = general.get("server");
+        		Object articlePath = general.get("articlepath");
+        		if (server != null && articlePath != null) {
+        			return server.toString() + articlePath.toString().replace("$1", title);
+        		}		
+        	}
+    	}
+    	Log.d("aarddict", "Not enough metadata to generate online url for title " + title);
+    	return null;
     }
     
     @Override
@@ -646,7 +681,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
             }
         }
     	finally {
-    		Log.d("d", "Decompressed " + type + " in " + (System.currentTimeMillis() - t0));
+    		Log.d(TAG, "Decompressed " + type + " in " + (System.currentTimeMillis() - t0));
     	}
     }
 
@@ -728,13 +763,13 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
     }
 
     public CharSequence getDisplayTitle() {
-        StringBuilder s = new StringBuilder(this.title);
-        if (this.lang != null) {
-            s.append(String.format(" (%s)", this.lang));
+        StringBuilder s = new StringBuilder(this.metadata.title);
+        if (this.metadata.lang != null) {
+            s.append(String.format(" (%s)", this.metadata.lang));
         }
         else {
-            if (this.sitelang != null) {
-                s.append(String.format(" (%s)", this.sitelang));
+            if (this.metadata.sitelang != null) {
+                s.append(String.format(" (%s)", this.metadata.sitelang));
             }
         }
         if (this.header.of > 1) 

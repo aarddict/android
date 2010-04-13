@@ -1,24 +1,16 @@
 package aarddict.android;
 
-import static java.lang.String.format;
-
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import aarddict.Dictionary;
 import aarddict.Dictionary.RedirectError;
@@ -65,10 +57,7 @@ public class DictionaryService extends Service {
         return binder;
     }
 
-    // This is the object that receives interactions from clients.  See
-    // RemoteService for a more complete example.
-    private final IBinder binder = new LocalBinder();
-    
+    private final IBinder binder = new LocalBinder();    
 
 	@Override
 	public void onCreate() {
@@ -116,28 +105,14 @@ public class DictionaryService extends Service {
 	    	}
     	}
     	
-        Map<String, JSONObject> metaCache = new HashMap<String, JSONObject>();
-        File[] metaFiles = metaCacheDir.listFiles();
-        for (File metaFile : metaFiles) {
-        	long t0 = System.currentTimeMillis();
-        	if (!metaCache.containsKey(metaFile.getName())) {
-	        	try {
-	        		JSONObject meta = new JSONObject(readFile(metaFile.getAbsolutePath()));
-	        		metaCache.put(metaFile.getName(), meta);
-	        		Log.d(TAG, format("Loaded meta for %s from cache in %s", metaFile.getName(), (System.currentTimeMillis() - t0)));
-	        	}
-	        	catch(Exception e) {
-	        		Log.e(TAG, "Failed to restore meta from cache for " + metaFile.getName(), e);
-	        	}
-        	}
-        }
-    	
+        Map<UUID, Dictionary.Metadata> knownMeta = new HashMap<UUID, Dictionary.Metadata>();
+                    
         Map<File, Exception> errors = new HashMap<File, Exception>();
         for (int i = 0;  i < files.size(); i++) {
         	File file = files.get(i);
         	Dictionary d = null;
             try {
-                d = new Dictionary(file, metaCache);
+                d = new Dictionary(file, metaCacheDir, knownMeta);
                 dicts.add(d);
                 Intent notifyOpened = new Intent(OPENED_DICT);
                 notifyOpened.putExtra("title", d.getDisplayTitle());
@@ -155,19 +130,6 @@ public class DictionaryService extends Service {
                 sendBroadcast(notifyFailed);  
                 Thread.yield();
                 errors.put(file, e);
-            }
-            if (d != null) {
-	            if (!metaCache.containsKey(d.getDictionaryId().toString())) {
-	            	Log.d(TAG, format("Adding metadata for %s to cache", d.getDictionaryId()));                	
-	            	metaCache.put(d.getDictionaryId().toString(), d.metadata);
-	            	File metaFile = new File(metaCacheDir, d.getDictionaryId().toString());
-	            	try {
-	            		writeFile(metaFile.getAbsolutePath(), d.metadata.toString());
-	            	}
-	            	catch (Exception e) {
-	            		Log.e(TAG, format("Failed to save metadata for %s in cache file", metaFile.getAbsoluteFile()), e);
-	            	}
-	            }	            
             }
         }        
     	sendBroadcast(new Intent(OPEN_FINISHED));
@@ -215,30 +177,7 @@ public class DictionaryService extends Service {
         }
         return candidates;
     }
-    
-    private String readFile(String name) throws IOException {
-    	InputStream fstream = new FileInputStream(name);
-        final char[] buffer = new char[0x1000];
-        StringBuilder out = new StringBuilder();
-        Reader in = new InputStreamReader(fstream, "UTF-8");
-        int read;
-        do {
-          read = in.read(buffer, 0, buffer.length);
-          if (read>0) {
-            out.append(buffer, 0, read);
-          }
-        } while (read>=0);
-        return out.toString();
-    }
-    
-    private void writeFile(String name, String text) throws IOException {
-        FileWriter fstream = new FileWriter(name);
-        BufferedWriter out = new BufferedWriter(fstream);
-        out.write(text);
-        fstream.close();
-        out.close();
-    }
-    
+        
     public Iterator<Dictionary.Entry> lookup(CharSequence word) {
         return dicts.bestMatch(word.toString());
     }

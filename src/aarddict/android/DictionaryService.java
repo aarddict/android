@@ -10,8 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.json.JSONException;
-
 import aarddict.Dictionary;
 import aarddict.Dictionary.RedirectError;
 import android.app.Service;
@@ -182,7 +180,7 @@ public class DictionaryService extends Service {
         return dicts.bestMatch(word.toString());
     }
 
-    public Dictionary.Article redirect(Dictionary.Article article) throws RedirectError, IOException, JSONException {
+    public Dictionary.Article redirect(Dictionary.Article article) throws RedirectError, IOException {
         return dicts.redirect(article);
     }
 

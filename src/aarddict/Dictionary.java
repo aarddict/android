@@ -771,6 +771,11 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
             if (this.metadata.sitelang != null) {
                 s.append(String.format(" (%s)", this.metadata.sitelang));
             }
+            else {
+                if (this.metadata.index_language != null && this.metadata.article_language != null) {
+                    s.append(String.format(" (%s-%s)", this.metadata.index_language, this.metadata.article_language));
+                }        	
+            }            
         }
         if (this.header.of > 1) 
                s.append(String.format(" Vol. %s", this.header.volume));        

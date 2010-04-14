@@ -186,5 +186,9 @@ public class DictionaryService extends Service {
 
     public Dictionary getDictionary(String dictionaryId) {
         return dicts.getDictionary(dictionaryId);
-    }    
+    }
+    
+    public Dictionary.Collection getDictionaries() {
+    	return dicts;
+    }
 }

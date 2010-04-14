@@ -12,7 +12,8 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".ArticleViewActivity"/>        
+        <activity android:name=".ArticleViewActivity"/>
+        <activity android:name=".DictionariesActivity"/>               
         <service android:name=".DictionaryService"/>
 
     </application>

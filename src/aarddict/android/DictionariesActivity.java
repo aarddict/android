@@ -3,14 +3,12 @@ package aarddict.android;
 import aarddict.Dictionary;
 import android.app.Activity;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.text.TextUtils;
 import android.util.Log;
-import android.view.LayoutInflater;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -19,7 +17,6 @@ import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.TwoLineListItem;
 
 public class DictionariesActivity extends Activity {
 
@@ -97,6 +94,10 @@ public class DictionariesActivity extends Activity {
         	CharSequence title = dicts.get(position).getDisplayTitle();
         	if (convertView == null) {
         		renderer = new TextView(DictionariesActivity.this);
+        		renderer.setLayoutParams(new ListView.LayoutParams(ListView.LayoutParams.FILL_PARENT, 
+        				ListView.LayoutParams.FILL_PARENT));
+        		renderer.setPadding(10, 10, 10, 10);
+        		renderer.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);        		        		
         	} else {
         		renderer = (TextView)convertView; 
         	}        	

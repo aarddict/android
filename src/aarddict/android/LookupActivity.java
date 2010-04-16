@@ -225,7 +225,7 @@ public class LookupActivity extends Activity {
         next.setClass(this, ArticleViewActivity.class);                       
         next.putExtra("word", theWord.title);        
         next.putExtra("section", theWord.section);
-        next.putExtra("dictionaryId", theWord.dictionary.getId());
+        next.putExtra("volumeId", theWord.dictionary.getId());
         next.putExtra("articlePointer", theWord.articlePointer);
         startActivity(next);
     }

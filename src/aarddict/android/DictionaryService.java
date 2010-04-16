@@ -185,8 +185,8 @@ public class DictionaryService extends Service {
         return dicts.redirect(article);
     }
 
-    public Dictionary getDictionary(String dictionaryId) {
-        return dicts.getDictionary(dictionaryId);
+    public Dictionary getDictionary(String volumeId) {
+        return dicts.getDictionary(volumeId);
     }
     
     public Dictionary.Collection getDictionaries() {

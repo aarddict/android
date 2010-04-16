@@ -141,9 +141,9 @@ public class ArticleViewActivity extends Activity {
                 Intent intent = getIntent();
                 String word = intent.getStringExtra("word");                
                 String section = intent.getStringExtra("section");
-                String dictionaryId = intent.getStringExtra("dictionaryId");
+                String volumeId = intent.getStringExtra("volumeId");
                 long articlePointer = intent.getLongExtra("articlePointer", -1);            	
-            	showArticle(dictionaryId, articlePointer, word, section, true);
+            	showArticle(volumeId, articlePointer, word, section, true);
             }
 
             public void onServiceDisconnected(ComponentName className) {
@@ -258,9 +258,9 @@ public class ArticleViewActivity extends Activity {
         }
     }
     
-    private void showArticle(String dictionaryId, long articlePointer, String word, String section, boolean clearForward) {
+    private void showArticle(String volumeId, long articlePointer, String word, String section, boolean clearForward) {
         Log.d(TAG, "word: " + word);
-        Log.d(TAG, "dictionaryId: " + dictionaryId);
+        Log.d(TAG, "dictionaryId: " + volumeId);
         Log.d(TAG, "articlePointer: " + articlePointer);
         Log.d(TAG, "section: " + section);
         
@@ -269,9 +269,9 @@ public class ArticleViewActivity extends Activity {
 //            return;
 //        }
         
-        Dictionary d = dictionaryService.getDictionary(dictionaryId);
+        Dictionary d = dictionaryService.getDictionary(volumeId);
         if (d == null) {
-            showError(String.format("Dictionary %s not found", dictionaryId));
+            showError(String.format("Dictionary %s not found", volumeId));
             return;
         }
         

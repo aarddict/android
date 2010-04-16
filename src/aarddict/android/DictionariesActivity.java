@@ -1,7 +1,6 @@
 package aarddict.android;
 
 import java.util.ArrayList;
-import java.util.Formatter;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -82,6 +81,7 @@ public class DictionariesActivity extends Activity {
 		LayoutInflater inflater;    	
 		List<List<Dictionary>> volumes;
 
+		@SuppressWarnings("unchecked")
         public DictListAdapter(Map<UUID, List<Dictionary>> volumes) {
 			this.volumes = new ArrayList();
 			this.volumes.addAll(volumes.values());

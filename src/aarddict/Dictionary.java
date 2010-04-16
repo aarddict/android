@@ -413,9 +413,9 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
             return redirect(article, 0);
         }
         
-        public Dictionary getDictionary(String dictionaryId) {
+        public Dictionary getDictionary(String volumeId) {
             for (Dictionary d : this) {
-                if (d.sha1sum.equals(dictionaryId)) {
+                if (d.sha1sum.equals(volumeId)) {
                     return d;
                 }
             }

@@ -2,4 +2,18 @@
 <resources>
     
     <string name="app_name">Aard Dictionary</string>
+    <string name="main_title">%s - %s</string>
+    <string name="short_dict_info">%s in %s, %s open</string>
+    <plurals name="dictionaries">
+        <item quantity="one">%d dictionary</item>
+        <item quantity="other">%d dictionaries</item>        
+    </plurals>    
+    <plurals name="articles">
+        <item quantity="one">%d article</item>
+        <item quantity="other">%,d articles</item>        
+    </plurals>
+    <plurals name="volumes">
+        <item quantity="one">%d volume</item>
+        <item quantity="other">%d volumes</item>        
+    </plurals>    
 </resources>

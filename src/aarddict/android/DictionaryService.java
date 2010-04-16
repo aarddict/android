@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -190,5 +191,18 @@ public class DictionaryService extends Service {
     
     public Dictionary.Collection getDictionaries() {
     	return dicts;
+    }
+    
+    @SuppressWarnings("unchecked")
+    public Map<UUID, List<Dictionary>> getVolumes() {
+    	Map<UUID, List<Dictionary>> result = new LinkedHashMap();
+    	for (Dictionary d : dicts) {
+    		UUID dictionaryId = d.getDictionaryId();
+			if (!result.containsKey(dictionaryId)) {
+				result.put(dictionaryId, new ArrayList<Dictionary>());
+			}
+			result.get(dictionaryId).add(d);
+    	}    	    	
+    	return result;
     }
 }

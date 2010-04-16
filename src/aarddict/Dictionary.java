@@ -75,7 +75,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
 
     }
 
-    static class Header {
+    public static class Header {
 
         public final String signature;
         public final String sha1sum;
@@ -424,7 +424,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
     }
 
     public Metadata  metadata;
-    Header           header;
+    public Header           header;
     RandomAccessFile file;
     String           sha1sum;
     
@@ -763,6 +763,10 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
     }
 
     public CharSequence getDisplayTitle() {
+    	return getDisplayTitle(true);
+    }
+    
+    public CharSequence getDisplayTitle(boolean withVolumeNumber) {
         StringBuilder s = new StringBuilder(this.metadata.title);
         if (this.metadata.lang != null) {
             s.append(String.format(" (%s)", this.metadata.lang));
@@ -777,7 +781,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
                 }        	
             }            
         }
-        if (this.header.of > 1) 
+        if (this.header.of > 1 && withVolumeNumber) 
                s.append(String.format(" Vol. %s", this.header.volume));        
         return s.toString();
     }

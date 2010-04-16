@@ -22,6 +22,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -60,6 +61,7 @@ public class LookupActivity extends Activity {
         public void onServiceConnected(ComponentName className, IBinder service) {
         	dictionaryService = ((DictionaryService.LocalBinder)service).getService();
         	Log.d(TAG, "Service connected: " + dictionaryService);
+        	updateTitle();
         }
 
         public void onServiceDisconnected(ComponentName className) {
@@ -70,6 +72,15 @@ public class LookupActivity extends Activity {
             LookupActivity.this.finish();
         }
     };    
+    
+    void updateTitle() {
+    	int dictCount = dictionaryService.getVolumes().size();
+    	Resources r = getResources();
+		String dictionaries = r.getQuantityString(R.plurals.dictionaries, dictCount);
+    	String appName = r.getString(R.string.app_name);
+    	String mainTitle = r.getString(R.string.main_title);
+    	setTitle(String.format(mainTitle, appName, String.format(dictionaries, dictCount)));    	
+    }
     
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -163,6 +174,7 @@ public class LookupActivity extends Activity {
 				}
 				if (a.equals(DictionaryService.OPEN_FINISHED)) {
 					progressDialog.dismiss();
+					updateTitle();					
 				}								
 			}
 		};

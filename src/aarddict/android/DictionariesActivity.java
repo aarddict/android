@@ -48,7 +48,9 @@ public class DictionariesActivity extends Activity {
     };    
 
     private void init() {
-    	listView.setAdapter(new DictListAdapter(dictionaryService.getVolumes()));    	    
+    	DictListAdapter adapter = new DictListAdapter(dictionaryService.getVolumes());
+    	listView.setAdapter(adapter);
+    	listView.setOnItemClickListener(adapter);    	
     }
     
     
@@ -102,6 +104,9 @@ public class DictionariesActivity extends Activity {
         }
         
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        	Intent i = new Intent(DictionariesActivity.this, DictionaryInfoActivity.class);
+        	i.putExtra("volumeId", volumes.get(position).get(0).getId());
+        	startActivity(i);
         }
 
 		public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {

@@ -15,5 +15,5 @@
     <plurals name="volumes">
         <item quantity="one">%d volume</item>
         <item quantity="other">%d volumes</item>        
-    </plurals>    
+    </plurals>
 </resources>

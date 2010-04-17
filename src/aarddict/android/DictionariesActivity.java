@@ -1,8 +1,12 @@
 package aarddict.android;
 
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
 
 import aarddict.Dictionary;
@@ -21,6 +25,7 @@ import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -40,6 +45,14 @@ public class DictionariesActivity extends Activity {
 	ListView listView;
     DictionaryService 	dictionaryService;    
     
+    class VerifyRecord {
+    	public UUID uuid;
+    	public Date date;
+    	public boolean ok;
+    }
+    
+    Map<UUID, VerifyRecord> verifyData = new HashMap();
+    
     ServiceConnection connection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
         	dictionaryService = ((DictionaryService.LocalBinder)service).getService();
@@ -54,13 +67,15 @@ public class DictionariesActivity extends Activity {
                     Toast.LENGTH_LONG).show();
             DictionariesActivity.this.finish();
         }
-    };    
+    };
+
+	private DictListAdapter dataAdapter;    
 
     private void init() {
-    	DictListAdapter adapter = new DictListAdapter(dictionaryService.getVolumes());
-    	listView.setAdapter(adapter);
-    	listView.setOnItemClickListener(adapter);    	
-    	listView.setOnItemLongClickListener(adapter);
+    	dataAdapter = new DictListAdapter(dictionaryService.getVolumes());
+    	listView.setAdapter(dataAdapter);
+    	listView.setOnItemClickListener(dataAdapter);    	
+    	listView.setOnItemLongClickListener(dataAdapter);
     }
     
     
@@ -81,6 +96,7 @@ public class DictionariesActivity extends Activity {
     
     protected void onDestroy() {
         super.onDestroy();
+        dataAdapter.destroy();
         unbindService(connection);
     }
 
@@ -92,13 +108,20 @@ public class DictionariesActivity extends Activity {
 
 		LayoutInflater inflater;    	
 		List<List<Dictionary>> volumes;
+		Timer timer = new Timer();
+		long TIME_UPDATE_PERIOD = 60*1000;
 
 		@SuppressWarnings("unchecked")
         public DictListAdapter(Map<UUID, List<Dictionary>> volumes) {
 			this.volumes = new ArrayList();
 			this.volumes.addAll(volumes.values());
             inflater = (LayoutInflater) getSystemService(
-                    Context.LAYOUT_INFLATER_SERVICE);        	
+                    Context.LAYOUT_INFLATER_SERVICE);
+            timer.scheduleAtFixedRate(new TimerTask() {
+				public void run() {
+					updateView();
+				}
+            }, TIME_UPDATE_PERIOD, TIME_UPDATE_PERIOD);
         }
         
         public int getCount() {
@@ -111,6 +134,10 @@ public class DictionariesActivity extends Activity {
 
         public long getItemId(int position) {
             return position;
+        }
+        
+        public void destroy() {
+        	timer.cancel();
         }
         
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -147,7 +174,13 @@ public class DictionariesActivity extends Activity {
 			public void verified(final Dictionary d, final boolean ok) {
 				verifiedCount++;
 				Log.i(TAG, String.format("Verified %s: %s", d.getDisplayTitle(), (ok ? "ok" : "corrupted")));
+				VerifyRecord record = new VerifyRecord();
+				record.uuid = d.getDictionaryId();
+				record.ok = ok;
+				record.date = new Date();
+				verifyData.put(record.uuid, record);									
 				if (!ok) {
+					updateView();
 					progressDialog.dismiss();
 					CharSequence message = String.format("%s is corrupted", getTitle(d, true));					
 					showError(message);					
@@ -160,10 +193,19 @@ public class DictionariesActivity extends Activity {
 						}
 					});					
 					if (verifiedCount == max) {
+						updateView();
 						progressDialog.dismiss();					
 					}					
 				}
 			}			
+        }
+        
+        private void updateView() {
+			handler.post(new Runnable() {
+				public void run() {
+					notifyDataSetChanged();
+				}
+			});        	
         }
         
 		private void showError(final CharSequence message) {
@@ -245,7 +287,15 @@ public class DictionariesActivity extends Activity {
             String totalVolumesStr = r.getQuantityString(R.plurals.volumes, d.header.of, d.header.of);
             String volumesStr = r.getQuantityString(R.plurals.volumes, volCount, volCount);
             String shortInfo = r.getString(R.string.short_dict_info, articleStr, totalVolumesStr, volumesStr);
-            view.getText2().setText(shortInfo);
+            if (verifyData.containsKey(d.getDictionaryId())) {
+            	VerifyRecord record = verifyData.get(d.getDictionaryId()); 
+            	CharSequence dateStr = DateUtils.getRelativeTimeSpanString(record.date.getTime());
+            	String resultStr = record.ok ? "ok" : "corrupted";
+            	view.getText2().setText(String.format("%s\nData integrity verified %s: %s", shortInfo, dateStr, resultStr));
+            }
+            else {
+            	view.getText2().setText(shortInfo+"\nData integrity not verified");
+            }            
         	return view;
         }
         

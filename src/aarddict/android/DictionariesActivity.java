@@ -1,5 +1,12 @@
 package aarddict.android;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -45,13 +52,13 @@ public class DictionariesActivity extends Activity {
 	ListView listView;
     DictionaryService 	dictionaryService;    
     
-    class VerifyRecord {
+    public static class VerifyRecord implements Serializable {
     	public UUID uuid;
     	public Date date;
     	public boolean ok;
     }
     
-    Map<UUID, VerifyRecord> verifyData = new HashMap();
+    Map<UUID, VerifyRecord> verifyData = new HashMap(); 
     
     ServiceConnection connection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
@@ -89,9 +96,13 @@ public class DictionariesActivity extends Activity {
         setContentView(listView);
         setTitle("Dictionaries");        
         getWindow().setFeatureDrawableResource(Window.FEATURE_LEFT_ICON, R.drawable.aarddict);
-                
+        try {
+			loadVerifyData();
+		} catch (Exception e) {
+			Log.e(TAG, "Failed to load verify data", e);
+		}
         Intent dictServiceIntent = new Intent(this, DictionaryService.class);                        
-        bindService(dictServiceIntent, connection, 0);
+        bindService(dictServiceIntent, connection, 0);        
     }
     
     protected void onDestroy() {
@@ -174,13 +185,8 @@ public class DictionariesActivity extends Activity {
 			public void verified(final Dictionary d, final boolean ok) {
 				verifiedCount++;
 				Log.i(TAG, String.format("Verified %s: %s", d.getDisplayTitle(), (ok ? "ok" : "corrupted")));
-				VerifyRecord record = new VerifyRecord();
-				record.uuid = d.getDictionaryId();
-				record.ok = ok;
-				record.date = new Date();
-				verifyData.put(record.uuid, record);									
 				if (!ok) {
-					updateView();
+					recordVerifyData(d.getDictionaryId(), ok);					
 					progressDialog.dismiss();
 					CharSequence message = String.format("%s is corrupted", getTitle(d, true));					
 					showError(message);					
@@ -193,11 +199,26 @@ public class DictionariesActivity extends Activity {
 						}
 					});					
 					if (verifiedCount == max) {
-						updateView();
+						recordVerifyData(d.getDictionaryId(), ok);
 						progressDialog.dismiss();					
 					}					
 				}
 			}			
+        }
+        
+        private void recordVerifyData(UUID uuid, boolean ok) {
+			VerifyRecord record = new VerifyRecord();
+			record.uuid = uuid;
+			record.ok = ok;
+			record.date = new Date();
+			verifyData.put(record.uuid, record);
+			try {
+				saveVerifyData();
+			}
+			catch (Exception e) {
+				Log.e(TAG, "Failed to save verify data", e);
+			}
+			updateView();
         }
         
         private void updateView() {
@@ -305,6 +326,23 @@ public class DictionariesActivity extends Activity {
             return item;
         }
         
+    }   
 
+    void saveVerifyData() throws IOException {
+    	File verifyDir = getDir("verify", 0);
+    	File verifyFile = new File(verifyDir, "verifydata");
+    	FileOutputStream fout = new FileOutputStream(verifyFile);
+    	ObjectOutputStream oout = new ObjectOutputStream(fout);
+    	oout.writeObject(verifyData);
+    }
+
+    void loadVerifyData() throws IOException, ClassNotFoundException {
+    	File verifyDir = getDir("verify", 0);
+    	File verifyFile = new File(verifyDir, "verifydata");
+    	if (verifyFile.exists()) {
+    		FileInputStream fin = new FileInputStream(verifyFile);
+    		ObjectInputStream oin = new ObjectInputStream(fin);
+    		verifyData  = (Map<UUID, VerifyRecord>)oin.readObject();
+    	}
     }    
 }

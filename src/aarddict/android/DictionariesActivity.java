@@ -6,13 +6,20 @@ import java.util.Map;
 import java.util.UUID;
 
 import aarddict.Dictionary;
+import aarddict.Dictionary.VerifyProgressListener;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.DialogInterface.OnCancelListener;
+import android.content.DialogInterface.OnClickListener;
 import android.content.res.Resources;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -29,8 +36,10 @@ public class DictionariesActivity extends Activity {
 
 	private final static String TAG = DictionariesActivity.class.getName();
 	
+	final Handler       handler = new Handler();
 	ListView listView;
     DictionaryService 	dictionaryService;    
+    
     ServiceConnection connection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
         	dictionaryService = ((DictionaryService.LocalBinder)service).getService();
@@ -51,6 +60,7 @@ public class DictionariesActivity extends Activity {
     	DictListAdapter adapter = new DictListAdapter(dictionaryService.getVolumes());
     	listView.setAdapter(adapter);
     	listView.setOnItemClickListener(adapter);    	
+    	listView.setOnItemLongClickListener(adapter);
     }
     
     
@@ -109,10 +119,117 @@ public class DictionariesActivity extends Activity {
         	startActivity(i);
         }
 
+        class ProgressListener implements VerifyProgressListener {
+
+        	boolean proceed = true;
+        	ProgressDialog progressDialog;
+        	int max;
+        	int verifiedCount = 0;
+        	
+        	ProgressListener(ProgressDialog progressDialog, int max) {
+        		this.progressDialog = progressDialog;
+        		this.max = max;
+        	}
+        	
+			@Override
+			public boolean updateProgress(final Dictionary d, final double progress) {
+				handler.post(new Runnable() {
+					public void run() {
+						CharSequence m = getTitle(d, true);
+						progressDialog.setMessage(m);
+						progressDialog.setProgress((int)(100*progress/max));
+					}
+				});
+				return proceed;
+			}
+
+			@Override
+			public void verified(final Dictionary d, final boolean ok) {
+				verifiedCount++;
+				Log.i(TAG, String.format("Verified %s: %s", d.getDisplayTitle(), (ok ? "ok" : "corrupted")));
+				if (!ok) {
+					progressDialog.dismiss();
+					CharSequence message = String.format("%s is corrupted", getTitle(d, true));					
+					showError(message);					
+				} else {
+					handler.post(new Runnable() {
+						public void run() {
+							Toast.makeText(DictionariesActivity.this, 
+									String.format("%s is ok", getTitle(d, true)), 
+									Toast.LENGTH_SHORT).show();
+						}
+					});					
+					if (verifiedCount == max) {
+						progressDialog.dismiss();					
+					}					
+				}
+			}			
+        }
+        
+		private void showError(final CharSequence message) {
+			handler.post(new Runnable() {
+				public void run() {
+			        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(DictionariesActivity.this);
+			        dialogBuilder.setTitle("Error").setMessage(message).setNeutralButton("Dismiss", new OnClickListener() {            
+			            @Override
+			            public void onClick(DialogInterface dialog, int which) {
+			                dialog.dismiss();
+			            }
+			        });
+			        dialogBuilder.show();						
+				}
+			});
+		}
+		
 		public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-			return false;
+			final List<Dictionary> allDictVols = volumes.get(position);
+			final ProgressDialog progressDialog = new ProgressDialog(DictionariesActivity.this);
+			progressDialog.setIndeterminate(false);
+	        progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+	        progressDialog.setTitle("Verifying");
+	        progressDialog.setMessage(getTitle(allDictVols.get(0), false));
+	        progressDialog.setCancelable(true);
+			final ProgressListener progressListener = new ProgressListener(progressDialog, allDictVols.size());	        
+	        
+			Runnable verify = new Runnable() {																			
+				@Override
+				public void run() {
+					for (Dictionary d : allDictVols) {						
+						try {
+							d.verify(progressListener);
+						} catch (Exception e) {
+							Log.e(TAG, "There was an error verifying volume " + d.getId(), e);
+							progressListener.proceed = false;
+							progressDialog.dismiss();
+							showError(String.format("Error encountered while verifying %s: %s", d.getDisplayTitle(), e.getLocalizedMessage()));
+						}
+					}
+				}
+			};
+
+	        progressDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "Cancel", new OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+					progressListener.proceed = false;					
+				}
+			});			
+	        progressDialog.setOnCancelListener(new OnCancelListener() {
+				
+				@Override
+				public void onCancel(DialogInterface dialog) {
+					progressListener.proceed = false;										
+				}
+			});
+	        Thread t = new Thread(verify);
+	        t.setPriority(Thread.MIN_PRIORITY);
+	        t.start();
+	        progressDialog.show();
+			return true;
 		}
         
+		CharSequence getTitle(Dictionary d, boolean withVol) {
+			return new StringBuilder(d.getDisplayTitle(withVol)).append(" ").append(d.metadata.version);			
+		}
+		
         public View getView(int position, View convertView, ViewGroup parent) {
         	List<Dictionary> allDictVols = volumes.get(position);
         	int volCount = allDictVols.size();
@@ -121,7 +238,7 @@ public class DictionariesActivity extends Activity {
             TwoLineListItem view = (convertView != null) ? (TwoLineListItem) convertView :
                 createView(parent);
                         
-            view.getText1().setText(new StringBuilder(d.getDisplayTitle(false)).append(" ").append(d.metadata.version));
+            view.getText1().setText(getTitle(d, false));
             
             Resources r = getResources();
 			String articleStr = r.getQuantityString(R.plurals.articles, d.metadata.article_count, d.metadata.article_count);            

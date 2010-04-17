@@ -2,14 +2,20 @@ package aarddict;
 
 import static java.lang.String.format;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
 import java.nio.charset.Charset;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -427,6 +433,8 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
     public Header           header;
     RandomAccessFile file;
     String           sha1sum;
+
+	private File origFile;
     
     public static class Metadata {
 		public String title;
@@ -456,6 +464,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
     }
     
     public Dictionary(File file, File cacheDir, Map<UUID, Metadata> knownMeta) throws IOException {
+    	this.origFile = file;
         init(new RandomAccessFile(file, "r"), cacheDir, knownMeta);
     }
     
@@ -785,4 +794,32 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
                s.append(String.format(" Vol. %s", this.header.volume));        
         return s.toString();
     }
+    
+    public static interface VerifyProgressListener {
+    	boolean updateProgress(Dictionary d, double progress);
+    	void verified(Dictionary d, boolean ok);
+    }
+    
+    public void verify(VerifyProgressListener listener) throws IOException, NoSuchAlgorithmException {    	
+    	FileInputStream fis = new FileInputStream(origFile);
+    	fis.skip(44);
+    	byte[] buff = new byte[1 << 16];    	
+    	MessageDigest m = MessageDigest.getInstance("SHA-1");
+    	int readCount;
+    	long totalReadCount = 0;    	
+    	double totalBytes = origFile.length() - 44;
+    	boolean proceed = true;
+    	while ((readCount=fis.read(buff)) != -1) {
+    		m.update(buff, 0, readCount);
+    		totalReadCount += readCount;
+    		proceed = listener.updateProgress(this, totalReadCount/totalBytes);    		
+    	}    	
+    	fis.close();
+    	if (proceed) {
+    		BigInteger b = new BigInteger(1, m.digest());
+    		String calculated = b.toString(16);
+    		Log.d(TAG, "calculated: " + calculated + " actual: " + sha1sum);
+    		listener.verified(this, calculated.equals(this.sha1sum));
+    	}
+    }    
 }

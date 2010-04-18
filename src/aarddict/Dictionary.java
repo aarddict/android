@@ -26,6 +26,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.WeakHashMap;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
@@ -636,12 +637,19 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
     	return null;
     }
     
+    Map <Integer, Entry> entryCache = new WeakHashMap<Integer, Entry>(100);
+    
     @Override
     public Entry get(int index) {
+    	if (entryCache.containsKey(index)) {
+    		return entryCache.get(index);
+    	}
         try {
             IndexItem indexItem = readIndexItem(index);
             String title = readKey(indexItem.keyPointer);
-            return new Entry(this, title, indexItem.articlePointer);
+            Entry entry = new Entry(this, title, indexItem.articlePointer);
+            entryCache.put(index, entry);
+            return entry;
         }
         catch (IOException e) {
             throw new RuntimeException(e);

@@ -207,8 +207,9 @@ public class LookupActivity extends Activity {
             }
         };        
         handler.post(updateProgress);
-    	    	
+    	long t0 = System.currentTimeMillis();
         Iterator<Dictionary.Entry> results = dictionaryService.lookup(word);
+        Log.d(TAG, "Looked up " + word + " in " + (System.currentTimeMillis() - t0));
         final WordAdapter wordAdapter = new WordAdapter(results);
         final Runnable updateWordList = new Runnable() {            
             @Override

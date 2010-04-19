@@ -9,6 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import aarddict.Dictionary;
+import aarddict.Dictionary.Article;
 import aarddict.Dictionary.RedirectNotFound;
 import aarddict.Dictionary.RedirectTooManyLevels;
 import android.app.Activity;
@@ -73,7 +74,7 @@ public class ArticleViewActivity extends Activity {
             
             public void onProgressChanged(WebView view, int newProgress) {
                 Log.d(TAG, "Progress: " + newProgress);
-                setProgress(newProgress * 1000);
+                setProgress(5000 + newProgress * 50);
             }
         });
                        
@@ -106,7 +107,7 @@ public class ArticleViewActivity extends Activity {
             }
             
             @Override
-            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+            public boolean shouldOverrideUrlLoading(WebView view, final String url) {
                 Log.d(TAG, "URL clicked: " + url);
                 String urlLower = url.toLowerCase(); 
                 if (urlLower.startsWith("http://") ||
@@ -116,16 +117,25 @@ public class ArticleViewActivity extends Activity {
                     urlLower.startsWith("mailto:")) {
                     Intent browserIntent = new Intent(Intent.ACTION_VIEW, 
                                                 Uri.parse(url)); 
-                    startActivity(browserIntent);                     
-                    return true;
+                    startActivity(browserIntent);                                         
                 }
-                Iterator<Dictionary.Entry> a = dictionaryService.lookup(url);
-                if (a.hasNext()) {
-                    Dictionary.Entry entry = a.next();
-                    showArticle(entry, true);
-                }                
                 else {
-                    showMessage(String.format("Article \"%s\" not found", url));
+                    new Thread(new Runnable() {
+    					public void run() {
+    						final Iterator<Dictionary.Entry> a = dictionaryService.lookup(url);
+    						runOnUiThread(new Runnable() {
+								public void run() {
+				                    if (a.hasNext()) {
+				                        Dictionary.Entry entry = a.next();
+				                        showArticle(entry);
+				                    }                
+				                    else {
+				                        showMessage(String.format("Article \"%s\" not found", url));
+				                    }                										
+								}
+							});
+    					}
+    				}).start();
                 }
                 return true;
             }
@@ -143,7 +153,7 @@ public class ArticleViewActivity extends Activity {
                 String section = intent.getStringExtra("section");
                 String volumeId = intent.getStringExtra("volumeId");
                 long articlePointer = intent.getLongExtra("articlePointer", -1);            	
-            	showArticle(volumeId, articlePointer, word, section, true);
+            	showArticle(volumeId, articlePointer, word, section);
             }
 
             public void onServiceDisconnected(ComponentName className) {
@@ -183,7 +193,7 @@ public class ArticleViewActivity extends Activity {
                 goToSection(prev.section);
             }   
             else {
-                showArticle(prev, false);
+                showArticle(prev);
             }
             return true;            
         }
@@ -198,7 +208,7 @@ public class ArticleViewActivity extends Activity {
                 backItems.add(next);
                 goToSection(next.section);                
             } else {
-                showArticle(next, false);
+                showArticle(next);
             }
         }
         return false;
@@ -258,17 +268,12 @@ public class ArticleViewActivity extends Activity {
         }
     }
     
-    private void showArticle(String volumeId, long articlePointer, String word, String section, boolean clearForward) {
+    private void showArticle(String volumeId, long articlePointer, String word, String section) {
         Log.d(TAG, "word: " + word);
         Log.d(TAG, "dictionaryId: " + volumeId);
         Log.d(TAG, "articlePointer: " + articlePointer);
         Log.d(TAG, "section: " + section);
-        
-//        if (articlePointer > -1) {
-//            showError(String.format("Invalid article pointer for article \"%s\" in dictionary %s", word, dictionaryId));
-//            return;
-//        }
-        
+                
         Dictionary d = dictionaryService.getDictionary(volumeId);
         if (d == null) {
             showError(String.format("Dictionary %s not found", volumeId));
@@ -277,39 +282,65 @@ public class ArticleViewActivity extends Activity {
         
         Dictionary.Entry entry = new Dictionary.Entry(d, word, articlePointer);
         entry.section = section;
-        showArticle(entry, clearForward);
+        showArticle(entry);
     }    
     
-    private void showArticle(Dictionary.Entry entry, boolean clearForward) {
-        try {
-            showArticle(entry.getArticle(), true);
-        }
-        catch (Exception e) {
-            showError(String.format("There was an error loading article \"%s\"", entry.title));
-        }
+    private void showArticle(final Dictionary.Entry entry) {
+    	forwardItems.clear();    	
+    	setTitle(entry.title);
+    	setProgress(500);
+    	new Thread(
+    			new Runnable() {
+					public void run() {						
+				        try {
+					        final Article a = entry.getArticle();
+							runOnUiThread( new Runnable() {							
+								public void run() {
+									showArticle(a);							
+								}
+							});
+				        }
+				        catch (Exception e) {
+							runOnUiThread( new Runnable() {							
+								public void run() {
+									showError(String.format("There was an error loading article \"%s\"", entry.title));
+								}
+							});				        					            
+				        }    							
+					}
+				}).start();     	
     }
     
-    private void showArticle(Dictionary.Article a, boolean clearForward) {
+    private void showArticle(Dictionary.Article a) {
         try {
             a = dictionaryService.redirect(a);
         }            
-        catch (RedirectNotFound e) {
+        catch (RedirectNotFound e) {        	
+        	setProgress(10000);     
+        	if (!backItems.isEmpty()) {
+        		setTitle(backItems.get(0).title);
+        	}
             showMessage(String.format("Redirect \"%s\" not found", a.getRedirect()));
             return;
         }
         catch (RedirectTooManyLevels e) {
+        	setProgress(10000);
+        	if (!backItems.isEmpty()) {
+        		setTitle(backItems.get(0).title);
+        	}        	
             showMessage(String.format("Too many redirects for \"%s\"", a.getRedirect()));
             return;
         }
         catch (Exception e) {
+        	setProgress(10000);
+        	if (!backItems.isEmpty()) {
+        		setTitle(backItems.get(0).title);
+        	}        	
             showError(String.format("There was an error loading article \"%s\"", a.title));
             return;
         }
-        if (clearForward) {
-            forwardItems.clear();
-        }
         backItems.add(a);
-        setProgress(0);
+        setProgress(5000);
         setTitle(a.title);
         Log.d(TAG, "Show article: " + a.text);        
         articleView.loadDataWithBaseURL("", wrap(a.text), "text/html", "utf-8", null);

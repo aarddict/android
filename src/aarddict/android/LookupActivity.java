@@ -100,30 +100,27 @@ public class LookupActivity extends Activity {
         EditText editText = new EditText(this){
             
             TimerTask currentLookupTask;
-            
+                        
             @Override
-            public boolean onKeyUp(int keyCode, KeyEvent event) {
-            	if (keyCode != KeyEvent.KEYCODE_BACK) {
-                    if (currentLookupTask != null) {
-                        currentLookupTask.cancel();
-                    }
-                                        
-                    final CharSequence textToLookup = getText(); 
-                    
-                    currentLookupTask = new TimerTask() {                    
-                        @Override
-                        public void run() {
-                            Log.d(TAG, "running lookup task for " + textToLookup + " in " + Thread.currentThread());
-                            if (textToLookup.equals(getText())) {
-                                doLookup(textToLookup);
-                            }
+            protected void onTextChanged(CharSequence text, int start,
+            		int before, int after) {
+                if (currentLookupTask != null) {
+                    currentLookupTask.cancel();
+                }                                        
+                final CharSequence textToLookup = getText(); 
+                
+                currentLookupTask = new TimerTask() {                    
+                    @Override
+                    public void run() {
+                        Log.d(TAG, "running lookup task for " + textToLookup + " in " + Thread.currentThread());
+                        if (textToLookup.equals(getText())) {
+                            doLookup(textToLookup);
                         }
-                    };                 
-                    timer.schedule(currentLookupTask, 600);
-                    return true;
-            	}            	
-            	return super.onKeyUp(keyCode, event);
+                    }
+                };                 
+                timer.schedule(currentLookupTask, 600);
             }
+            
         };
         editText.setHint("Start typing");
         editText.setInputType(InputType.TYPE_CLASS_TEXT | 

@@ -20,23 +20,6 @@ function headings(level)
   return result
 }
 
-function scrollToMatch(text, matchStrength) {
-  for (var j=1; j <=6; j++) {
-     var h = headings(j);
-     for (var k=0; k < h.length; k++) {
-       heading = h[k];
-       headingText = heading[0];       
-       if (matcher.match(headingText, text, matchStrength)) {    	  
-          headingElem = heading[1];
-          headingElem.scrollIntoView(true);
-          matcher.setFound(true);
-          return;
-       }
-     }
-  }
-  matcher.setFound(false);
-}
-
 function scrollToMatch(text) {
 	var comparators = matcher.getNumberOfComparators();	
 	for (var comparator = 0; comparator < comparators; comparator++) {
@@ -45,16 +28,8 @@ function scrollToMatch(text) {
 			for (var k=0; k < h.length; k++) {
 				heading = h[k];
 				headingText = heading[0];
-				if (matcher.match(headingText, text, comparator)) {    	  
-					headingElem = heading[1];
-					 var x = 0;
-					 var y = 0;
-					 while (headingElem != null) {
-						 x += headingElem.offsetLeft;
-						 y += headingElem.offsetTop;
-						 headingElem = headingElem.offsetParent;
-					 }
-					 window.scrollTo(x, y);					
+				if (matcher.match(headingText, text, comparator)) {
+				    myScrollTo(heading[1]);
 					return;
 				}
 			}
@@ -64,6 +39,17 @@ function scrollToMatch(text) {
 
 
 function s(elementId) {
-    document.getElementById(elementId).scrollIntoView(true);
+    myScrollTo(document.getElementById(elementId));    
     return false;
+}
+
+function myScrollTo(elem) {
+    alert("scroll to " + elem);    
+    var y = 0;
+    while (elem != null) {
+        y += elem.offsetTop;
+        elem = elem.offsetParent;
+    }
+    alert("y = " + y);
+    window.scrollTo(0, y);                 
 }

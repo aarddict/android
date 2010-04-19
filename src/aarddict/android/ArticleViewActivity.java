@@ -27,6 +27,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.Window;
+import android.webkit.JsResult;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -70,6 +71,14 @@ public class ArticleViewActivity extends Activity {
             @Override
             public void onConsoleMessage(String message, int lineNumber, String sourceID) {
                 Log.d(TAG + ".js", String.format("%d [%s]: %s", lineNumber, sourceID, message));
+            }
+            
+            @Override
+            public boolean onJsAlert(WebView view, String url, String message,
+            		JsResult result) {            	
+            	Log.d(TAG + ".js", String.format("[%s]: %s", url, message));
+            	result.cancel();
+            	return true;
             }
             
             public void onProgressChanged(WebView view, int newProgress) {

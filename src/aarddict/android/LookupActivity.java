@@ -311,7 +311,7 @@ public class LookupActivity extends Activity {
         }
 
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            if (position == itemCount - 1) {
+            if (displayMore && position == itemCount - 1) {
                 loadBatch();
                 notifyDataSetChanged();
             }            

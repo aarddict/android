@@ -120,7 +120,7 @@ public class ArticleViewActivity extends Activity {
                     startActivity(browserIntent);                                         
                 }
                 else {
-                    new Thread(new Runnable() {
+                    Thread t = new Thread(new Runnable() {
     					public void run() {
     						final Iterator<Dictionary.Entry> a = dictionaryService.lookup(url);
     						runOnUiThread(new Runnable() {
@@ -135,7 +135,9 @@ public class ArticleViewActivity extends Activity {
 								}
 							});
     					}
-    				}).start();
+    				});
+                    t.setPriority(Thread.MIN_PRIORITY);
+					t.start();
                 }
                 return true;
             }
@@ -289,7 +291,7 @@ public class ArticleViewActivity extends Activity {
     	forwardItems.clear();    	
     	setTitle(entry.title);
     	setProgress(500);
-    	new Thread(
+    	Thread t = new Thread(
     			new Runnable() {
 					public void run() {						
 				        try {
@@ -308,7 +310,9 @@ public class ArticleViewActivity extends Activity {
 							});				        					            
 				        }    							
 					}
-				}).start();     	
+				});
+    	t.setPriority(Thread.MIN_PRIORITY);
+		t.start();     	
     }
     
     private void showArticle(Dictionary.Article a) {

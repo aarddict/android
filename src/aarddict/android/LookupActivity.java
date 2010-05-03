@@ -18,7 +18,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.DialogInterface.OnClickListener;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -31,7 +30,6 @@ import android.text.TextUtils;
 import android.text.util.Linkify;
 import android.util.Log;
 import android.view.Gravity;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -347,18 +345,17 @@ public class LookupActivity extends Activity {
 
 	private void showAbout() {        
         PackageManager manager = getPackageManager();
-        String versionMame = "";
+        String versionName = "";
         try {
 			PackageInfo info = manager.getPackageInfo(getPackageName(), 0);
-			versionMame = info.versionName;
+			versionName = info.versionName;
 		} catch (NameNotFoundException e) {
 			Log.e(TAG, "Failed to load package info for " + getPackageName(), e) ;
 		}        
-        ApplicationInfo applicationInfo = getApplicationInfo();        
-		StringBuilder message = new StringBuilder().        		
-        append(applicationInfo.loadLabel(getPackageManager())).
+		StringBuilder message = new StringBuilder().
+		append(getString(R.string.app_name)).
         append(" ").
-        append(versionMame).
+        append(versionName).
         append("\n").
         append("(C) 2010 Igor Tkach").append("\n").append("http://aarddict.org");
 		

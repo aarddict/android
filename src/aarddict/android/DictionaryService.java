@@ -65,7 +65,7 @@ public class DictionaryService extends Service {
 	}
 
 	@Override
-	synchronized public int onStartCommand(Intent intent, int flags, int startId) {
+	synchronized public void onStart(Intent intent, int flags) {
 		if (!started && !starting) {
 			starting = true;
 			Thread t = new Thread(new Runnable() {
@@ -81,8 +81,7 @@ public class DictionaryService extends Service {
 			t.setPriority(Thread.MIN_PRIORITY);
 			t.start();					
 		}
-		return START_STICKY;
-	}
+	}	
 	
 	private void init() {
 		List<File> candidates = discover();

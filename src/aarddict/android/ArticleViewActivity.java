@@ -68,7 +68,7 @@ public class ArticleViewActivity extends Activity {
         articleView.addJavascriptInterface(new SectionMatcher(), "matcher");
         
         articleView.setWebChromeClient(new WebChromeClient(){
-            @Override
+//            @Override
             public void onConsoleMessage(String message, int lineNumber, String sourceID) {
                 Log.d(TAG + ".js", String.format("%d [%s]: %s", lineNumber, sourceID, message));
             }

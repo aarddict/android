@@ -123,10 +123,10 @@ public class LookupActivity extends Activity {
             
         };
         editText.setHint("Start typing");
+
         editText.setInputType(InputType.TYPE_CLASS_TEXT | 
-                              InputType.TYPE_TEXT_FLAG_AUTO_COMPLETE |
-                              InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
-                        
+                InputType.TYPE_TEXT_FLAG_AUTO_COMPLETE);
+        
         layout.addView(editText);                        
         layout.addView(listView);        
         setContentView(layout);        

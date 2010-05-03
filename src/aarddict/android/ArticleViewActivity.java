@@ -298,7 +298,7 @@ public class ArticleViewActivity extends Activity {
     
     private void showArticle(final Dictionary.Entry entry) {
     	forwardItems.clear();    	
-    	setTitle(entry.title);
+    	setTitle(entry);
     	setProgress(500);
     	Thread t = new Thread(
     			new Runnable() {
@@ -331,7 +331,7 @@ public class ArticleViewActivity extends Activity {
         catch (RedirectNotFound e) {        	
         	setProgress(10000);     
         	if (!backItems.isEmpty()) {
-        		setTitle(backItems.get(0).title);
+        		setTitle(backItems.get(0));
         	}
             showMessage(String.format("Redirect \"%s\" not found", a.getRedirect()));
             return;
@@ -339,7 +339,7 @@ public class ArticleViewActivity extends Activity {
         catch (RedirectTooManyLevels e) {
         	setProgress(10000);
         	if (!backItems.isEmpty()) {
-        		setTitle(backItems.get(0).title);
+        		setTitle(backItems.get(0));
         	}        	
             showMessage(String.format("Too many redirects for \"%s\"", a.getRedirect()));
             return;
@@ -347,14 +347,14 @@ public class ArticleViewActivity extends Activity {
         catch (Exception e) {
         	setProgress(10000);
         	if (!backItems.isEmpty()) {
-        		setTitle(backItems.get(0).title);
+        		setTitle(backItems.get(0));
         	}        	
             showError(String.format("There was an error loading article \"%s\"", a.title));
             return;
         }
         backItems.add(a);
         setProgress(5000);
-        setTitle(a.title);
+        setTitle(a);
         Log.d(TAG, "Show article: " + a.text);        
         articleView.loadDataWithBaseURL("", wrap(a.text), "text/html", "utf-8", null);
     }
@@ -379,6 +379,23 @@ public class ArticleViewActivity extends Activity {
         });
         dialogBuilder.show();
     }
+    
+    private void setTitle(Article a) {
+    	Dictionary d = dictionaryService.getDictionary(a.volumeId);
+    	CharSequence dictTitle = "Dictionary not found";
+    	if (d != null) {
+    		dictTitle = d.getDisplayTitle();
+    	}
+    	setTitle(a.title, dictTitle);
+    }
+    
+    private void setTitle(Dictionary.Entry e) {
+    	setTitle(e.title, e.dictionary.getDisplayTitle());
+    }    
+    
+    private void setTitle(CharSequence articleTitle, CharSequence dictTitle) {
+    	setTitle(String.format("%s - %s", articleTitle, dictTitle));
+    }        
     
     private String wrap(String articleText) {
         return new StringBuilder("<html>")

@@ -7,6 +7,8 @@ import java.io.Reader;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import aarddict.Dictionary;
 import aarddict.Dictionary.Article;
@@ -14,6 +16,7 @@ import aarddict.Dictionary.RedirectNotFound;
 import aarddict.Dictionary.RedirectTooManyLevels;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -48,6 +51,9 @@ public class ArticleViewActivity extends Activity {
     
     DictionaryService 	dictionaryService;
     ServiceConnection 	connection;
+    
+    Timer               timer;
+    TimerTask 			currentTask;
         
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +61,8 @@ public class ArticleViewActivity extends Activity {
 
         loadAssets();
 
+        timer = new Timer();
+        
         backItems = new LinkedList<Dictionary.Article>();
         forwardItems = new LinkedList<Dictionary.Article>();
         
@@ -83,7 +91,7 @@ public class ArticleViewActivity extends Activity {
             
             public void onProgressChanged(WebView view, int newProgress) {
                 Log.d(TAG, "Progress: " + newProgress);
-                setProgress(5000 + newProgress * 50);
+                setProgress(5000 + newProgress * 50);                
             }
         });
                        
@@ -92,6 +100,7 @@ public class ArticleViewActivity extends Activity {
             @Override
             public void onPageFinished(WebView view, String url) {
                 Log.d(TAG, "Page finished: " + url);
+                currentTask = null;
                 String section = null;
                 
                 if (url.contains("#")) {
@@ -129,24 +138,25 @@ public class ArticleViewActivity extends Activity {
                     startActivity(browserIntent);                                         
                 }
                 else {
-                    Thread t = new Thread(new Runnable() {
-    					public void run() {
-    						final Iterator<Dictionary.Entry> a = dictionaryService.lookup(url);
-    						runOnUiThread(new Runnable() {
-								public void run() {
-				                    if (a.hasNext()) {
-				                        Dictionary.Entry entry = a.next();
-				                        showArticle(entry);
-				                    }                
-				                    else {
-				                        showMessage(String.format("Article \"%s\" not found", url));
-				                    }                										
-								}
-							});
-    					}
-    				});
-                    t.setPriority(Thread.MIN_PRIORITY);
-					t.start();
+                	if (currentTask == null) {
+                		currentTask = new TimerTask() {							
+							public void run() {
+	    						final Iterator<Dictionary.Entry> a = dictionaryService.lookup(url);
+	    						runOnUiThread(new Runnable() {
+									public void run() {
+					                    if (a.hasNext()) {
+					                        Dictionary.Entry entry = a.next();
+					                        showArticle(entry);
+					                    }                
+					                    else {					                    	
+					                        showMessage(String.format("Article \"%s\" not found", url));
+					                    }                										
+									}
+								});								
+							}
+						};
+						timer.schedule(currentTask, 0);
+                	}                	
                 }
                 return true;
             }
@@ -194,6 +204,9 @@ public class ArticleViewActivity extends Activity {
     }
 
     private boolean goBack() {
+    	if (currentTask != null) {
+    		return true;
+    	}
         if (backItems.size() > 1) {
             Dictionary.Article current = backItems.remove(backItems.size() - 1); 
             forwardItems.add(0, current);
@@ -212,6 +225,9 @@ public class ArticleViewActivity extends Activity {
     }
     
     private boolean goForward() {
+    	if (currentTask != null) {
+    		return true;
+    	}    	
         if (forwardItems.size() > 0){              
             Dictionary.Article next = forwardItems.remove(0);
             Dictionary.Article current = backItems.get(backItems.size() - 1);
@@ -300,28 +316,26 @@ public class ArticleViewActivity extends Activity {
     	forwardItems.clear();    	
     	setTitle(entry);
     	setProgress(500);
-    	Thread t = new Thread(
-    			new Runnable() {
-					public void run() {						
-				        try {
-					        final Article a = entry.getArticle();
-							runOnUiThread( new Runnable() {							
-								public void run() {
-									showArticle(a);							
-								}
-							});
-				        }
-				        catch (Exception e) {
-							runOnUiThread( new Runnable() {							
-								public void run() {
-									showError(String.format("There was an error loading article \"%s\"", entry.title));
-								}
-							});				        					            
-				        }    							
-					}
-				});
-    	t.setPriority(Thread.MIN_PRIORITY);
-		t.start();     	
+    	currentTask = new TimerTask() {
+			public void run() {
+		        try {
+			        final Article a = entry.getArticle();
+					runOnUiThread( new Runnable() {							
+						public void run() {
+							showArticle(a);							
+						}
+					});
+		        }
+		        catch (Exception e) {
+					runOnUiThread( new Runnable() {							
+						public void run() {
+							showError(String.format("There was an error loading article \"%s\"", entry.title));
+						}
+					});				        					            
+		        }
+			}
+    	};
+    	timer.schedule(currentTask, 0);
     }
     
     private void showArticle(Dictionary.Article a) {
@@ -329,7 +343,7 @@ public class ArticleViewActivity extends Activity {
             a = dictionaryService.redirect(a);
         }            
         catch (RedirectNotFound e) {        	
-        	setProgress(10000);     
+        	setProgress(10000);
         	if (!backItems.isEmpty()) {
         		setTitle(backItems.get(0));
         	}
@@ -345,7 +359,7 @@ public class ArticleViewActivity extends Activity {
             return;
         }
         catch (Exception e) {
-        	setProgress(10000);
+        	currentTask = null;
         	if (!backItems.isEmpty()) {
         		setTitle(backItems.get(0));
         	}        	
@@ -360,6 +374,7 @@ public class ArticleViewActivity extends Activity {
     }
     
     private void showMessage(String message) {
+    	currentTask = null;
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
         if (backItems.size() == 0) {
             finish();
@@ -367,6 +382,7 @@ public class ArticleViewActivity extends Activity {
     }
 
     private void showError(String message) {
+    	currentTask = null;
         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
         dialogBuilder.setTitle("Error").setMessage(message).setNeutralButton("Dismiss", new OnClickListener() {            
             @Override
@@ -452,6 +468,7 @@ public class ArticleViewActivity extends Activity {
     @Override
     protected void onDestroy() {
     	super.onDestroy();
+    	timer.cancel();    	
     	unbindService(connection);  
     }
 }

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -175,7 +176,11 @@ public class DictionaryService extends Service {
         }
         return candidates;
     }
-        
+
+    public void setPreferred(String volumeId) {
+    	dicts.makeFirst(volumeId);    	
+    }
+    
     public Iterator<Dictionary.Entry> lookup(CharSequence word) {
         return dicts.bestMatch(word.toString());
     }

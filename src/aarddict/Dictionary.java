@@ -17,6 +17,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -425,6 +426,32 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
                 }
             }
             return null;            
+        }
+        
+        public void makeFirst(String volumeId) {
+        	Dictionary d = getDictionary(volumeId);
+        	if (d != null) {
+        		final UUID id = d.getDictionaryId();
+        		Comparator<Dictionary> c = new Comparator<Dictionary>() {
+					public int compare(Dictionary d1, Dictionary d2) {
+						UUID id1 = d1.getDictionaryId();
+						UUID id2 = d2.getDictionaryId();
+						if (id1.equals(id2)) {
+							if (id1.equals(id)) {
+								return d1.header.volume - d2.header.volume; 
+							}
+						}
+						else if (id1.equals(id)) {
+							return -1;
+						}
+						if (id2.equals(id)) {
+							return 1;
+						}						
+						return 0;
+					}
+				}; 
+				Collections.sort(this, c);
+        	}
         }
     }
 

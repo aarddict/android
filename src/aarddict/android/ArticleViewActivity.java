@@ -16,7 +16,6 @@ import aarddict.Dictionary.RedirectNotFound;
 import aarddict.Dictionary.RedirectTooManyLevels;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -173,7 +172,8 @@ public class ArticleViewActivity extends Activity {
                 String word = intent.getStringExtra("word");                
                 String section = intent.getStringExtra("section");
                 String volumeId = intent.getStringExtra("volumeId");
-                long articlePointer = intent.getLongExtra("articlePointer", -1);            	
+                long articlePointer = intent.getLongExtra("articlePointer", -1);
+                dictionaryService.setPreferred(volumeId);
             	showArticle(volumeId, articlePointer, word, section);
             }
 

@@ -143,13 +143,12 @@ public class LookupActivity extends Activity {
         
         broadcastReceiver = new BroadcastReceiver() {
         
-        	ProgressDialog progressDialog;
+        	ProgressDialog progressDialog = new ProgressDialog(LookupActivity.this);
         	
 			@Override
 			public void onReceive(Context context, Intent intent) {
 				String a = intent.getAction();
 				if (a.equals(DictionaryService.DISCOVERY_STARTED)) {
-					progressDialog = new ProgressDialog(LookupActivity.this);
 					progressDialog.setIndeterminate(true);
 			        progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
 			        progressDialog.setMessage("Looking for dictionaries...");

@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -17,6 +16,7 @@ import aarddict.Dictionary.RedirectError;
 import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
+import android.os.Environment;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -56,7 +56,7 @@ public class DictionaryService extends Service {
     public IBinder onBind(Intent intent) {
         return binder;
     }
-
+    
     private final IBinder binder = new LocalBinder();    
 
 	@Override
@@ -65,6 +65,7 @@ public class DictionaryService extends Service {
 		dicts = new Dictionary.Collection();
 	}
 
+	
 	@Override
 	synchronized public void onStart(Intent intent, int flags) {
 		if (!started && !starting) {
@@ -154,9 +155,11 @@ public class DictionaryService extends Service {
     public List<File> discover() {
 		sendBroadcast(new Intent(DISCOVERY_STARTED));
 		Thread.yield();
-        String sdCardPath = "/sdcard";
-        File f = new File(sdCardPath);
-        List<File> result = scanDir(f);
+        File extStorage = Environment.getExternalStorageDirectory();
+        List<File> result = new ArrayList<File>();
+        if (extStorage != null) {
+        	result.addAll(scanDir(extStorage));
+        }
         Intent intent = new Intent(DISCOVERY_FINISHED);
         intent.putExtra("count", result.size());
         sendBroadcast(intent);

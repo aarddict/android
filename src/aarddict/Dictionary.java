@@ -211,66 +211,55 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         public String     title;
         public String     section;
         public long       articlePointer;
-        public Dictionary dictionary;
+        public String 	  volumeId;
 
-        public Entry(Dictionary dictionary, String title) {
-            this(dictionary, title, -1);
+        public Entry(String volumeId, String title) {
+            this(volumeId, title, -1);
         }
 
-        public  Entry(Dictionary dictionary, String title, long articlePointer) {
-            this.dictionary = dictionary;
+        public  Entry(String volumeId, String title, long articlePointer) {
+            this.volumeId = volumeId;
             this.title = title;
             this.articlePointer = articlePointer;
         }
 
 
-        public Article getArticle() throws IOException {
-            Article a = dictionary.readArticle(articlePointer);
-            a.title = this.title;
-            a.section = this.section;
-            return a;
-        }
+//        public Article getArticle() throws IOException {
+//            Article a = dictionary.readArticle(articlePointer);
+//            a.title = this.title;
+//            a.section = this.section;
+//            return a;
+//        }
 
         @Override
         public String toString() {
             return title;
         }
 
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + (int) (articlePointer ^ (articlePointer >>> 32));
-            result = prime * result + ((dictionary == null) ? 0 : dictionary.hashCode());
-            result = prime * result + ((title == null) ? 0 : title.hashCode());
-            return result;
-        }
+		public String getTitle() {
+			return title;
+		}
 
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            Entry other = (Entry) obj;
-            if (articlePointer != other.articlePointer)
-                return false;
-            if (dictionary == null) {
-                if (other.dictionary != null)
-                    return false;
-            }
-            else if (!dictionary.equals(other.dictionary))
-                return false;
-            if (title == null) {
-                if (other.title != null)
-                    return false;
-            }
-            else if (!title.equals(other.title))
-                return false;
-            return true;
-        }
+		public void setTitle(String title) {
+			this.title = title;
+		}
+
+		public long getArticlePointer() {
+			return articlePointer;
+		}
+
+		public void setArticlePointer(long articlePointer) {
+			this.articlePointer = articlePointer;
+		}
+
+		public String getVolumeId() {
+			return volumeId;
+		}
+
+		public void setVolumeId(String volumeId) {
+			this.volumeId = volumeId;
+		}
+
 
     }
 
@@ -390,6 +379,14 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
             };
         }
         
+		public Article getArticle(Entry e) throws IOException {
+			Dictionary d = getDictionary(e.volumeId);
+			Article a = d.readArticle(e.articlePointer);
+			a.title = e.title;
+			a.section = e.section;
+			return a;
+		}
+        
         Article redirect(Article article, int level) throws RedirectError, 
                                                             IOException 
                                                              {            
@@ -405,7 +402,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
                                                article.dictionaryUUID);
             if (result.hasNext()) {
                 Entry redirectEntry = result.next();
-                Article redirectArticle = redirectEntry.getArticle();
+                Article redirectArticle = getArticle(redirectEntry);
                 return redirect(redirectArticle, level+1);
             }
             else {
@@ -420,6 +417,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         }
         
         public Dictionary getDictionary(String volumeId) {
+        	        	
             for (Dictionary d : this) {
                 if (d.sha1sum.equals(volumeId)) {
                     return d;
@@ -427,7 +425,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
             }
             return null;            
         }
-        
+                        
         public void makeFirst(String volumeId) {
         	Dictionary d = getDictionary(volumeId);
         	if (d != null) {
@@ -609,7 +607,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         String[] parts = splitWord(word);
         final String lookupWord = parts[0];
         final String section = parts[1];
-        final Entry lookupEntry = new Entry(this, lookupWord);
+        final Entry lookupEntry = new Entry(this.getId(), lookupWord);
         final int initialIndex = binarySearch(this, lookupEntry, comparator);
         Iterator<Entry> iterator = new Iterator<Entry>() {
 
@@ -674,7 +672,7 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         try {
             IndexItem indexItem = readIndexItem(index);
             String title = readKey(indexItem.keyPointer);
-            Entry entry = new Entry(this, title, indexItem.articlePointer);
+            Entry entry = new Entry(this.getId(), title, indexItem.articlePointer);
             entryCache.put(index, entry);
             return entry;
         }

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -12,6 +13,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import aarddict.Dictionary;
+import aarddict.Dictionary.Article;
+import aarddict.Dictionary.Entry;
 import aarddict.Dictionary.RedirectError;
 import android.app.Service;
 import android.content.Intent;
@@ -90,7 +93,11 @@ public class DictionaryService extends Service {
 		open(candidates);		
 	}
 	
-    public Map<File, Exception> open(List<File> files) {
+	public Map<File, Exception> open(File file) {
+		return open(Arrays.asList(new File[]{file}));
+	}
+	
+    synchronized public Map<File, Exception> open(List<File> files) {
     	
     	Intent notifyOpenStarted = new Intent(OPEN_STARTED);
     	notifyOpenStarted.putExtra("count", files.size());
@@ -112,8 +119,16 @@ public class DictionaryService extends Service {
         	File file = files.get(i);
         	Dictionary d = null;
             try {
+            	Log.d(TAG, "Opening " + file.getName());
                 d = new Dictionary(file, metaCacheDir, knownMeta);
-                dicts.add(d);
+                Dictionary existing = dicts.getDictionary(d.getId());
+                if (existing == null) {
+                	Log.d(TAG, "Dictionary " + d.getId() + " is not in current collection");
+                	dicts.add(d);
+                }
+                else {
+                	Log.d(TAG, "Dictionary " + d.getId() + " is already open");
+                }
                 Intent notifyOpened = new Intent(OPENED_DICT);
                 notifyOpened.putExtra("title", d.getDisplayTitle());
                 notifyOpened.putExtra("count", files.size());
@@ -200,6 +215,10 @@ public class DictionaryService extends Service {
     	return dicts;
     }
     
+    public CharSequence getDisplayTitle(String volumeId) {
+    	return dicts.getDictionary(volumeId).getDisplayTitle();
+    }
+    
     @SuppressWarnings("unchecked")
     public Map<UUID, List<Dictionary>> getVolumes() {
     	Map<UUID, List<Dictionary>> result = new LinkedHashMap();
@@ -212,4 +231,9 @@ public class DictionaryService extends Service {
     	}    	    	
     	return result;
     }
+
+
+	public Article getArticle(Entry entry) throws IOException {
+		return dicts.getArticle(entry);
+	}
 }

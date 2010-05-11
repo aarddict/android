@@ -307,7 +307,7 @@ public class ArticleViewActivity extends Activity {
             return;
         }
         
-        Dictionary.Entry entry = new Dictionary.Entry(d, word, articlePointer);
+        Dictionary.Entry entry = new Dictionary.Entry(d.getId(), word, articlePointer);
         entry.section = section;
         showArticle(entry);
     }    
@@ -319,7 +319,7 @@ public class ArticleViewActivity extends Activity {
     	currentTask = new TimerTask() {
 			public void run() {
 		        try {
-			        final Article a = entry.getArticle();
+			        final Article a = dictionaryService.getArticle(entry);
 					runOnUiThread( new Runnable() {							
 						public void run() {
 							showArticle(a);							
@@ -397,16 +397,11 @@ public class ArticleViewActivity extends Activity {
     }
     
     private void setTitle(Article a) {
-    	Dictionary d = dictionaryService.getDictionary(a.volumeId);
-    	CharSequence dictTitle = "Dictionary not found";
-    	if (d != null) {
-    		dictTitle = d.getDisplayTitle();
-    	}
-    	setTitle(a.title, dictTitle);
+    	setTitle(a.title, dictionaryService.getDisplayTitle(a.volumeId));
     }
     
     private void setTitle(Dictionary.Entry e) {
-    	setTitle(e.title, e.dictionary.getDisplayTitle());
+    	setTitle(e.title, dictionaryService.getDisplayTitle(e.volumeId));
     }    
     
     private void setTitle(CharSequence articleTitle, CharSequence dictTitle) {

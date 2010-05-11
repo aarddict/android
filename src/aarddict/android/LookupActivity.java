@@ -1,8 +1,10 @@
 package aarddict.android;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -22,6 +24,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Resources;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -60,6 +63,23 @@ public class LookupActivity extends Activity {
         	dictionaryService = ((DictionaryService.LocalBinder)service).getService();
         	Log.d(TAG, "Service connected: " + dictionaryService);
         	updateTitle();
+        	final Intent intent = getIntent();
+        	logIntent(intent);
+        	if (intent.getAction().equals(Intent.ACTION_VIEW)) {
+        		final Uri data = intent.getData();
+        		Log.d(TAG, "Path: " + data.getPath());        		
+        		if (data != null && data.getPath() != null) {
+            		Runnable r = new Runnable() {					
+    					@Override
+    					public void run() {
+    						Log.d(TAG, "opening: " + data.getPath());
+    		        		dictionaryService.open(new File(data.getPath()));						
+    					}
+    				};
+    				new Thread(r).start();        			
+    				Log.d(TAG, "started: " + data.getPath());
+        		}
+        	}
         }
 
         public void onServiceDisconnected(ComponentName className) {
@@ -78,6 +98,12 @@ public class LookupActivity extends Activity {
     	String appName = r.getString(R.string.app_name);
     	String mainTitle = r.getString(R.string.main_title);
     	setTitle(String.format(mainTitle, appName, String.format(dictionaries, dictCount)));    	
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+    	Log.d(TAG, "New intent");
+    	logIntent(intent);
     }
     
     @Override
@@ -101,12 +127,16 @@ public class LookupActivity extends Activity {
                         
             @Override
             protected void onTextChanged(CharSequence text, int start,
-            		int before, int after) {
+            		int before, int after) {            	
                 if (currentLookupTask != null) {
                     currentLookupTask.cancel();
                 }                                        
-                final CharSequence textToLookup = getText(); 
                 
+                if (dictionaryService == null) {
+                	return;
+                }
+                
+                final CharSequence textToLookup = getText();                 
                 currentLookupTask = new TimerTask() {                    
                     @Override
                     public void run() {
@@ -115,7 +145,7 @@ public class LookupActivity extends Activity {
                             doLookup(textToLookup);
                         }
                     }
-                };                 
+                };                
                 timer.schedule(currentLookupTask, 600);
             }
             
@@ -138,37 +168,43 @@ public class LookupActivity extends Activity {
         intentFilter.addAction(DictionaryService.OPEN_FINISHED);
         intentFilter.addAction(DictionaryService.OPEN_STARTED);
         intentFilter.addAction(DictionaryService.OPENED_DICT);
-        
-        
-        
+                       
         broadcastReceiver = new BroadcastReceiver() {
         
         	ProgressDialog progressDialog = new ProgressDialog(LookupActivity.this);
+        	
+        	{
+        		progressDialog.setCancelable(false);
+        	}
         	
 			@Override
 			public void onReceive(Context context, Intent intent) {
 				String a = intent.getAction();
 				if (a.equals(DictionaryService.DISCOVERY_STARTED)) {
+					Log.d(TAG, "dictionary disconvery started");
 					progressDialog.setIndeterminate(true);
 			        progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
 			        progressDialog.setMessage("Looking for dictionaries...");
 			        progressDialog.show();					
 				}
 				if (a.equals(DictionaryService.DISCOVERY_FINISHED)) {
+					Log.d(TAG, "dictionary discovery finished");
 				}				
-				if (a.equals(DictionaryService.OPEN_STARTED)) {
+				if (a.equals(DictionaryService.OPEN_STARTED)) {	
+					Log.d(TAG, "dictionary open started");
 					int count = intent.getIntExtra("count", 0);					
 					progressDialog.setIndeterminate(false);
 					progressDialog.setProgress(0);			        
 			        progressDialog.setMessage("Loading dictionaries...");
 			        progressDialog.setMax(count);
+			        progressDialog.show();
 				}
 				if (a.equals(DictionaryService.DICT_OPEN_FAILED)  || a.equals(DictionaryService.OPENED_DICT)) {
 					progressDialog.incrementProgressBy(1);
 				}
 				if (a.equals(DictionaryService.OPEN_FINISHED)) {
 					progressDialog.dismiss();
-					updateTitle();					
+					updateTitle();
 				}								
 			}
 		};
@@ -178,7 +214,18 @@ public class LookupActivity extends Activity {
     	startService(dictServiceIntent);
     	bindService(dictServiceIntent, connection, 0);
     }
-        
+            
+    private void logIntent(Intent intent) {
+    	Set<String> cats = intent.getCategories();
+    	StringBuilder s = new StringBuilder();
+    	if (cats != null) {
+	    	for (String c : cats) {
+	    		s.append(c);
+	    	}
+    	}
+    	Log.d(TAG, "intent: " + intent.getAction() + " cats: " + s.toString() + " data: " + intent.getData());    	
+    }    
+    
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -220,7 +267,7 @@ public class LookupActivity extends Activity {
         next.setClass(this, ArticleViewActivity.class);                       
         next.putExtra("word", theWord.title);        
         next.putExtra("section", theWord.section);
-        next.putExtra("volumeId", theWord.dictionary.getId());
+        next.putExtra("volumeId", theWord.getVolumeId());
         next.putExtra("articlePointer", theWord.articlePointer);
         startActivity(next);
     }
@@ -304,7 +351,7 @@ public class LookupActivity extends Activity {
 
         private void bindView(TwoLineListItem view, Dictionary.Entry word) {
             view.getText1().setText(word.title);
-            view.getText2().setText(word.dictionary.getDisplayTitle());
+            view.getText2().setText(dictionaryService.getDisplayTitle(word.volumeId));
         }
 
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {

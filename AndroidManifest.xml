@@ -11,12 +11,25 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />                
+                <data android:scheme="file" android:pathPattern=".*\\.aar"/>
+            </intent-filter>
+            
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />                
+                <data android:scheme="file" android:mimeType="application/aar"/>
+            </intent-filter>                        
+                                   
         </activity>
 
         <activity android:name=".ArticleViewActivity"/>
-        <activity android:name=".DictionariesActivity"/>
+        <activity android:name=".DictionariesActivity"/>        
         <activity android:name=".DictionaryInfoActivity"/>                      
-        <service android:name=".DictionaryService"/>        
+        <service android:name=".DictionaryService"/>
 
     </application>
 

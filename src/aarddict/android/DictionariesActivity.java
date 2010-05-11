@@ -290,7 +290,11 @@ public class DictionariesActivity extends Activity {
 		}
         
 		CharSequence getTitle(Dictionary d, boolean withVol) {
-			return new StringBuilder(d.getDisplayTitle(withVol)).append(" ").append(d.metadata.version);			
+			StringBuilder s = new StringBuilder(d.getDisplayTitle(withVol));
+			if (d.metadata.version != null) {
+				s.append(" ").append(d.metadata.version);	
+			}	
+			return s;
 		}
 		
         public View getView(int position, View convertView, ViewGroup parent) {

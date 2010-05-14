@@ -54,28 +54,10 @@ public final class Collection extends ArrayList<Dictionary> {
     	}
     	
     	final List<Dictionary> dicts = new ArrayList<Dictionary>(this);
-    	final UUID targetDictUUID = target;
     	//This is supposed to move volumes of target dict to first positions
     	//leaving everything else in place, preferred dictionary
     	//volumes coming next (if preferred and target dictionaries are different)
-		Comparator<Dictionary> c = new Comparator<Dictionary>() {
-			public int compare(Dictionary d1, Dictionary d2) {
-				UUID id1 = d1.getDictionaryId();
-				UUID id2 = d2.getDictionaryId();
-				if (id1.equals(id2)) {
-					if (id1.equals(targetDictUUID)) {
-						return d1.header.volume - d2.header.volume; 
-					}
-				}
-				else if (id1.equals(targetDictUUID)) {
-					return -1;
-				}
-				if (id2.equals(targetDictUUID)) {
-					return 1;
-				}						
-				return 0;
-			}
-		}; 
+    	Comparator<Dictionary> c = new PreferredDictionaryComparator(target);
     	Collections.sort(dicts, c);
 
     	return new Iterator<Entry>() {
@@ -270,25 +252,7 @@ public final class Collection extends ArrayList<Dictionary> {
     public void makeFirst(String volumeId) {
     	Dictionary d = getDictionary(volumeId);
     	if (d != null) {
-    		final UUID id = d.getDictionaryId();
-    		Comparator<Dictionary> c = new Comparator<Dictionary>() {
-				public int compare(Dictionary d1, Dictionary d2) {
-					UUID id1 = d1.getDictionaryId();
-					UUID id2 = d2.getDictionaryId();
-					if (id1.equals(id2)) {
-						if (id1.equals(id)) {
-							return d1.header.volume - d2.header.volume; 
-						}
-					}
-					else if (id1.equals(id)) {
-						return -1;
-					}
-					if (id2.equals(id)) {
-						return 1;
-					}						
-					return 0;
-				}
-			}; 
+    		Comparator<Dictionary> c = new PreferredDictionaryComparator(d.getDictionaryId()); 
 			Collections.sort(this, c);
     	}
     }

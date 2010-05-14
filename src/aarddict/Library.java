@@ -14,20 +14,20 @@ import java.util.UUID;
 
 import android.util.Log;
 
-public final class Collection extends ArrayList<Volume> {
+public final class Library extends ArrayList<Volume> {
 
 	int maxRedirectLevels = 5;
 
 	public Iterator<Entry> followLink(final String word, String fromVolumeId) {
 		Log.d(Volume.TAG, String.format("Follow link \"%s\", %s", word,
 				fromVolumeId));
-		Volume fromDict = getDictionary(fromVolumeId);
+		Volume fromDict = getVolume(fromVolumeId);
 		UUID target = fromDict.getDictionaryId();
 		Metadata fromMeta = fromDict.metadata;
 
-		LookupWord parts = LookupWord.splitWord(word);
-		Log.d(Volume.TAG, parts.toString());
-		String nameSpace = parts.nameSpace;
+		LookupWord lookupWord = LookupWord.splitWord(word);
+		Log.d(Volume.TAG, lookupWord.toString());
+		String nameSpace = lookupWord.nameSpace;
 
 		if (fromMeta != null && nameSpace != null) {
 			Log.d(Volume.TAG, String.format("Name space: %s", nameSpace));
@@ -59,7 +59,7 @@ public final class Collection extends ArrayList<Volume> {
 		// different)
 		Comparator<Volume> c = new PreferredDictionaryComparator(target);
 		Collections.sort(dicts, c);
-		return new MatchIterator(dicts, EntryComparators.FULL_WORD, word);
+		return new MatchIterator(dicts, EntryComparators.FULL_WORD, lookupWord);
 	}
 
 	private UUID findMatchingDict(String serverUrl) {
@@ -85,7 +85,7 @@ public final class Collection extends ArrayList<Volume> {
 	}
 
 	public Iterator<Entry> bestMatch(final String word, UUID... dictUUIDs) {
-
+		
 		List<Volume> volumes;
 		if (dictUUIDs.length == 0) {
 			volumes = this;
@@ -99,12 +99,11 @@ public final class Collection extends ArrayList<Volume> {
 				}
 			}
 		}
-
-		return new MatchIterator(EntryComparators.ALL, volumes, word);
+		return new MatchIterator(EntryComparators.ALL, volumes, LookupWord.splitWord(word));
 	}
 
 	public Article getArticle(Entry e) throws IOException {
-		Volume d = getDictionary(e.volumeId);
+		Volume d = getVolume(e.volumeId);
 		Article a = d.readArticle(e.articlePointer);
 		a.title = e.title;
 		a.section = e.section;
@@ -136,7 +135,7 @@ public final class Collection extends ArrayList<Volume> {
 		return redirect(article, 0);
 	}
 
-	public Volume getDictionary(String volumeId) {
+	public Volume getVolume(String volumeId) {
 
 		for (Volume d : this) {
 			if (d.sha1sum.equals(volumeId)) {
@@ -147,7 +146,7 @@ public final class Collection extends ArrayList<Volume> {
 	}
 
 	public void makeFirst(String volumeId) {
-		Volume d = getDictionary(volumeId);
+		Volume d = getVolume(volumeId);
 		if (d != null) {
 			Comparator<Volume> c = new PreferredDictionaryComparator(d
 					.getDictionaryId());

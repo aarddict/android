@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.WeakHashMap;
@@ -29,9 +28,9 @@ import org.codehaus.jackson.map.ObjectMapper;
 
 import android.util.Log;
 
-public final class Dictionary extends AbstractList<Entry> {
+public final class Volume extends AbstractList<Entry> {
 
-	final static String TAG = Dictionary.class.getName();
+	final static String TAG = Volume.class.getName();
 	
     final static Charset UTF8 = Charset.forName("utf8");
    
@@ -49,7 +48,7 @@ public final class Dictionary extends AbstractList<Entry> {
     	mapper.getDeserializationConfig().set(org.codehaus.jackson.map.DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
     
-    public Dictionary(File file, File cacheDir, Map<UUID, Metadata> knownMeta) throws IOException {
+    public Volume(File file, File cacheDir, Map<UUID, Metadata> knownMeta) throws IOException {
     	this.origFile = file;
         init(new RandomAccessFile(file, "r"), cacheDir, knownMeta);
     }
@@ -115,7 +114,7 @@ public final class Dictionary extends AbstractList<Entry> {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        Dictionary other = (Dictionary) obj;
+        Volume other = (Volume) obj;
         if (sha1sum == null) {
             if (other.sha1sum != null)
                 return false;
@@ -163,16 +162,13 @@ public final class Dictionary extends AbstractList<Entry> {
 
     static Iterator<Entry> EMPTY_ITERATOR = new ArrayList<Entry>().iterator();
     
-    Iterator<Entry> lookup(final String word, final Comparator<Entry> comparator) {
-    	Log.d(TAG, "Lookup " + word);
-    	LookupWord parts = LookupWord.splitWord(word);
-        if (parts.isEmpty()) {
+    Iterator<Entry> lookup(final LookupWord lookupWord, final Comparator<Entry> comparator) {
+        if (lookupWord.isEmpty()) {
             return EMPTY_ITERATOR;
-        }
+        }    	
         
-        final String lookupWord = parts.word;
-        final String section = parts.section;
-        final Entry lookupEntry = new Entry(this.getId(), lookupWord);
+        final String section = lookupWord.section;
+        final Entry lookupEntry = new Entry(this.getId(), lookupWord.word);
         final int initialIndex = binarySearch(this, lookupEntry, comparator);
         Iterator<Entry> iterator = new Iterator<Entry>() {
 

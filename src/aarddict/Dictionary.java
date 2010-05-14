@@ -11,6 +11,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -219,17 +221,10 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
 
         public  Entry(String volumeId, String title, long articlePointer) {
             this.volumeId = volumeId;
-            this.title = title;
+            this.title = title == null ? "" : title;
             this.articlePointer = articlePointer;
         }
 
-
-//        public Article getArticle() throws IOException {
-//            Article a = dictionary.readArticle(articlePointer);
-//            a.title = this.title;
-//            a.section = this.section;
-//            return a;
-//        }
 
         @Override
         public String toString() {
@@ -315,7 +310,141 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         int maxFromVol = 50;
         int maxRedirectLevels = 5;
         
-        public Iterator<Entry> bestMatch(final String word, UUID ... dictUUIDs) {
+        public Iterator<Entry> followLink(final String word, String fromVolumeId) {
+        	Log.d(TAG, String.format("Follow link \"%s\", %s", word, fromVolumeId));
+        	Dictionary fromDict =  getDictionary(fromVolumeId);
+        	UUID target = fromDict.getDictionaryId();
+        	Dictionary.Metadata fromMeta = fromDict.metadata;
+        	
+        	String[] parts = splitWord(word);
+        	Log.d(TAG, String.format("lookup word \"%s\", section \"%s\", name space \"%s\"", parts[0], parts[1], parts[2]));
+        	String nameSpace = parts[2];
+        	
+        	if (fromMeta != null && nameSpace != null) {
+        		Log.d(TAG, String.format("Name space: %s", nameSpace));
+        		if (fromMeta.siteinfo != null) {
+        			Log.d(TAG, "Siteinfo not null");
+        			List interwiki = (List)fromMeta.siteinfo.get("interwikimap");        			
+        			if (interwiki != null) {
+        				Log.d(TAG, "Interwiki map not null");
+        				for (Object item : interwiki) {
+        					Map interwikiItem = (Map)item;
+        					String prefix = (String)interwikiItem.get("prefix");
+        					Log.d(TAG, "Analyzing prefix " + prefix);
+        					if (prefix != null && prefix.equals(nameSpace)) {
+        						Log.d(TAG, "Matching prefix found: " + prefix);
+        						target = findMatchingDict((String)interwikiItem.get("url"));
+        						break;
+        					}
+        				}
+        			}
+        		}
+        	}
+        	
+        	final List<Dictionary> dicts = new ArrayList<Dictionary>(this);
+        	final UUID targetDictUUID = target;
+        	//This is supposed to move volumes of target dict to first positions
+        	//leaving everything else in place, preferred dictionary
+        	//volumes coming next (if preferred and target dictionaries are different)
+    		Comparator<Dictionary> c = new Comparator<Dictionary>() {
+				public int compare(Dictionary d1, Dictionary d2) {
+					UUID id1 = d1.getDictionaryId();
+					UUID id2 = d2.getDictionaryId();
+					if (id1.equals(id2)) {
+						if (id1.equals(targetDictUUID)) {
+							return d1.header.volume - d2.header.volume; 
+						}
+					}
+					else if (id1.equals(targetDictUUID)) {
+						return -1;
+					}
+					if (id2.equals(targetDictUUID)) {
+						return 1;
+					}						
+					return 0;
+				}
+			}; 
+        	Collections.sort(dicts, c);
+
+        	return new Iterator<Entry>() {
+
+        		Entry                 next;
+        		Set<Entry>            seen            = new HashSet<Entry>();
+        		List<Iterator<Entry>> iterators       = new ArrayList<Iterator<Entry>>();
+        		
+        		{
+        			//Unlike in best match lookup, first look in same dict using 
+        			//comparators of diminishing strength
+        			for (Dictionary vol : dicts) {
+        				//Iterate through comparators with step 2 to skip word start comparators
+        				for (int i = 0; i < comparators.length; i = i + 2) {                        
+        					iterators.add(vol.lookup(word, comparators[i]));
+        				}        	
+        			}                		
+        			prepareNext();	
+        		}
+        		
+                private void prepareNext() {
+                    if (!iterators.isEmpty()) {
+                        Iterator<Entry> i = iterators.get(0);
+                        if (i.hasNext()) {
+                            next = i.next();
+                            Log.d(TAG, "follow link: next " + next.title);
+                            if (!seen.contains(next)) {
+                                seen.add(next);
+                            }
+                            else {
+                                next = null;
+                                prepareNext();
+                            }
+                        }
+                        else {
+                            iterators.remove(0);
+                            prepareNext();
+                        }
+                    }
+                    else {
+                    	Log.d(TAG, "follow link: no next");
+                        next = null;
+                    }
+                }
+
+                @Override
+                public boolean hasNext() {
+                    return next != null;
+                }
+
+                @Override
+                public Entry next() {
+                    Entry current = next;
+                    prepareNext();
+                    return current;
+                }
+
+                @Override
+                public void remove() {
+                    throw new UnsupportedOperationException();
+                }
+        	};        	
+        }
+        
+        private UUID findMatchingDict(String serverUrl) {
+        	Log.d(TAG, "Looking for dictionary with server url " + serverUrl);
+        	if (serverUrl == null) 
+        		return null;        	
+        	for (Dictionary d : this) {
+            	String articleURLTemplate = d.getArticleURLTemplate();
+            	Log.d(TAG, "Looking at article url template: " + articleURLTemplate);
+            	if (articleURLTemplate != null && serverUrl.equals(articleURLTemplate)) {
+            		Log.d(TAG, String.format("Dictionary with server url %s found: %s", serverUrl, d.getDictionaryId()));
+            		return d.getDictionaryId();
+            	}
+        	}
+        	Log.d(TAG, String.format("Dictionary with server url %s not found", serverUrl));
+        	return null;
+		}
+
+		public Iterator<Entry> bestMatch(final String word, UUID ... dictUUIDs) {
             final Set<UUID> dictUUIDSet = new HashSet<UUID>();
             dictUUIDSet.addAll(Arrays.asList(dictUUIDs));            
             return new Iterator<Entry>() {
@@ -599,8 +728,9 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
     }
 
     static Iterator<Entry> EMPTY_ITERATOR = new ArrayList<Entry>().iterator();
-
+    
     Iterator<Entry> lookup(final String word, final Comparator<Entry> comparator) {
+    	Log.d(TAG, "Lookup " + word);
         if (isBlank(word)) {
             return EMPTY_ITERATOR;
         }
@@ -648,18 +778,38 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
     
     @SuppressWarnings("unchecked")
     public String getArticleURL(String title) {
+    	String template = getArticleURLTemplate();
+    	if (template != null) {
+    		return template.replace("$1", title);
+    	}
+    	return null;
+    }
+    
+    private String getArticleURLTemplate() {
+    	String[] serverAndArticlePath = getServerAndArticlePath();
+    	String server = serverAndArticlePath[0];
+    	String articlePath = serverAndArticlePath[1];
+    	if (server != null && articlePath != null) {
+    		return server + articlePath;
+    	}		    	
+    	Log.d(TAG, "Not enough metadata to generate article url template");
+    	return null;    	
+    }
+    
+    private String[] getServerAndArticlePath() {
+    	String[] result = new String[]{null, null};
     	if (metadata.siteinfo != null){
         	Map <String, Object> general = (Map <String, Object>)this.metadata.siteinfo.get("general");
         	if (general != null) {
         		Object server = general.get("server");
         		Object articlePath = general.get("articlepath");
-        		if (server != null && articlePath != null) {
-        			return server.toString() + articlePath.toString().replace("$1", title);
-        		}		
+        		if (server != null)
+        			result[0] = server.toString();
+        		if (articlePath != null)
+        			result[1] = articlePath.toString();
         	}
-    	}
-    	Log.d("aarddict", "Not enough metadata to generate online url for title " + title);
-    	return null;
+    	}    	
+    	return result;
     }
     
     Map <Integer, Entry> entryCache = new WeakHashMap<Integer, Entry>(100);
@@ -790,14 +940,34 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
 
     static String[] splitWord(String word) {
         if (word.equals("#")) {
-            return new String[] {"", ""};
+            return new String[] {null, null, null};
         }
-        String[] parts = word.split("#", 2);
-        String section = parts.length == 1 ? "" : parts[1];
-        String lookupWord = (!isBlank(parts[0]) || !isBlank(section)) ? parts[0] : word;
-        return new String[] {lookupWord, section};
+		try {
+			return splitWordAsURI(word);
+		} catch (URISyntaxException e) {
+			Log.d(TAG, "Word is not proper URI: " + word);
+			return splitWordSimple(word);
+		}		                
     }
 
+    static String[] splitWordAsURI(String word) throws URISyntaxException {
+		URI uri = new URI(word);
+		String nameSpace = uri.getScheme();
+		String lookupWord = uri.getSchemeSpecificPart();
+		String section = uri.getFragment();
+		return new String[] {lookupWord, section, nameSpace};     	
+    }
+    
+    static String[] splitWordSimple(String word) {    
+        String[] parts = word.split("#", 2);
+        String section = parts.length == 1 ? null : parts[1];
+        String nsWord = (!isBlank(parts[0]) || !isBlank(section)) ? parts[0] : word;
+        String[] nsParts = nsWord.split(":", 2);      
+        String lookupWord = nsParts.length == 1 ? nsParts[0] : nsParts[1];
+        String nameSpace = nsParts.length == 1 ? null : nsParts[0];
+        return new String[] {lookupWord, section, nameSpace};			    	
+    }
+    
     static boolean isBlank(String s) {
         return s == null || s.equals("");
     }

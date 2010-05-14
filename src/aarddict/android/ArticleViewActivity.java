@@ -16,6 +16,8 @@ import aarddict.Dictionary.RedirectNotFound;
 import aarddict.Dictionary.RedirectTooManyLevels;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -140,18 +142,36 @@ public class ArticleViewActivity extends Activity {
                 	if (currentTask == null) {
                 		currentTask = new TimerTask() {							
 							public void run() {
-	    						final Iterator<Dictionary.Entry> a = dictionaryService.lookup(url);
-	    						runOnUiThread(new Runnable() {
-									public void run() {
-					                    if (a.hasNext()) {
-					                        Dictionary.Entry entry = a.next();
-					                        showArticle(entry);
-					                    }                
-					                    else {					                    	
-					                        showMessage(String.format("Article \"%s\" not found", url));
-					                    }                										
+								try {
+									Dictionary.Article currentArticle = backItems.get(backItems.size() - 1);
+		    						final Iterator<Dictionary.Entry> a = dictionaryService.followLink(url, currentArticle.volumeId);
+		    						runOnUiThread(new Runnable() {
+										public void run() {
+						                    if (a.hasNext()) {
+						                        Dictionary.Entry entry = a.next();
+						                        showArticle(entry);
+						                    }                
+						                    else {					                    	
+						                        showMessage(String.format("Article \"%s\" not found", url));
+						                    }                										
+										}
+									});	
+								}
+								catch (Exception e) {
+									StringBuilder msgBuilder = new StringBuilder("There was an error following link ")
+									.append("\"").append(url).append("\"");
+									if (e.getMessage() != null) {
+										msgBuilder.append(": ").append(e.getMessage());
 									}
-								});								
+									
+									final String msg = msgBuilder.toString(); 
+									Log.e(TAG, msg, e);
+									runOnUiThread(new Runnable() {
+										public void run() {
+											showError(msg);											
+										}
+									});									
+								}
 							}
 						};
 						timer.schedule(currentTask, 0);
@@ -175,7 +195,7 @@ public class ArticleViewActivity extends Activity {
                 long articlePointer = intent.getLongExtra("articlePointer", -1);
                 dictionaryService.setPreferred(volumeId);
             	showArticle(volumeId, articlePointer, word, section);
-            }
+            } 
 
             public void onServiceDisconnected(ComponentName className) {
             	dictionaryService = null;

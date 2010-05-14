@@ -202,6 +202,10 @@ public class DictionaryService extends Service {
     public Iterator<Dictionary.Entry> lookup(CharSequence word) {
         return dicts.bestMatch(word.toString());
     }
+    
+    public Iterator<Dictionary.Entry> followLink(CharSequence word, String fromVolumeId) {
+        return dicts.followLink(word.toString(), fromVolumeId);
+    }    
 
     public Dictionary.Article redirect(Dictionary.Article article) throws RedirectError, IOException {
         return dicts.redirect(article);

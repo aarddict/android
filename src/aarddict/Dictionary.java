@@ -588,6 +588,8 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
     String           sha1sum;
 
 	private File origFile;
+
+	private String articleURLTemplate;
     
     public static class Metadata {
 		public String title;
@@ -657,7 +659,8 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
             		Log.e(TAG, format("Failed to write metadata to cache file %s", metadataCacheFile.getName()), e);
             	}            	
             }                    
-        }        
+        }
+        initArticleURLTemplate();        
     }
 
     public String getId() {
@@ -776,7 +779,6 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
         return iterator;
     }
     
-    @SuppressWarnings("unchecked")
     public String getArticleURL(String title) {
     	String template = getArticleURLTemplate();
     	if (template != null) {
@@ -785,17 +787,23 @@ public class Dictionary extends AbstractList<Dictionary.Entry> {
     	return null;
     }
     
-    private String getArticleURLTemplate() {
+    String getArticleURLTemplate() {
+    	return articleURLTemplate;
+    }
+        
+    private void initArticleURLTemplate() {
     	String[] serverAndArticlePath = getServerAndArticlePath();
     	String server = serverAndArticlePath[0];
     	String articlePath = serverAndArticlePath[1];
     	if (server != null && articlePath != null) {
-    		return server + articlePath;
-    	}		    	
-    	Log.d(TAG, "Not enough metadata to generate article url template");
-    	return null;    	
+    		articleURLTemplate = server + articlePath;
+    	}
+    	else {
+    		Log.d(TAG, "Not enough metadata to generate article url template");
+    	}
     }
     
+    @SuppressWarnings("unchecked")
     private String[] getServerAndArticlePath() {
     	String[] result = new String[]{null, null};
     	if (metadata.siteinfo != null){

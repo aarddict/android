@@ -16,8 +16,8 @@ public class MatchIterator implements Iterator<Entry> {
     Set<Entry>            seen            = new HashSet<Entry>();
     List<Iterator<Entry>> iterators       = new ArrayList<Iterator<Entry>>();                
 
-    MatchIterator(Iterable<Dictionary> dictionaries, Comparator<Entry>[] comparators, String word) {
-    	for (Dictionary vol : dictionaries) {
+    MatchIterator(Iterable<Volume> dictionaries, Comparator<Entry>[] comparators, String word) {
+    	for (Volume vol : dictionaries) {
     		for (Comparator<Entry> c : comparators) {
             	iterators.add(vol.lookup(word, c));
             }
@@ -26,9 +26,9 @@ public class MatchIterator implements Iterator<Entry> {
     }
     
     
-    MatchIterator(Comparator<Entry>[] comparators, Iterable<Dictionary> dictionaries, String word) {
+    MatchIterator(Comparator<Entry>[] comparators, Iterable<Volume> dictionaries, String word) {
         for (Comparator<Entry> c : comparators) {
-            for (Dictionary vol : dictionaries) {
+            for (Volume vol : dictionaries) {
             	iterators.add(vol.lookup(word, c));
             }
         }

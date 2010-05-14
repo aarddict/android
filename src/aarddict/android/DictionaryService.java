@@ -14,7 +14,7 @@ import java.util.UUID;
 
 import aarddict.Article;
 import aarddict.Collection;
-import aarddict.Dictionary;
+import aarddict.Volume;
 import aarddict.Entry;
 import aarddict.Metadata;
 import aarddict.RedirectError;
@@ -119,11 +119,11 @@ public class DictionaryService extends Service {
         Map<File, Exception> errors = new HashMap<File, Exception>();
         for (int i = 0;  i < files.size(); i++) {
         	File file = files.get(i);
-        	Dictionary d = null;
+        	Volume d = null;
             try {
             	Log.d(TAG, "Opening " + file.getName());
-                d = new Dictionary(file, metaCacheDir, knownMeta);
-                Dictionary existing = dicts.getDictionary(d.getId());
+                d = new Volume(file, metaCacheDir, knownMeta);
+                Volume existing = dicts.getDictionary(d.getId());
                 if (existing == null) {
                 	Log.d(TAG, "Dictionary " + d.getId() + " is not in current collection");
                 	dicts.add(d);
@@ -157,7 +157,7 @@ public class DictionaryService extends Service {
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-        for (Dictionary d : dicts) {
+        for (Volume d : dicts) {
             try {
                 d.close();
             }
@@ -213,7 +213,7 @@ public class DictionaryService extends Service {
         return dicts.redirect(article);
     }
 
-    public Dictionary getDictionary(String volumeId) {
+    public Volume getDictionary(String volumeId) {
         return dicts.getDictionary(volumeId);
     }
     
@@ -226,12 +226,12 @@ public class DictionaryService extends Service {
     }
     
     @SuppressWarnings("unchecked")
-    public Map<UUID, List<Dictionary>> getVolumes() {
-    	Map<UUID, List<Dictionary>> result = new LinkedHashMap();
-    	for (Dictionary d : dicts) {
+    public Map<UUID, List<Volume>> getVolumes() {
+    	Map<UUID, List<Volume>> result = new LinkedHashMap();
+    	for (Volume d : dicts) {
     		UUID dictionaryId = d.getDictionaryId();
 			if (!result.containsKey(dictionaryId)) {
-				result.put(dictionaryId, new ArrayList<Dictionary>());
+				result.put(dictionaryId, new ArrayList<Volume>());
 			}
 			result.get(dictionaryId).add(d);
     	}    	    	

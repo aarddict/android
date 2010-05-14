@@ -32,13 +32,13 @@ final class RandomAccessFile extends java.io.RandomAccessFile {
     public final String readUTF8(int length) throws IOException {
         byte[] s = new byte[length];
         this.read(s);
-        return Dictionary.utf8(s);
+        return Volume.utf8(s);
     }
 
     public final UUID readUUID() throws IOException {
         byte[] s = new byte[16];
         this.read(s);
-        return Dictionary.uuid(s);
+        return Volume.uuid(s);
     }
 
 }

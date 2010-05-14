@@ -32,7 +32,7 @@ public final class Article {
 
     @SuppressWarnings("unchecked")
     static Article fromJsonStr(String serializedArticle) throws IOException {
-    	Object[] articleTuple = Dictionary.mapper.readValue(serializedArticle, Object[].class);
+    	Object[] articleTuple = Volume.mapper.readValue(serializedArticle, Object[].class);
         Article article = new Article();
         article.text = String.valueOf(articleTuple[0]);
         if (articleTuple.length == 3) {

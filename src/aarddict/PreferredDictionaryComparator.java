@@ -6,7 +6,7 @@ package aarddict;
 import java.util.Comparator;
 import java.util.UUID;
 
-final class PreferredDictionaryComparator implements Comparator<Dictionary> {
+final class PreferredDictionaryComparator implements Comparator<Volume> {
 	
 	private final UUID preferred;
 	
@@ -14,7 +14,7 @@ final class PreferredDictionaryComparator implements Comparator<Dictionary> {
 		this.preferred = preferred;
 	}
 	
-	public int compare(Dictionary d1, Dictionary d2) {
+	public int compare(Volume d1, Volume d2) {
 		UUID id1 = d1.getDictionaryId();
 		UUID id2 = d2.getDictionaryId();
 		if (id1.equals(id2)) {

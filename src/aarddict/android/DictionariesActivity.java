@@ -16,7 +16,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 
-import aarddict.Dictionary;
+import aarddict.Volume;
 import aarddict.VerifyProgressListener;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -118,12 +118,12 @@ public class DictionariesActivity extends Activity {
     {
 
 		LayoutInflater inflater;    	
-		List<List<Dictionary>> volumes;
+		List<List<Volume>> volumes;
 		Timer timer = new Timer();
 		long TIME_UPDATE_PERIOD = 60*1000;
 
 		@SuppressWarnings("unchecked")
-        public DictListAdapter(Map<UUID, List<Dictionary>> volumes) {
+        public DictListAdapter(Map<UUID, List<Volume>> volumes) {
 			this.volumes = new ArrayList();
 			this.volumes.addAll(volumes.values());
             inflater = (LayoutInflater) getSystemService(
@@ -170,7 +170,7 @@ public class DictionariesActivity extends Activity {
         	}
         	
 			@Override
-			public boolean updateProgress(final Dictionary d, final double progress) {
+			public boolean updateProgress(final Volume d, final double progress) {
 				handler.post(new Runnable() {
 					public void run() {
 						CharSequence m = getTitle(d, true);
@@ -182,7 +182,7 @@ public class DictionariesActivity extends Activity {
 			}
 
 			@Override
-			public void verified(final Dictionary d, final boolean ok) {
+			public void verified(final Volume d, final boolean ok) {
 				verifiedCount++;
 				Log.i(TAG, String.format("Verified %s: %s", d.getDisplayTitle(), (ok ? "ok" : "corrupted")));
 				if (!ok) {
@@ -245,7 +245,7 @@ public class DictionariesActivity extends Activity {
 		}
 		
 		public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-			final List<Dictionary> allDictVols = volumes.get(position);
+			final List<Volume> allDictVols = volumes.get(position);
 			final ProgressDialog progressDialog = new ProgressDialog(DictionariesActivity.this);
 			progressDialog.setIndeterminate(false);
 	        progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
@@ -257,7 +257,7 @@ public class DictionariesActivity extends Activity {
 			Runnable verify = new Runnable() {																			
 				@Override
 				public void run() {
-					for (Dictionary d : allDictVols) {						
+					for (Volume d : allDictVols) {						
 						try {
 							d.verify(progressListener);
 						} catch (Exception e) {
@@ -289,7 +289,7 @@ public class DictionariesActivity extends Activity {
 			return true;
 		}
         
-		CharSequence getTitle(Dictionary d, boolean withVol) {
+		CharSequence getTitle(Volume d, boolean withVol) {
 			StringBuilder s = new StringBuilder(d.getDisplayTitle(withVol));
 			if (d.metadata.version != null) {
 				s.append(" ").append(d.metadata.version);	
@@ -298,9 +298,9 @@ public class DictionariesActivity extends Activity {
 		}
 		
         public View getView(int position, View convertView, ViewGroup parent) {
-        	List<Dictionary> allDictVols = volumes.get(position);
+        	List<Volume> allDictVols = volumes.get(position);
         	int volCount = allDictVols.size();
-        	Dictionary d = allDictVols.get(0);
+        	Volume d = allDictVols.get(0);
         	
             TwoLineListItem view = (convertView != null) ? (TwoLineListItem) convertView :
                 createView(parent);

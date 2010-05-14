@@ -14,34 +14,34 @@ import java.util.UUID;
 
 import android.util.Log;
 
-public final class Collection extends ArrayList<Dictionary> {
+public final class Collection extends ArrayList<Volume> {
 
 	int maxRedirectLevels = 5;
 
 	public Iterator<Entry> followLink(final String word, String fromVolumeId) {
-		Log.d(Dictionary.TAG, String.format("Follow link \"%s\", %s", word,
+		Log.d(Volume.TAG, String.format("Follow link \"%s\", %s", word,
 				fromVolumeId));
-		Dictionary fromDict = getDictionary(fromVolumeId);
+		Volume fromDict = getDictionary(fromVolumeId);
 		UUID target = fromDict.getDictionaryId();
 		Metadata fromMeta = fromDict.metadata;
 
 		LookupWord parts = LookupWord.splitWord(word);
-		Log.d(Dictionary.TAG, parts.toString());
+		Log.d(Volume.TAG, parts.toString());
 		String nameSpace = parts.nameSpace;
 
 		if (fromMeta != null && nameSpace != null) {
-			Log.d(Dictionary.TAG, String.format("Name space: %s", nameSpace));
+			Log.d(Volume.TAG, String.format("Name space: %s", nameSpace));
 			if (fromMeta.siteinfo != null) {
-				Log.d(Dictionary.TAG, "Siteinfo not null");
+				Log.d(Volume.TAG, "Siteinfo not null");
 				List interwiki = (List) fromMeta.siteinfo.get("interwikimap");
 				if (interwiki != null) {
-					Log.d(Dictionary.TAG, "Interwiki map not null");
+					Log.d(Volume.TAG, "Interwiki map not null");
 					for (Object item : interwiki) {
 						Map interwikiItem = (Map) item;
 						String prefix = (String) interwikiItem.get("prefix");
-						Log.d(Dictionary.TAG, "Analyzing prefix " + prefix);
+						Log.d(Volume.TAG, "Analyzing prefix " + prefix);
 						if (prefix != null && prefix.equals(nameSpace)) {
-							Log.d(Dictionary.TAG, "Matching prefix found: "
+							Log.d(Volume.TAG, "Matching prefix found: "
 									+ prefix);
 							target = findMatchingDict((String) interwikiItem
 									.get("url"));
@@ -52,48 +52,48 @@ public final class Collection extends ArrayList<Dictionary> {
 			}
 		}
 
-		final List<Dictionary> dicts = new ArrayList<Dictionary>(this);
+		final List<Volume> dicts = new ArrayList<Volume>(this);
 		// This is supposed to move volumes of target dict to first positions
 		// leaving everything else in place, preferred dictionary
 		// volumes coming next (if preferred and target dictionaries are
 		// different)
-		Comparator<Dictionary> c = new PreferredDictionaryComparator(target);
+		Comparator<Volume> c = new PreferredDictionaryComparator(target);
 		Collections.sort(dicts, c);
 		return new MatchIterator(dicts, EntryComparators.FULL_WORD, word);
 	}
 
 	private UUID findMatchingDict(String serverUrl) {
-		Log.d(Dictionary.TAG, "Looking for dictionary with server url "
+		Log.d(Volume.TAG, "Looking for dictionary with server url "
 				+ serverUrl);
 		if (serverUrl == null)
 			return null;
-		for (Dictionary d : this) {
+		for (Volume d : this) {
 			String articleURLTemplate = d.getArticleURLTemplate();
-			Log.d(Dictionary.TAG, "Looking at article url template: "
+			Log.d(Volume.TAG, "Looking at article url template: "
 					+ articleURLTemplate);
 			if (articleURLTemplate != null
 					&& serverUrl.equals(articleURLTemplate)) {
-				Log.d(Dictionary.TAG, String.format(
+				Log.d(Volume.TAG, String.format(
 						"Dictionary with server url %s found: %s", serverUrl, d
 								.getDictionaryId()));
 				return d.getDictionaryId();
 			}
 		}
-		Log.d(Dictionary.TAG, String.format(
+		Log.d(Volume.TAG, String.format(
 				"Dictionary with server url %s not found", serverUrl));
 		return null;
 	}
 
 	public Iterator<Entry> bestMatch(final String word, UUID... dictUUIDs) {
 
-		List<Dictionary> volumes;
+		List<Volume> volumes;
 		if (dictUUIDs.length == 0) {
 			volumes = this;
 		} else {
 			final Set<UUID> dictUUIDSet = new HashSet<UUID>();
 			dictUUIDSet.addAll(Arrays.asList(dictUUIDs));
-			volumes = new ArrayList<Dictionary>();
-			for (Dictionary vol : this) {
+			volumes = new ArrayList<Volume>();
+			for (Volume vol : this) {
 				if (dictUUIDSet.contains(vol.header.uuid)) {
 					volumes.add(vol);
 				}
@@ -104,7 +104,7 @@ public final class Collection extends ArrayList<Dictionary> {
 	}
 
 	public Article getArticle(Entry e) throws IOException {
-		Dictionary d = getDictionary(e.volumeId);
+		Volume d = getDictionary(e.volumeId);
 		Article a = d.readArticle(e.articlePointer);
 		a.title = e.title;
 		a.section = e.section;
@@ -136,9 +136,9 @@ public final class Collection extends ArrayList<Dictionary> {
 		return redirect(article, 0);
 	}
 
-	public Dictionary getDictionary(String volumeId) {
+	public Volume getDictionary(String volumeId) {
 
-		for (Dictionary d : this) {
+		for (Volume d : this) {
 			if (d.sha1sum.equals(volumeId)) {
 				return d;
 			}
@@ -147,9 +147,9 @@ public final class Collection extends ArrayList<Dictionary> {
 	}
 
 	public void makeFirst(String volumeId) {
-		Dictionary d = getDictionary(volumeId);
+		Volume d = getDictionary(volumeId);
 		if (d != null) {
-			Comparator<Dictionary> c = new PreferredDictionaryComparator(d
+			Comparator<Volume> c = new PreferredDictionaryComparator(d
 					.getDictionaryId());
 			Collections.sort(this, c);
 		}

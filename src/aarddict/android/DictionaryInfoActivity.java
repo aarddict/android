@@ -1,6 +1,6 @@
 package aarddict.android;
 
-import aarddict.Dictionary;
+import aarddict.Volume;
 import aarddict.Metadata;
 import android.app.Activity;
 import android.content.ComponentName;
@@ -71,7 +71,7 @@ public class DictionaryInfoActivity extends Activity implements TabContentFactor
 	public View createTabContent(String tag) {
 		Intent intent = getIntent();
 		String volumeId = intent.getStringExtra("volumeId");
-		Dictionary d = dictionaryService.getDictionary(volumeId);
+		Volume d = dictionaryService.getDictionary(volumeId);
 		setTitle(new StringBuilder(d.getDisplayTitle(false)).append(" ").append(d.metadata.version));
 		Metadata m = d.metadata;
 		TextView textView = new TextView(this);

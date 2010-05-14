@@ -15,7 +15,7 @@ public class SectionMatcher {
     }
     
     public boolean match(String section, String candidate, int strength) {        
-        Comparator<Entry> c = EntryComparators.comparators[strength];
+        Comparator<Entry> c = EntryComparators.ALL[strength];
         Entry e1 = new Entry(null, section.trim());
         Entry e2 = new Entry(null, candidate.trim());
         boolean result = c.compare(e1, e2) == 0;
@@ -24,6 +24,6 @@ public class SectionMatcher {
     }                
 
     public int getNumberOfComparators() {
-        return EntryComparators.comparators.length;
+        return EntryComparators.ALL.length;
     }
 }

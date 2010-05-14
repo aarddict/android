@@ -28,9 +28,9 @@ public final class Collection extends ArrayList<Dictionary> {
     	UUID target = fromDict.getDictionaryId();
     	Metadata fromMeta = fromDict.metadata;
     	
-    	String[] parts = Dictionary.splitWord(word);
-    	Log.d(Dictionary.TAG, String.format("lookup word \"%s\", section \"%s\", name space \"%s\"", parts[0], parts[1], parts[2]));
-    	String nameSpace = parts[2];
+    	LookupWord parts = LookupWord.splitWord(word);
+    	Log.d(Dictionary.TAG, parts.toString());
+    	String nameSpace = parts.nameSpace;
     	
     	if (fromMeta != null && nameSpace != null) {
     		Log.d(Dictionary.TAG, String.format("Name space: %s", nameSpace));

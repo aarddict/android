@@ -2,6 +2,7 @@ package aarddict;
 
 import static java.lang.String.format;
 
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -32,7 +33,6 @@ import org.codehaus.jackson.map.ObjectMapper;
 import android.util.Log;
 
 import com.ibm.icu.text.Collator;
-
 
 public final class Dictionary extends AbstractList<Entry> {
 
@@ -184,12 +184,13 @@ public final class Dictionary extends AbstractList<Entry> {
     
     Iterator<Entry> lookup(final String word, final Comparator<Entry> comparator) {
     	Log.d(TAG, "Lookup " + word);
-        if (isBlank(word)) {
+    	LookupWord parts = LookupWord.splitWord(word);
+        if (parts.isEmpty()) {
             return EMPTY_ITERATOR;
         }
-        String[] parts = splitWord(word);
-        final String lookupWord = parts[0];
-        final String section = parts[1];
+        
+        final String lookupWord = parts.word;
+        final String section = parts.section;
         final Entry lookupEntry = new Entry(this.getId(), lookupWord);
         final int initialIndex = binarySearch(this, lookupEntry, comparator);
         Iterator<Entry> iterator = new Iterator<Entry>() {
@@ -395,41 +396,7 @@ public final class Dictionary extends AbstractList<Entry> {
         }
         return lo;
     }
-
-    static String[] splitWord(String word) {
-        if (word.equals("#")) {
-            return new String[] {null, null, null};
-        }
-		try {
-			return splitWordAsURI(word);
-		} catch (URISyntaxException e) {
-			Log.d(TAG, "Word is not proper URI: " + word);
-			return splitWordSimple(word);
-		}		                
-    }
-
-    static String[] splitWordAsURI(String word) throws URISyntaxException {
-		URI uri = new URI(word);
-		String nameSpace = uri.getScheme();
-		String lookupWord = uri.getSchemeSpecificPart();
-		String section = uri.getFragment();
-		return new String[] {lookupWord, section, nameSpace};     	
-    }
     
-    static String[] splitWordSimple(String word) {    
-        String[] parts = word.split("#", 2);
-        String section = parts.length == 1 ? null : parts[1];
-        String nsWord = (!isBlank(parts[0]) || !isBlank(section)) ? parts[0] : word;
-        String[] nsParts = nsWord.split(":", 2);      
-        String lookupWord = nsParts.length == 1 ? nsParts[0] : nsParts[1];
-        String nameSpace = nsParts.length == 1 ? null : nsParts[0];
-        return new String[] {lookupWord, section, nameSpace};			    	
-    }
-    
-    static boolean isBlank(String s) {
-        return s == null || s.equals("");
-    }
-
     public CharSequence getDisplayTitle() {
     	return getDisplayTitle(true);
     }

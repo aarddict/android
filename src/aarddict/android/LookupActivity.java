@@ -8,7 +8,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import aarddict.Dictionary;
+import aarddict.Entry;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -249,7 +249,7 @@ public class LookupActivity extends Activity {
         };        
         handler.post(updateProgress);
     	long t0 = System.currentTimeMillis();
-        Iterator<Dictionary.Entry> results = dictionaryService.lookup(word);
+        Iterator<Entry> results = dictionaryService.lookup(word);
         Log.d(TAG, "Looked up " + word + " in " + (System.currentTimeMillis() - t0));
         final WordAdapter wordAdapter = new WordAdapter(results);
         final Runnable updateWordList = new Runnable() {            
@@ -262,7 +262,7 @@ public class LookupActivity extends Activity {
         handler.post(updateWordList);
     }           
     
-    private void launchWord(Dictionary.Entry theWord) {
+    private void launchWord(Entry theWord) {
         Intent next = new Intent();
         next.setClass(this, ArticleViewActivity.class);                       
         next.putExtra("word", theWord.title);        
@@ -275,16 +275,16 @@ public class LookupActivity extends Activity {
     
     class WordAdapter extends BaseAdapter implements AdapterView.OnItemClickListener {
 
-        private final List<Dictionary.Entry> words;
+        private final List<Entry> words;
         private final LayoutInflater         mInflater;
         private int                          itemCount;
         private LinearLayout                 more;
-        private Iterator<Dictionary.Entry>   results;
+        private Iterator<Entry>   results;
         private boolean                      displayMore;
 
-        public WordAdapter(Iterator<Dictionary.Entry> results) {
+        public WordAdapter(Iterator<Entry> results) {
             this.results = results;                        
-            this.words = new ArrayList<Dictionary.Entry>();                        
+            this.words = new ArrayList<Entry>();                        
             loadBatch();
             mInflater = (LayoutInflater) LookupActivity.this.getSystemService(
                     Context.LAYOUT_INFLATER_SERVICE);
@@ -349,7 +349,7 @@ public class LookupActivity extends Activity {
             return item;
         }
 
-        private void bindView(TwoLineListItem view, Dictionary.Entry word) {
+        private void bindView(TwoLineListItem view, Entry word) {
             view.getText1().setText(word.title);
             view.getText2().setText(dictionaryService.getDisplayTitle(word.volumeId));
         }

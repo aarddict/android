@@ -10,10 +10,11 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import aarddict.Article;
 import aarddict.Dictionary;
-import aarddict.Dictionary.Article;
-import aarddict.Dictionary.RedirectNotFound;
-import aarddict.Dictionary.RedirectTooManyLevels;
+import aarddict.Entry;
+import aarddict.RedirectNotFound;
+import aarddict.RedirectTooManyLevels;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Notification;
@@ -47,8 +48,8 @@ public class ArticleViewActivity extends Activity {
     private String mediawikiMonobookCSS;
     private String js;
         
-    private List<Dictionary.Article> backItems; 
-    private List<Dictionary.Article> forwardItems;
+    private List<Article> backItems; 
+    private List<Article> forwardItems;
     
     DictionaryService 	dictionaryService;
     ServiceConnection 	connection;
@@ -64,8 +65,8 @@ public class ArticleViewActivity extends Activity {
 
         timer = new Timer();
         
-        backItems = new LinkedList<Dictionary.Article>();
-        forwardItems = new LinkedList<Dictionary.Article>();
+        backItems = new LinkedList<Article>();
+        forwardItems = new LinkedList<Article>();
         
         getWindow().requestFeature(Window.FEATURE_PROGRESS);        
         getWindow().requestFeature(Window.FEATURE_LEFT_ICON);
@@ -108,14 +109,14 @@ public class ArticleViewActivity extends Activity {
                     String[] parts = url.split("#", 2);
                     section = parts[1];
                     if (backItems.size() > 0) {
-                        Dictionary.Article current = backItems.get(backItems.size() - 1);
-                        Dictionary.Article a = new Dictionary.Article(current);
+                        Article current = backItems.get(backItems.size() - 1);
+                        Article a = new Article(current);
                         a.section = section;
                         backItems.add(a);
                     }
                 }
                 else if (backItems.size() > 0) {
-                    Dictionary.Article current = backItems.get(backItems.size() - 1);
+                    Article current = backItems.get(backItems.size() - 1);
                     section = current.section;
                 }
                 
@@ -143,12 +144,12 @@ public class ArticleViewActivity extends Activity {
                 		currentTask = new TimerTask() {							
 							public void run() {
 								try {
-									Dictionary.Article currentArticle = backItems.get(backItems.size() - 1);
-		    						final Iterator<Dictionary.Entry> a = dictionaryService.followLink(url, currentArticle.volumeId);
+									Article currentArticle = backItems.get(backItems.size() - 1);
+		    						final Iterator<Entry> a = dictionaryService.followLink(url, currentArticle.volumeId);
 		    						runOnUiThread(new Runnable() {
 										public void run() {
 						                    if (a.hasNext()) {
-						                        Dictionary.Entry entry = a.next();
+						                        Entry entry = a.next();
 						                        showArticle(entry);
 						                    }                
 						                    else {					                    	
@@ -228,9 +229,9 @@ public class ArticleViewActivity extends Activity {
     		return true;
     	}
         if (backItems.size() > 1) {
-            Dictionary.Article current = backItems.remove(backItems.size() - 1); 
+            Article current = backItems.remove(backItems.size() - 1); 
             forwardItems.add(0, current);
-            Dictionary.Article prev = backItems.remove(backItems.size() - 1);
+            Article prev = backItems.remove(backItems.size() - 1);
             
             if (prev.eqalsIgnoreSection(current)) {
                 backItems.add(prev);
@@ -249,8 +250,8 @@ public class ArticleViewActivity extends Activity {
     		return true;
     	}    	
         if (forwardItems.size() > 0){              
-            Dictionary.Article next = forwardItems.remove(0);
-            Dictionary.Article current = backItems.get(backItems.size() - 1);
+            Article next = forwardItems.remove(0);
+            Article current = backItems.get(backItems.size() - 1);
             if (next.eqalsIgnoreSection(current)) {
                 backItems.add(next);
                 goToSection(next.section);                
@@ -304,7 +305,7 @@ public class ArticleViewActivity extends Activity {
     
     private void viewOnline() {
         if (this.backItems.size() > 0) {            
-            Dictionary.Article current = this.backItems.get(this.backItems.size() - 1);
+            Article current = this.backItems.get(this.backItems.size() - 1);
             Dictionary d = dictionaryService.getDictionary(current.volumeId);
             String url = d == null ? null : d.getArticleURL(current.title);
             if (url != null) {
@@ -327,12 +328,12 @@ public class ArticleViewActivity extends Activity {
             return;
         }
         
-        Dictionary.Entry entry = new Dictionary.Entry(d.getId(), word, articlePointer);
+        Entry entry = new Entry(d.getId(), word, articlePointer);
         entry.section = section;
         showArticle(entry);
     }    
     
-    private void showArticle(final Dictionary.Entry entry) {
+    private void showArticle(final Entry entry) {
     	forwardItems.clear();    	
     	setTitle(entry);
     	setProgress(500);
@@ -358,7 +359,7 @@ public class ArticleViewActivity extends Activity {
     	timer.schedule(currentTask, 0);
     }
     
-    private void showArticle(Dictionary.Article a) {
+    private void showArticle(Article a) {
         try {
             a = dictionaryService.redirect(a);
         }            
@@ -420,7 +421,7 @@ public class ArticleViewActivity extends Activity {
     	setTitle(a.title, dictionaryService.getDisplayTitle(a.volumeId));
     }
     
-    private void setTitle(Dictionary.Entry e) {
+    private void setTitle(Entry e) {
     	setTitle(e.title, dictionaryService.getDisplayTitle(e.volumeId));
     }    
     

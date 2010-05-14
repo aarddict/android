@@ -12,10 +12,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import aarddict.Article;
+import aarddict.Collection;
 import aarddict.Dictionary;
-import aarddict.Dictionary.Article;
-import aarddict.Dictionary.Entry;
-import aarddict.Dictionary.RedirectError;
+import aarddict.Entry;
+import aarddict.Metadata;
+import aarddict.RedirectError;
 import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
@@ -40,7 +42,7 @@ public class DictionaryService extends Service {
 	public final static String DICT_OPEN_FAILED = TAG + ".DICT_OPEN_FAILED";
 	public final static String OPEN_FINISHED = TAG + ".OPEN_FINISHED";
 	
-	Dictionary.Collection dicts;
+	Collection dicts;
 	
 	private boolean started = false;
 	private boolean starting = false;
@@ -65,7 +67,7 @@ public class DictionaryService extends Service {
 	@Override
 	public void onCreate() {
 		Log.d(TAG, "On create");
-		dicts = new Dictionary.Collection();
+		dicts = new Collection();
 	}
 
 	
@@ -112,7 +114,7 @@ public class DictionaryService extends Service {
 	    	}
     	}
     	
-        Map<UUID, Dictionary.Metadata> knownMeta = new HashMap<UUID, Dictionary.Metadata>();
+        Map<UUID, Metadata> knownMeta = new HashMap<UUID, Metadata>();
                     
         Map<File, Exception> errors = new HashMap<File, Exception>();
         for (int i = 0;  i < files.size(); i++) {
@@ -199,15 +201,15 @@ public class DictionaryService extends Service {
     	dicts.makeFirst(volumeId);    	
     }
     
-    public Iterator<Dictionary.Entry> lookup(CharSequence word) {
+    public Iterator<Entry> lookup(CharSequence word) {
         return dicts.bestMatch(word.toString());
     }
     
-    public Iterator<Dictionary.Entry> followLink(CharSequence word, String fromVolumeId) {
+    public Iterator<Entry> followLink(CharSequence word, String fromVolumeId) {
         return dicts.followLink(word.toString(), fromVolumeId);
     }    
 
-    public Dictionary.Article redirect(Dictionary.Article article) throws RedirectError, IOException {
+    public Article redirect(Article article) throws RedirectError, IOException {
         return dicts.redirect(article);
     }
 
@@ -215,7 +217,7 @@ public class DictionaryService extends Service {
         return dicts.getDictionary(volumeId);
     }
     
-    public Dictionary.Collection getDictionaries() {
+    public Collection getDictionaries() {
     	return dicts;
     }
     

@@ -1,7 +1,7 @@
 package aarddict.android;
 
 import aarddict.Dictionary;
-import aarddict.Dictionary.Metadata;
+import aarddict.Metadata;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;

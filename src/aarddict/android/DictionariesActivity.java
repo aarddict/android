@@ -17,7 +17,7 @@ import java.util.TimerTask;
 import java.util.UUID;
 
 import aarddict.Dictionary;
-import aarddict.Dictionary.VerifyProgressListener;
+import aarddict.VerifyProgressListener;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;

@@ -71,8 +71,8 @@ public final class Collection extends ArrayList<Dictionary> {
     			//comparators of diminishing strength
     			for (Dictionary vol : dicts) {
     				//Iterate through comparators with step 2 to skip word start comparators
-    				for (int i = 0; i < Dictionary.comparators.length; i = i + 2) {                        
-    					iterators.add(vol.lookup(word, Dictionary.comparators[i]));
+    				for (int i = 0; i < EntryComparators.comparators.length; i = i + 2) {                        
+    					iterators.add(vol.lookup(word, EntryComparators.comparators[i]));
     				}        	
     			}                		
     			prepareNext();	
@@ -148,7 +148,7 @@ public final class Collection extends ArrayList<Dictionary> {
             Set<Entry>            seen            = new HashSet<Entry>();
             List<Iterator<Entry>> iterators       = new ArrayList<Iterator<Entry>>();                
             {
-                for (Comparator<Entry> c : Dictionary.comparators) {
+                for (Comparator<Entry> c : EntryComparators.comparators) {
                     for (Dictionary vol : Collection.this) {
                         if (dictUUIDSet.size() == 0 || dictUUIDSet.contains(vol.header.uuid)) { 
                             iterators.add(vol.lookup(word, c));

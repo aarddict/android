@@ -2,7 +2,6 @@ package aarddict;
 
 import static java.lang.String.format;
 
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -10,8 +9,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -32,8 +29,6 @@ import org.codehaus.jackson.map.ObjectMapper;
 
 import android.util.Log;
 
-import com.ibm.icu.text.Collator;
-
 public final class Dictionary extends AbstractList<Entry> {
 
 	final static String TAG = Dictionary.class.getName();
@@ -41,18 +36,6 @@ public final class Dictionary extends AbstractList<Entry> {
     final static Charset UTF8 = Charset.forName("utf8");
 
     final static Locale  ROOT = new Locale("", "", "");
-
-    @SuppressWarnings("unchecked")
-    public static Comparator<Entry>[] comparators = new Comparator[] {
-            new EntryComparator(Collator.QUATERNARY),
-            new EntryStartComparator(Collator.QUATERNARY),
-            new EntryComparator(Collator.TERTIARY),
-            new EntryStartComparator(Collator.TERTIARY),
-            new EntryComparator(Collator.SECONDARY),
-            new EntryStartComparator(Collator.SECONDARY),
-            new EntryComparator(Collator.PRIMARY),
-            new EntryStartComparator(Collator.PRIMARY)};
-
 
     public Metadata  metadata;
     public Header    header;

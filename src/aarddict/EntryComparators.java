@@ -18,7 +18,7 @@ public class EntryComparators {
 	
 	@SuppressWarnings("unchecked")
 	public static Comparator<Entry>[] ALL = new Comparator[] {
-		FULL4, START4, FULL3, START3, FULL2, START2, FULL1, START1
+		FULL4, FULL3, FULL2, FULL1, START4, START3, START2, START1
 	};
 	
 	@SuppressWarnings("unchecked")

@@ -4,15 +4,18 @@
 package aarddict;
 
 import java.util.Comparator;
+import java.util.Locale;
 
 import com.ibm.icu.text.Collator;
 
 public class EntryComparator implements Comparator<Entry> {
 
+	final static Locale ROOT_LOCALE = new Locale("", "", "");
+	
     Collator collator;
 
     EntryComparator(int strength) {
-        collator = Collator.getInstance(Dictionary.ROOT);
+        collator = Collator.getInstance(ROOT_LOCALE);
         collator.setStrength(strength);
     }
 

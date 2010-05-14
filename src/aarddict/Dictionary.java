@@ -34,9 +34,7 @@ public final class Dictionary extends AbstractList<Entry> {
 	final static String TAG = Dictionary.class.getName();
 	
     final static Charset UTF8 = Charset.forName("utf8");
-
-    final static Locale  ROOT = new Locale("", "", "");
-
+   
     public Metadata  metadata;
     public Header    header;
     RandomAccessFile file;

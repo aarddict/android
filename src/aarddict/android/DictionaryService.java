@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import aarddict.Article;
-import aarddict.Collection;
+import aarddict.Library;
 import aarddict.Volume;
 import aarddict.Entry;
 import aarddict.Metadata;
@@ -42,7 +42,7 @@ public class DictionaryService extends Service {
 	public final static String DICT_OPEN_FAILED = TAG + ".DICT_OPEN_FAILED";
 	public final static String OPEN_FINISHED = TAG + ".OPEN_FINISHED";
 	
-	Collection dicts;
+	Library library;
 	
 	private boolean started = false;
 	private boolean starting = false;
@@ -67,7 +67,7 @@ public class DictionaryService extends Service {
 	@Override
 	public void onCreate() {
 		Log.d(TAG, "On create");
-		dicts = new Collection();
+		library = new Library();
 	}
 
 	
@@ -123,10 +123,10 @@ public class DictionaryService extends Service {
             try {
             	Log.d(TAG, "Opening " + file.getName());
                 d = new Volume(file, metaCacheDir, knownMeta);
-                Volume existing = dicts.getDictionary(d.getId());
+                Volume existing = library.getVolume(d.getId());
                 if (existing == null) {
                 	Log.d(TAG, "Dictionary " + d.getId() + " is not in current collection");
-                	dicts.add(d);
+                	library.add(d);
                 }
                 else {
                 	Log.d(TAG, "Dictionary " + d.getId() + " is already open");
@@ -157,7 +157,7 @@ public class DictionaryService extends Service {
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-        for (Volume d : dicts) {
+        for (Volume d : library) {
             try {
                 d.close();
             }
@@ -165,7 +165,7 @@ public class DictionaryService extends Service {
                 Log.e(TAG, "Failed to close " + d, e);
             }
         }
-        dicts.clear();	
+        library.clear();	
         Log.i(TAG, "destroyed");
 	}
 	
@@ -198,37 +198,37 @@ public class DictionaryService extends Service {
     }
 
     public void setPreferred(String volumeId) {
-    	dicts.makeFirst(volumeId);    	
+    	library.makeFirst(volumeId);    	
     }
     
     public Iterator<Entry> lookup(CharSequence word) {
-        return dicts.bestMatch(word.toString());
+        return library.bestMatch(word.toString());
     }
     
     public Iterator<Entry> followLink(CharSequence word, String fromVolumeId) {
-        return dicts.followLink(word.toString(), fromVolumeId);
+        return library.followLink(word.toString(), fromVolumeId);
     }    
 
     public Article redirect(Article article) throws RedirectError, IOException {
-        return dicts.redirect(article);
+        return library.redirect(article);
     }
 
-    public Volume getDictionary(String volumeId) {
-        return dicts.getDictionary(volumeId);
+    public Volume getVolume(String volumeId) {
+        return library.getVolume(volumeId);
     }
     
-    public Collection getDictionaries() {
-    	return dicts;
+    public Library getDictionaries() {
+    	return library;
     }
     
     public CharSequence getDisplayTitle(String volumeId) {
-    	return dicts.getDictionary(volumeId).getDisplayTitle();
+    	return library.getVolume(volumeId).getDisplayTitle();
     }
     
     @SuppressWarnings("unchecked")
     public Map<UUID, List<Volume>> getVolumes() {
     	Map<UUID, List<Volume>> result = new LinkedHashMap();
-    	for (Volume d : dicts) {
+    	for (Volume d : library) {
     		UUID dictionaryId = d.getDictionaryId();
 			if (!result.containsKey(dictionaryId)) {
 				result.put(dictionaryId, new ArrayList<Volume>());
@@ -240,6 +240,6 @@ public class DictionaryService extends Service {
 
 
 	public Article getArticle(Entry entry) throws IOException {
-		return dicts.getArticle(entry);
+		return library.getArticle(entry);
 	}
 }

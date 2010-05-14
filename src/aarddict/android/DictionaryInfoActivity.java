@@ -71,7 +71,7 @@ public class DictionaryInfoActivity extends Activity implements TabContentFactor
 	public View createTabContent(String tag) {
 		Intent intent = getIntent();
 		String volumeId = intent.getStringExtra("volumeId");
-		Volume d = dictionaryService.getDictionary(volumeId);
+		Volume d = dictionaryService.getVolume(volumeId);
 		setTitle(new StringBuilder(d.getDisplayTitle(false)).append(" ").append(d.metadata.version));
 		Metadata m = d.metadata;
 		TextView textView = new TextView(this);

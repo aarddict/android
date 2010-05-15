@@ -11,14 +11,12 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import aarddict.Article;
-import aarddict.Volume;
 import aarddict.Entry;
 import aarddict.RedirectNotFound;
 import aarddict.RedirectTooManyLevels;
+import aarddict.Volume;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Notification;
-import android.app.NotificationManager;
 import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -56,6 +54,7 @@ public class ArticleViewActivity extends Activity {
     
     Timer               timer;
     TimerTask 			currentTask;
+    Iterator<Entry>     currentIterator;
         
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,7 +70,9 @@ public class ArticleViewActivity extends Activity {
         getWindow().requestFeature(Window.FEATURE_PROGRESS);        
         getWindow().requestFeature(Window.FEATURE_LEFT_ICON);
         
-        articleView = new WebView(this);        
+        articleView = new WebView(this) {
+        };
+        
         articleView.getSettings().setBuiltInZoomControls(true);
         articleView.getSettings().setJavaScriptEnabled(true);
         
@@ -98,7 +99,7 @@ public class ArticleViewActivity extends Activity {
         });
                        
         articleView.setWebViewClient(new WebViewClient() {
-            
+                    	        	
             @Override
             public void onPageFinished(WebView view, String url) {
                 Log.d(TAG, "Page finished: " + url);
@@ -145,11 +146,11 @@ public class ArticleViewActivity extends Activity {
 							public void run() {
 								try {
 									Article currentArticle = backItems.get(backItems.size() - 1);
-		    						final Iterator<Entry> a = dictionaryService.followLink(url, currentArticle.volumeId);
+									currentIterator = dictionaryService.followLink(url, currentArticle.volumeId);
 		    						runOnUiThread(new Runnable() {
 										public void run() {
-						                    if (a.hasNext()) {
-						                        Entry entry = a.next();
+						                    if (currentIterator.hasNext()) {
+						                        Entry entry = currentIterator.next();
 						                        showArticle(entry);
 						                    }                
 						                    else {					                    	
@@ -258,10 +259,18 @@ public class ArticleViewActivity extends Activity {
             } else {
                 showArticle(next);
             }
+            return true;
         }
         return false;
     }
 
+    private void nextArticle() {    	
+    	if (!goForward() && currentIterator != null && currentIterator.hasNext()) {
+    		Entry entry = currentIterator.next();
+    		showArticle(entry);
+    	}
+    }
+        
     @Override
     public boolean onSearchRequested() {
         finish();
@@ -272,15 +281,18 @@ public class ArticleViewActivity extends Activity {
     final static int MENU_FORWARD = 2;
     final static int MENU_VIEW_ONLINE = 3;
     final static int MENU_NEW_LOOKUP = 4;
+    final static int MENU_NEXT = 5;
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        menu.add(0, MENU_BACK, 0, "Back").setIcon(android.R.drawable.ic_media_previous);        
-        menu.add(0, MENU_FORWARD, 0, "Forward").setIcon(android.R.drawable.ic_media_next);
+        menu.add(0, MENU_BACK, 0, "Back").setIcon(android.R.drawable.ic_menu_revert);     
+//        menu.add(0, MENU_FORWARD, 0, "Forward");
+        menu.add(0, MENU_NEXT, 0, "Next").setIcon(android.R.drawable.ic_media_next);
         menu.add(0, MENU_VIEW_ONLINE, 0, "View Online").setIcon(android.R.drawable.ic_menu_view);
         menu.add(0, MENU_NEW_LOOKUP, 0, "New Lookup").setIcon(android.R.drawable.ic_menu_search);
         return true;
     }
+    
     
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -298,7 +310,10 @@ public class ArticleViewActivity extends Activity {
             break;            
         case MENU_NEW_LOOKUP:
             onSearchRequested();
-            break;                        
+            break;
+        case MENU_NEXT:
+            nextArticle();
+            break;                                    
         }
         return true;
     }
@@ -484,7 +499,9 @@ public class ArticleViewActivity extends Activity {
     @Override
     protected void onDestroy() {
     	super.onDestroy();
-    	timer.cancel();    	
+    	timer.cancel();
+    	currentIterator = null;
+    	currentTask = null;
     	unbindService(connection);  
     }
 }

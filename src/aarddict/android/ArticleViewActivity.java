@@ -278,21 +278,34 @@ public class ArticleViewActivity extends Activity {
     }
     
     final static int MENU_BACK = 1;
-    final static int MENU_FORWARD = 2;
-    final static int MENU_VIEW_ONLINE = 3;
-    final static int MENU_NEW_LOOKUP = 4;
-    final static int MENU_NEXT = 5;
+    final static int MENU_VIEW_ONLINE = 2;
+    final static int MENU_NEW_LOOKUP = 3;
+    final static int MENU_NEXT = 4;
+    
+    private MenuItem miViewOnline; 
+    private MenuItem miNextArticle;
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         menu.add(0, MENU_BACK, 0, "Back").setIcon(android.R.drawable.ic_menu_revert);     
-//        menu.add(0, MENU_FORWARD, 0, "Forward");
-        menu.add(0, MENU_NEXT, 0, "Next").setIcon(android.R.drawable.ic_media_next);
-        menu.add(0, MENU_VIEW_ONLINE, 0, "View Online").setIcon(android.R.drawable.ic_menu_view);
-        menu.add(0, MENU_NEW_LOOKUP, 0, "New Lookup").setIcon(android.R.drawable.ic_menu_search);
+        miNextArticle = menu.add(0, MENU_NEXT, 0, "Next").setIcon(android.R.drawable.ic_media_next);
+        miViewOnline = menu.add(0, MENU_VIEW_ONLINE, 0, "View Online").setIcon(android.R.drawable.ic_menu_view);
+        menu.add(0, MENU_NEW_LOOKUP, 0, "New Lookup").setIcon(android.R.drawable.ic_menu_search);        
         return true;
     }
     
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+    	boolean enableViewOnline = false;
+        if (this.backItems.size() > 0) {
+            Article current = this.backItems.get(this.backItems.size() - 1);
+            Volume d = dictionaryService.getVolume(current.volumeId);
+            enableViewOnline = d.getArticleURLTemplate() != null;
+        }    	    
+    	miViewOnline.setEnabled(enableViewOnline);
+    	miNextArticle.setEnabled(forwardItems.size() > 0 || (currentIterator != null && currentIterator.hasNext()));
+    	return true;
+    }
     
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -301,9 +314,6 @@ public class ArticleViewActivity extends Activity {
             if (!goBack()) {
                 finish();
             };
-            break;
-        case MENU_FORWARD:
-            goForward();
             break;
         case MENU_VIEW_ONLINE:
             viewOnline();

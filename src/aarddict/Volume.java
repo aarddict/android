@@ -215,7 +215,7 @@ public final class Volume extends AbstractList<Entry> {
     	return null;
     }
     
-    String getArticleURLTemplate() {
+    public String getArticleURLTemplate() {
     	return articleURLTemplate;
     }
         

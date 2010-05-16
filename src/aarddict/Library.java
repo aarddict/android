@@ -59,7 +59,16 @@ public final class Library extends ArrayList<Volume> {
 		// different)
 		Comparator<Volume> c = new PreferredDictionaryComparator(target);
 		Collections.sort(dicts, c);
-		return new MatchIterator(dicts, EntryComparators.FULL_WORD, lookupWord);
+		Comparator<Entry>[] comparators = EntryComparators.ALL_FULL;
+		
+		if (lookupWord.word != null) {
+			if (lookupWord.word.length() == 1)
+				comparators = EntryComparators.EXACT;
+			else
+				if (lookupWord.word.length() == 2)
+					comparators = EntryComparators.EXACT_IGNORE_CASE;
+		}		
+		return new MatchIterator(dicts, comparators, lookupWord);
 	}
 
 	private UUID findMatchingDict(String serverUrl) {

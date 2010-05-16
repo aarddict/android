@@ -22,7 +22,17 @@ public class EntryComparators {
 	};
 	
 	@SuppressWarnings("unchecked")
-	public static Comparator<Entry>[] FULL_WORD = new Comparator[] {
+	public static Comparator<Entry>[] ALL_FULL = new Comparator[] {
 		FULL4, FULL3, FULL2, FULL1
-	};	
+	};
+
+	@SuppressWarnings("unchecked")
+	public static Comparator<Entry>[] EXACT_IGNORE_CASE = new Comparator[] {
+		FULL4, FULL3, FULL2
+	};		
+	
+	@SuppressWarnings("unchecked")
+	public static Comparator<Entry>[] EXACT = new Comparator[] {
+		FULL4, FULL3
+	};		
 }

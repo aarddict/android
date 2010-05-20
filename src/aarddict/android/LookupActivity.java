@@ -249,6 +249,7 @@ public class LookupActivity extends Activity {
         };        
         handler.post(updateProgress);
     	long t0 = System.currentTimeMillis();
+    	try {
         Iterator<Entry> results = dictionaryService.lookup(word);
         Log.d(TAG, "Looked up " + word + " in " + (System.currentTimeMillis() - t0));
         final WordAdapter wordAdapter = new WordAdapter(results);
@@ -260,6 +261,16 @@ public class LookupActivity extends Activity {
             }
         };        
         handler.post(updateWordList);
+    	}
+    	catch (Exception e) {
+			StringBuilder msgBuilder = new StringBuilder("There was an error while looking up ")
+			.append("\"").append(word).append("\"");
+			if (e.getMessage() != null) {
+				msgBuilder.append(": ").append(e.getMessage());
+			}			
+			final String msg = msgBuilder.toString(); 
+			Log.e(TAG, msg, e);
+    	}
     }           
     
     private void launchWord(Entry theWord) {

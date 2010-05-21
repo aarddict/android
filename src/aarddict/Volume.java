@@ -251,14 +251,15 @@ public final class Volume extends AbstractList<Entry> {
     Map <Integer, Entry> entryCache = new WeakHashMap<Integer, Entry>(100);
     
     @Override
-    public Entry get(int index) {
-    	if (entryCache.containsKey(index)) {
-    		return entryCache.get(index);
+    public Entry get(int index) {    	
+    	Entry entry = entryCache.get(index);    	
+    	if (entry != null) {
+    		return entry;
     	}
         try {
             IndexItem indexItem = readIndexItem(index);
             String title = readKey(indexItem.keyPointer);
-            Entry entry = new Entry(this.getId(), title, indexItem.articlePointer);
+            entry = new Entry(this.getId(), title, indexItem.articlePointer);
             entryCache.put(index, entry);
             return entry;
         }

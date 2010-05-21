@@ -29,6 +29,7 @@ public final class Article {
         this.pointer = that.pointer;
         this.redirect = that.redirect;
         this.text = that.text;
+        this.redirectedFromTitle = that.redirectedFromTitle;
     }
 
     @SuppressWarnings("unchecked")

@@ -393,7 +393,7 @@ public class ArticleViewActivity extends Activity {
 			        Article a = dictionaryService.getArticle(entry);			        			        
 			        try {
 			            a = dictionaryService.redirect(a);
-			            item.article = a;
+			            item.article = new Article(a);
 			        }            
 			        catch (RedirectNotFound e) {
 			            showMessage(String.format("Redirect \"%s\" not found", a.getRedirect()));
@@ -404,14 +404,42 @@ public class ArticleViewActivity extends Activity {
 			            return;
 			        }
 			        catch (Exception e) {
+			        	Log.e(TAG, "Redirect failed", e);
 			            showError(String.format("There was an error loading article \"%s\"", a.title));
 			            return;
-			        }			        
+			        }
+			        
+			        HistoryItem oldCurrent = null;
+			        if (!backItems.isEmpty())
+			        	oldCurrent = backItems.get(backItems.size() - 1);
+			        
 			        backItems.add(item);
-			        showCurrentArticle();							
+			        
+			        if (oldCurrent != null) {
+			        	HistoryItem newCurrent = item;
+			            if (newCurrent.article.eqalsIgnoreSection(oldCurrent.article)) {
+			            	final String section = newCurrent.article.section;
+			            	runOnUiThread(new Runnable() {								
+								public void run() {
+									resetTitleToCurrent();
+									goToSection(section);
+									setProgress(10000);
+									currentTask = null;
+								}
+							});			                
+			            }   
+			            else {
+			            	showCurrentArticle();
+			            }			        	
+			        }
+			        else {
+			        	showCurrentArticle();
+			        }			        			        							
 		        }
 		        catch (Exception e) {
-		        	showError(String.format("There was an error loading article \"%s\"", entry.title));
+		        	String msg = String.format("There was an error loading article \"%s\"", entry.title); 
+		        	Log.e(TAG, msg, e);
+		        	showError(msg);
 		        }
 			}
     	};
@@ -477,7 +505,7 @@ public class ArticleViewActivity extends Activity {
     	setTitle(String.format("%s - %s", articleTitle, dictTitle));
     }        
     
-    private void resetTitleToCurrent() {
+    private void resetTitleToCurrent() {    	    		
     	if (!backItems.isEmpty()) {
     		HistoryItem current = backItems.get(backItems.size() - 1);
     		Article a = current.article;
@@ -496,7 +524,7 @@ public class ArticleViewActivity extends Activity {
     			title.append(a.title);
     		}
     		setTitle(title, dictionaryService.getDisplayTitle(a.volumeId));
-    	}		    	    	
+    	}
     }
     
     private String wrap(String articleText) {

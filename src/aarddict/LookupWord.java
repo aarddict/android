@@ -22,7 +22,7 @@ public class LookupWord {
 		this.section = section;
 	}	
 	
-    static LookupWord splitWord(String word) {
+    public static LookupWord splitWord(String word) {
         if (word == null || word.equals("") || word.equals("#")) {
             return new LookupWord();
         }

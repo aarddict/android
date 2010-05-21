@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -12,6 +14,7 @@ import java.util.TimerTask;
 
 import aarddict.Article;
 import aarddict.Entry;
+import aarddict.LookupWord;
 import aarddict.RedirectNotFound;
 import aarddict.RedirectTooManyLevels;
 import aarddict.Volume;
@@ -46,16 +49,48 @@ public class ArticleViewActivity extends Activity {
     private String mediawikiMonobookCSS;
     private String js;
         
-    private List<Article> backItems; 
-    private List<Article> forwardItems;
+    private List<HistoryItem> backItems; 
     
     DictionaryService 	dictionaryService;
     ServiceConnection 	connection;
     
     Timer               timer;
     TimerTask 			currentTask;
-    Iterator<Entry>     currentIterator;
-        
+    
+	private final static class HistoryItem {
+		List<Entry> entries;
+		int 		entryIndex;
+		Article 	article;
+
+		HistoryItem(Entry entry) {
+			this.entries = new ArrayList<Entry>();
+			this.entries.add(entry);
+			this.entryIndex = -1;
+		}		
+		
+		HistoryItem(List<Entry> entries) {
+			this.entries = entries;
+			this.entryIndex = -1;
+		}		
+				
+		HistoryItem(HistoryItem that) {
+			this.entries = that.entries;
+			this.entryIndex = that.entryIndex;
+			if (that.article != null) {
+				this.article = new Article(that.article);
+			}
+		}		
+		
+		boolean hasNext() {
+			return entryIndex < entries.size() - 1; 
+		}
+		
+		Entry next() {
+			entryIndex ++;
+			return entries.get(entryIndex);
+		}		
+	}
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,15 +99,12 @@ public class ArticleViewActivity extends Activity {
 
         timer = new Timer();
         
-        backItems = new LinkedList<Article>();
-        forwardItems = new LinkedList<Article>();
+        backItems = Collections.synchronizedList(new LinkedList<HistoryItem>());
         
         getWindow().requestFeature(Window.FEATURE_PROGRESS);        
         getWindow().requestFeature(Window.FEATURE_LEFT_ICON);
         
-        articleView = new WebView(this) {
-        };
-        
+        articleView = new WebView(this);        
         articleView.getSettings().setBuiltInZoomControls(true);
         articleView.getSettings().setJavaScriptEnabled(true);
         
@@ -105,19 +137,19 @@ public class ArticleViewActivity extends Activity {
                 Log.d(TAG, "Page finished: " + url);
                 currentTask = null;
                 String section = null;
-                
+                                
                 if (url.contains("#")) {
-                    String[] parts = url.split("#", 2);
-                    section = parts[1];
+                	LookupWord lookupWord = LookupWord.splitWord(url);                    
+                    section = lookupWord.section;
                     if (backItems.size() > 0) {
-                        Article current = backItems.get(backItems.size() - 1);
-                        Article a = new Article(current);
-                        a.section = section;
-                        backItems.add(a);
+                    	HistoryItem currentHistoryItem = backItems.get(backItems.size() - 1); 
+                        HistoryItem h = new HistoryItem(currentHistoryItem);
+                        h.article.section = section;
+                        backItems.add(h);
                     }
                 }
                 else if (backItems.size() > 0) {
-                    Article current = backItems.get(backItems.size() - 1);
+                    Article current = backItems.get(backItems.size() - 1).article;
                     section = current.section;
                 }
                 
@@ -145,34 +177,29 @@ public class ArticleViewActivity extends Activity {
                 		currentTask = new TimerTask() {							
 							public void run() {
 								try {
-									Article currentArticle = backItems.get(backItems.size() - 1);
-									currentIterator = dictionaryService.followLink(url, currentArticle.volumeId);
-		    						runOnUiThread(new Runnable() {
-										public void run() {
-						                    if (currentIterator.hasNext()) {
-						                        Entry entry = currentIterator.next();
-						                        showArticle(entry);
-						                    }                
-						                    else {					                    	
-						                        showMessage(String.format("Article \"%s\" not found", url));
-						                    }                										
-										}
-									});	
+									Article currentArticle = backItems.get(backItems.size() - 1).article;
+									Iterator<Entry> currentIterator = dictionaryService.followLink(url, currentArticle.volumeId);
+									List<Entry> result = new ArrayList<Entry>();
+									while (currentIterator.hasNext() && result.size() < 10) {
+										result.add(currentIterator.next());
+									}									
+									HistoryItem item = new HistoryItem(result);
+									if (item.hasNext()) {
+										showNext(item);
+									}
+									else {
+										showMessage(String.format("Article \"%s\" not found", url));
+									}
 								}
 								catch (Exception e) {
 									StringBuilder msgBuilder = new StringBuilder("There was an error following link ")
 									.append("\"").append(url).append("\"");
 									if (e.getMessage() != null) {
 										msgBuilder.append(": ").append(e.getMessage());
-									}
-									
+									}									
 									final String msg = msgBuilder.toString(); 
 									Log.e(TAG, msg, e);
-									runOnUiThread(new Runnable() {
-										public void run() {
-											showError(msg);											
-										}
-									});									
+									showError(msg);
 								}
 							}
 						};
@@ -212,6 +239,7 @@ public class ArticleViewActivity extends Activity {
     }
 
     private void goToSection(String section) {
+    	Log.d(TAG, "Go to section " + section);
         articleView.loadUrl(String.format("javascript:scrollToMatch(\"%s\")", section));
     }    
     
@@ -230,47 +258,28 @@ public class ArticleViewActivity extends Activity {
     		return true;
     	}
         if (backItems.size() > 1) {
-            Article current = backItems.remove(backItems.size() - 1); 
-            forwardItems.add(0, current);
-            Article prev = backItems.remove(backItems.size() - 1);
+            HistoryItem current = backItems.remove(backItems.size() - 1); 
+            HistoryItem prev = backItems.get(backItems.size() - 1);
             
-            if (prev.eqalsIgnoreSection(current)) {
-                backItems.add(prev);
-                goToSection(prev.section);
+            Article prevArticle = prev.article; 
+            if (prevArticle.eqalsIgnoreSection(current.article)) {
+                goToSection(prevArticle.section);
             }   
             else {
-                showArticle(prev);
+                showArticle(prevArticle);
             }
             return true;            
         }
         return false;
     }
-    
-    private boolean goForward() {
-    	if (currentTask != null) {
-    		return true;
-    	}    	
-        if (forwardItems.size() > 0){              
-            Article next = forwardItems.remove(0);
-            Article current = backItems.get(backItems.size() - 1);
-            if (next.eqalsIgnoreSection(current)) {
-                backItems.add(next);
-                goToSection(next.section);                
-            } else {
-                showArticle(next);
-            }
-            return true;
-        }
-        return false;
-    }
-
-    private void nextArticle() {    	
-    	if (!goForward() && currentIterator != null && currentIterator.hasNext()) {
-    		Entry entry = currentIterator.next();
-    		showArticle(entry);
+            
+    private void nextArticle() {
+    	HistoryItem current = backItems.get(backItems.size() - 1);
+    	if (current.hasNext()) {
+    		showNext(current);
     	}
     }
-        
+    
     @Override
     public boolean onSearchRequested() {
         finish();
@@ -298,12 +307,12 @@ public class ArticleViewActivity extends Activity {
     public boolean onPrepareOptionsMenu(Menu menu) {
     	boolean enableViewOnline = false;
         if (this.backItems.size() > 0) {
-            Article current = this.backItems.get(this.backItems.size() - 1);
+            Article current = this.backItems.get(this.backItems.size() - 1).article;
             Volume d = dictionaryService.getVolume(current.volumeId);
             enableViewOnline = d.getArticleURLTemplate() != null;
         }    	    
     	miViewOnline.setEnabled(enableViewOnline);
-    	miNextArticle.setEnabled(forwardItems.size() > 0 || (currentIterator != null && currentIterator.hasNext()));
+    	miNextArticle.setEnabled(this.backItems.get(this.backItems.size() - 1).hasNext());
     	return true;
     }
     
@@ -330,7 +339,7 @@ public class ArticleViewActivity extends Activity {
     
     private void viewOnline() {
         if (this.backItems.size() > 0) {            
-            Article current = this.backItems.get(this.backItems.size() - 1);
+            Article current = this.backItems.get(this.backItems.size() - 1).article;
             Volume d = dictionaryService.getVolume(current.volumeId);
             String url = d == null ? null : d.getArticleURL(current.title);
             if (url != null) {
@@ -355,91 +364,105 @@ public class ArticleViewActivity extends Activity {
         
         Entry entry = new Entry(d.getId(), word, articlePointer);
         entry.section = section;
-        showArticle(entry);
+        HistoryItem item = new HistoryItem(entry);
+        showNext(item);
     }    
     
-    private void showArticle(final Entry entry) {
-    	forwardItems.clear();    	
-    	setTitle(entry);
-    	setProgress(500);
+    private void updateProgress(final Entry entry, final int progress) {
+    	runOnUiThread(new Runnable() {
+			public void run() {
+				setTitle(entry);
+				setProgress(progress);
+			}
+		});    	
+    }
+    
+    private void showNext(HistoryItem item_) {
+    	final HistoryItem item = new HistoryItem(item_);
+    	final Entry entry = item.next();
+    	updateProgress(entry, 500);
     	currentTask = new TimerTask() {
 			public void run() {
 		        try {
-			        final Article a = dictionaryService.getArticle(entry);
-					runOnUiThread( new Runnable() {							
-						public void run() {
-							showArticle(a);							
-						}
-					});
+			        Article a = dictionaryService.getArticle(entry);			        			        
+			        try {
+			            a = dictionaryService.redirect(a);
+			            item.article = a;
+			        }            
+			        catch (RedirectNotFound e) {
+			            showMessage(String.format("Redirect \"%s\" not found", a.getRedirect()));
+			            return;
+			        }
+			        catch (RedirectTooManyLevels e) {
+			            showMessage(String.format("Too many redirects for \"%s\"", a.getRedirect()));
+			            return;
+			        }
+			        catch (Exception e) {
+			            showError(String.format("There was an error loading article \"%s\"", a.title));
+			            return;
+			        }			        
+			        backItems.add(item);
+			        showArticle(a);							
 		        }
 		        catch (Exception e) {
-					runOnUiThread( new Runnable() {							
-						public void run() {
-							showError(String.format("There was an error loading article \"%s\"", entry.title));
-						}
-					});				        					            
+		        	showError(String.format("There was an error loading article \"%s\"", entry.title));
 		        }
 			}
     	};
-    	timer.schedule(currentTask, 0);
+    	timer.schedule(currentTask, 0);    	    		
+    }
+        
+    private void showArticle(final Article a) {
+    	runOnUiThread(new Runnable() {			
+			public void run() {		        
+		        setProgress(5000);
+		        setTitle(a);
+		        Log.d(TAG, "Show article: " + a.text);        
+		        articleView.loadDataWithBaseURL("", wrap(a.text), "text/html", "utf-8", null);
+			}
+		});
     }
     
-    private void showArticle(Article a) {
-        try {
-            a = dictionaryService.redirect(a);
-        }            
-        catch (RedirectNotFound e) {        	
-        	setProgress(10000);
-        	if (!backItems.isEmpty()) {
-        		setTitle(backItems.get(0));
-        	}
-            showMessage(String.format("Redirect \"%s\" not found", a.getRedirect()));
-            return;
-        }
-        catch (RedirectTooManyLevels e) {
-        	setProgress(10000);
-        	if (!backItems.isEmpty()) {
-        		setTitle(backItems.get(0));
-        	}        	
-            showMessage(String.format("Too many redirects for \"%s\"", a.getRedirect()));
-            return;
-        }
-        catch (Exception e) {
-        	currentTask = null;
-        	if (!backItems.isEmpty()) {
-        		setTitle(backItems.get(0));
-        	}        	
-            showError(String.format("There was an error loading article \"%s\"", a.title));
-            return;
-        }
-        backItems.add(a);
-        setProgress(5000);
-        setTitle(a);
-        Log.d(TAG, "Show article: " + a.text);        
-        articleView.loadDataWithBaseURL("", wrap(a.text), "text/html", "utf-8", null);
-    }
-    
-    private void showMessage(String message) {
-    	currentTask = null;
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
-        if (backItems.size() == 0) {
-            finish();
-        }        
+    private void showMessage(final String message) {
+    	runOnUiThread(new Runnable() {
+			public void run() {
+		    	currentTask = null;
+		    	setProgress(10000);
+	        	if (!backItems.isEmpty()) {
+	        		setTitle(backItems.get(0).article);
+	        	}		    	
+		        Toast.makeText(ArticleViewActivity.this, message, Toast.LENGTH_LONG).show();
+		        if (backItems.size() == 0) {
+		            finish();
+		        }        				
+			}
+		});
     }
 
-    private void showError(String message) {
-    	currentTask = null;
-        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-        dialogBuilder.setTitle("Error").setMessage(message).setNeutralButton("Dismiss", new OnClickListener() {            
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-                if (backItems.size() == 0) {
-                    finish();
-                }
-            }
-        });
-        dialogBuilder.show();
+    private void showError(final String message) {
+    	runOnUiThread(new Runnable() {
+			public void run() {
+		    	currentTask = null;
+		    	setProgress(10000);
+	        	if (!backItems.isEmpty()) {
+	        		setTitle(backItems.get(0).article);
+	        	}		    	
+		        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(ArticleViewActivity.this);
+		        dialogBuilder.setTitle("Error").setMessage(message).setNeutralButton("Dismiss", new OnClickListener() {            
+		            @Override
+		            public void onClick(DialogInterface dialog, int which) {
+		                dialog.dismiss();
+		                if (backItems.size() == 0) {
+		                    finish();
+		                }
+		            }
+		        });
+		        dialogBuilder.show();
+		        if (backItems.size() == 0) {
+		            finish();
+		        }        						        
+			}
+		});    	
     }
     
     private void setTitle(Article a) {
@@ -509,8 +532,7 @@ public class ArticleViewActivity extends Activity {
     @Override
     protected void onDestroy() {
     	super.onDestroy();
-    	timer.cancel();
-    	currentIterator = null;
+    	timer.cancel();    	
     	currentTask = null;
     	unbindService(connection);  
     }

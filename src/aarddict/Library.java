@@ -141,7 +141,11 @@ public final class Library extends ArrayList<Volume> {
 	}
 
 	public Article redirect(Article article) throws RedirectError, IOException {
-		return redirect(article, 0);
+		Article result = redirect(article, 0);
+		if (result != article) {
+			result.redirectedFromTitle = article.title;
+		}
+		return result;
 	}
 
 	public Volume getVolume(String volumeId) {

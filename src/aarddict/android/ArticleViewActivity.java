@@ -266,7 +266,7 @@ public class ArticleViewActivity extends Activity {
                 goToSection(prevArticle.section);
             }   
             else {
-                showArticle(prevArticle);
+            	showCurrentArticle();
             }
             return true;            
         }
@@ -402,7 +402,7 @@ public class ArticleViewActivity extends Activity {
 			            return;
 			        }			        
 			        backItems.add(item);
-			        showArticle(a);							
+			        showCurrentArticle();							
 		        }
 		        catch (Exception e) {
 		        	showError(String.format("There was an error loading article \"%s\"", entry.title));
@@ -412,11 +412,12 @@ public class ArticleViewActivity extends Activity {
     	timer.schedule(currentTask, 0);    	    		
     }
         
-    private void showArticle(final Article a) {
+    private void showCurrentArticle() {
     	runOnUiThread(new Runnable() {			
 			public void run() {		        
 		        setProgress(5000);
-		        setTitle(a);
+		        resetTitleToCurrent();		       
+		        Article a = backItems.get(backItems.size() - 1).article;
 		        Log.d(TAG, "Show article: " + a.text);        
 		        articleView.loadDataWithBaseURL("", wrap(a.text), "text/html", "utf-8", null);
 			}
@@ -428,11 +429,9 @@ public class ArticleViewActivity extends Activity {
 			public void run() {
 		    	currentTask = null;
 		    	setProgress(10000);
-	        	if (!backItems.isEmpty()) {
-	        		setTitle(backItems.get(0).article);
-	        	}		    	
+		    	resetTitleToCurrent();
 		        Toast.makeText(ArticleViewActivity.this, message, Toast.LENGTH_LONG).show();
-		        if (backItems.size() == 0) {
+		        if (backItems.isEmpty()) {
 		            finish();
 		        }        				
 			}
@@ -444,30 +443,25 @@ public class ArticleViewActivity extends Activity {
 			public void run() {
 		    	currentTask = null;
 		    	setProgress(10000);
-	        	if (!backItems.isEmpty()) {
-	        		setTitle(backItems.get(0).article);
-	        	}		    	
+		    	resetTitleToCurrent();
 		        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(ArticleViewActivity.this);
 		        dialogBuilder.setTitle("Error").setMessage(message).setNeutralButton("Dismiss", new OnClickListener() {            
 		            @Override
 		            public void onClick(DialogInterface dialog, int which) {
 		                dialog.dismiss();
-		                if (backItems.size() == 0) {
+		                if (backItems.isEmpty()) {
 		                    finish();
 		                }
 		            }
 		        });
 		        dialogBuilder.show();
-		        if (backItems.size() == 0) {
+		        if (backItems.isEmpty()) {
 		            finish();
 		        }        						        
 			}
 		});    	
     }
     
-    private void setTitle(Article a) {
-    	setTitle(a.title, dictionaryService.getDisplayTitle(a.volumeId));
-    }
     
     private void setTitle(Entry e) {
     	setTitle(e.title, dictionaryService.getDisplayTitle(e.volumeId));
@@ -476,6 +470,28 @@ public class ArticleViewActivity extends Activity {
     private void setTitle(CharSequence articleTitle, CharSequence dictTitle) {
     	setTitle(String.format("%s - %s", articleTitle, dictTitle));
     }        
+    
+    private void resetTitleToCurrent() {
+    	if (!backItems.isEmpty()) {
+    		HistoryItem current = backItems.get(backItems.size() - 1);
+    		Article a = current.article;
+    		StringBuilder title = new StringBuilder();
+    		if (current.entries.size() > 1) {
+    			title
+    			.append(current.entryIndex + 1)
+    			.append("/")
+    			.append(current.entries.size())
+    			.append(" ");
+    		}
+    		if (a.redirectedFromTitle != null) {
+    			title.append(a.redirectedFromTitle);	
+    		}    		
+    		else {
+    			title.append(a.title);
+    		}
+    		setTitle(title, dictionaryService.getDisplayTitle(a.volumeId));
+    	}		    	    	
+    }
     
     private String wrap(String articleText) {
         return new StringBuilder("<html>")

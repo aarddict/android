@@ -16,6 +16,7 @@ public final class Article {
     public long     pointer;
     private String  redirect;
     public String   text;
+	public String   redirectedFromTitle;
 
     public Article() {            
     }

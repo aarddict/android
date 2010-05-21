@@ -263,6 +263,7 @@ public class ArticleViewActivity extends Activity {
             
             Article prevArticle = prev.article; 
             if (prevArticle.eqalsIgnoreSection(current.article)) {
+            	resetTitleToCurrent();
                 goToSection(prevArticle.section);
             }   
             else {

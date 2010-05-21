@@ -145,7 +145,12 @@ public final class Volume extends AbstractList<Entry> {
         return this.file.readUTF8(keyLength);
     }
 
+    Map <Long, Article> articleCache = new WeakHashMap<Long, Article>(20);    
+    
     Article readArticle(long pointer) throws IOException {
+    	Article a = articleCache.get(pointer);
+    	if (a != null)
+    		return a;
         long pos = this.header.articleOffset + pointer;
         this.file.seek(pos);
         long articleLength = this.file.readUnsignedInt();
@@ -153,10 +158,11 @@ public final class Volume extends AbstractList<Entry> {
         byte[] articleBytes = new byte[(int) articleLength];
         this.file.read(articleBytes);
         String serializedArticle = decompress(articleBytes);
-        Article a = Article.fromJsonStr(serializedArticle);
+        a = Article.fromJsonStr(serializedArticle);
         a.dictionaryUUID = this.header.uuid;
         a.volumeId = this.header.sha1sum;
         a.pointer = pointer;
+        articleCache.put(pointer, a);
         return a;
     }
 
@@ -248,7 +254,7 @@ public final class Volume extends AbstractList<Entry> {
     	return result;
     }
     
-    Map <Integer, Entry> entryCache = new WeakHashMap<Integer, Entry>(100);
+    Map <Integer, Entry> entryCache = new WeakHashMap<Integer, Entry>(100);        
     
     @Override
     public Entry get(int index) {    	

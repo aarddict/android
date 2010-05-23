@@ -87,8 +87,12 @@ public class ArticleViewActivity extends Activity {
 		
 		Entry next() {
 			entryIndex ++;
+			return current();
+		}
+		
+		Entry current() {
 			return entries.get(entryIndex);
-		}		
+		}
 	}
     
     @Override
@@ -373,20 +377,16 @@ public class ArticleViewActivity extends Activity {
         HistoryItem item = new HistoryItem(entry);
         showNext(item);
     }    
-    
-    private void updateProgress(final Entry entry, final int progress) {
-    	runOnUiThread(new Runnable() {
-			public void run() {
-				setTitle(entry);
-				setProgress(progress);
-			}
-		});    	
-    }
-    
+        
     private void showNext(HistoryItem item_) {
     	final HistoryItem item = new HistoryItem(item_);
     	final Entry entry = item.next();
-    	updateProgress(entry, 500);
+    	runOnUiThread(new Runnable() {
+			public void run() {
+				setTitle(item);
+				setProgress(500);
+			}
+		});    	
     	currentTask = new TimerTask() {
 			public void run() {
 		        try {
@@ -496,11 +496,7 @@ public class ArticleViewActivity extends Activity {
 		});    	
     }
     
-    
-    private void setTitle(Entry e) {
-    	setTitle(e.title, dictionaryService.getDisplayTitle(e.volumeId));
-    }    
-    
+        
     private void setTitle(CharSequence articleTitle, CharSequence dictTitle) {
     	setTitle(String.format("%s - %s", articleTitle, dictTitle));
     }        
@@ -508,23 +504,22 @@ public class ArticleViewActivity extends Activity {
     private void resetTitleToCurrent() {    	    		
     	if (!backItems.isEmpty()) {
     		HistoryItem current = backItems.get(backItems.size() - 1);
-    		Article a = current.article;
-    		StringBuilder title = new StringBuilder();
-    		if (current.entries.size() > 1) {
-    			title
-    			.append(current.entryIndex + 1)
-    			.append("/")
-    			.append(current.entries.size())
-    			.append(" ");
-    		}
-    		if (a.redirectedFromTitle != null) {
-    			title.append(a.redirectedFromTitle);	
-    		}    		
-    		else {
-    			title.append(a.title);
-    		}
-    		setTitle(title, dictionaryService.getDisplayTitle(a.volumeId));
+    		setTitle(current);
     	}
+    }
+    
+    private void setTitle(HistoryItem item) {		
+		StringBuilder title = new StringBuilder();
+		if (item.entries.size() > 1) {
+			title
+			.append(item.entryIndex + 1)
+			.append("/")
+			.append(item.entries.size())
+			.append(" ");
+		}
+		Entry entry = item.current();
+		title.append(entry.title);
+		setTitle(title, dictionaryService.getDisplayTitle(entry.volumeId));    	
     }
     
     private String wrap(String articleText) {

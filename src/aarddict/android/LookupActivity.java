@@ -26,10 +26,12 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
+import android.text.Editable;
 import android.text.InputType;
+import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
+import android.text.style.TextAppearanceSpan;
 import android.text.util.Linkify;
 import android.util.Log;
 import android.view.Gravity;
@@ -54,7 +56,6 @@ public class LookupActivity extends Activity {
     final static String TAG     = "aarddict.LookupActivity";
     Timer               timer;
     ListView            listView;
-    final Handler       handler = new Handler();
     BroadcastReceiver 	broadcastReceiver;
     DictionaryService 	dictionaryService;
 
@@ -89,7 +90,8 @@ public class LookupActivity extends Activity {
                     Toast.LENGTH_LONG).show();
             LookupActivity.this.finish();
         }
-    };    
+    };
+    private MessageAdapter listMessageAdapter;    
     
     void updateTitle() {
     	int dictCount = dictionaryService.getVolumes().size();
@@ -121,7 +123,10 @@ public class LookupActivity extends Activity {
                     LinearLayout.LayoutParams.FILL_PARENT, 1));
                      
         listView = new ListView(this);
-        EditText editText = new EditText(this){
+        
+        listMessageAdapter = new MessageAdapter(this);        
+        listView.setAdapter(listMessageAdapter);
+        editText = new EditText(this){
             
             TimerTask currentLookupTask;
                         
@@ -239,39 +244,50 @@ public class LookupActivity extends Activity {
         listView.setAdapter(wordAdapter);        
         listView.setOnItemClickListener(wordAdapter);
     }    
+
+    final Runnable updateProgress = new Runnable() {
+        public void run() {
+            setProgressBarIndeterminateVisibility(true);
+        }
+    };        
     
     private void doLookup(CharSequence word) {
-        final Runnable updateProgress = new Runnable() {            
-            @Override
-            public void run() {
-                setProgressBarIndeterminateVisibility(true);
+        runOnUiThread(updateProgress);
+        long t0 = System.currentTimeMillis();
+        try {
+            Iterator<Entry> results = dictionaryService.lookup(word);
+            Log.d(TAG, "Looked up " + word + " in "
+                    + (System.currentTimeMillis() - t0));
+
+            if (!results.hasNext()) {
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        Editable text = editText.getText();
+                        listMessageAdapter.setShowNothingFound(text != null && !text.toString().equals(""));
+                        listView.setAdapter(listMessageAdapter);
+                        setProgressBarIndeterminateVisibility(false);
+                    }
+                });
+            } else {
+                final WordAdapter wordAdapter = new WordAdapter(results);
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        updateWordListUI(wordAdapter);
+                        setProgressBarIndeterminateVisibility(false);
+                    }
+                });
             }
-        };        
-        handler.post(updateProgress);
-    	long t0 = System.currentTimeMillis();
-    	try {
-        Iterator<Entry> results = dictionaryService.lookup(word);
-        Log.d(TAG, "Looked up " + word + " in " + (System.currentTimeMillis() - t0));
-        final WordAdapter wordAdapter = new WordAdapter(results);
-        final Runnable updateWordList = new Runnable() {            
-            @Override
-            public void run() {
-                updateWordListUI(wordAdapter);
-                setProgressBarIndeterminateVisibility(false);
+        } catch (Exception e) {
+            StringBuilder msgBuilder = new StringBuilder(
+                    "There was an error while looking up ").append("\"")
+                    .append(word).append("\"");
+            if (e.getMessage() != null) {
+                msgBuilder.append(": ").append(e.getMessage());
             }
-        };        
-        handler.post(updateWordList);
-    	}
-    	catch (Exception e) {
-			StringBuilder msgBuilder = new StringBuilder("There was an error while looking up ")
-			.append("\"").append(word).append("\"");
-			if (e.getMessage() != null) {
-				msgBuilder.append(": ").append(e.getMessage());
-			}			
-			final String msg = msgBuilder.toString(); 
-			Log.e(TAG, msg, e);
-    	}
-    }           
+            final String msg = msgBuilder.toString();
+            Log.e(TAG, msg, e);
+        }
+    }
     
     private void launchWord(Entry theWord) {
         Intent next = new Intent();
@@ -284,14 +300,70 @@ public class LookupActivity extends Activity {
     }
     
     
+    static class MessageAdapter extends BaseAdapter {
+
+        private LinearLayout layout;
+        private TextView     textView;
+        
+        private final static String NOTHING_FOUND = "Nothing found";
+        private final static String GET_DICTS = "Get dictionaries at http://aarddict.org";
+        
+        SpannableStringBuilder nothingFoundText;
+        
+        public MessageAdapter(Context context) {
+            layout = new LinearLayout(context);
+            
+            textView = new TextView(context);
+            textView.setGravity(Gravity.CENTER_HORIZONTAL);
+            textView.setLineSpacing(2f, 1);
+            textView.setAutoLinkMask(Linkify.WEB_URLS);
+            textView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
+            textView.setText("Get dictionaries at http://aarddict.org");
+            layout.setGravity(Gravity.CENTER);
+            layout.addView(textView);
+            
+            nothingFoundText = new SpannableStringBuilder();
+            nothingFoundText.append(NOTHING_FOUND);
+            nothingFoundText.setSpan(new TextAppearanceSpan(context, android.R.style.TextAppearance_Large), 0, NOTHING_FOUND.length(), 0);
+            nothingFoundText.append('\n');
+            nothingFoundText.append(GET_DICTS);            
+        }
+        
+        void setShowNothingFound(boolean value) {
+            if (value) {
+                textView.setText(nothingFoundText);                
+            }
+            else {
+                textView.setText(GET_DICTS);
+            }
+        }
+        
+        public int getCount() {
+            return 1;
+        }
+
+        public Object getItem(int position) {
+            return position;
+        }
+
+        public long getItemId(int position) {
+            return position;
+        }
+        
+        public View getView(int position, View convertView, ViewGroup parent) {
+                return layout;
+        }
+    }
+    
+    
     class WordAdapter extends BaseAdapter implements AdapterView.OnItemClickListener {
 
-        private final List<Entry> words;
-        private final LayoutInflater         mInflater;
-        private int                          itemCount;
-        private LinearLayout                 more;
-        private Iterator<Entry>   results;
-        private boolean                      displayMore;
+        private final List<Entry>    words;
+        private final LayoutInflater mInflater;
+        private int                  itemCount;
+        private LinearLayout         more;
+        private Iterator<Entry>      results;
+        private boolean              displayMore;
 
         public WordAdapter(Iterator<Entry> results) {
             this.results = results;                        
@@ -304,7 +376,7 @@ public class LookupActivity extends Activity {
             ImageView moreImage = new ImageView(mInflater.getContext());
             moreImage.setImageResource(android.R.drawable.ic_menu_more);
             more.setGravity(Gravity.CENTER);
-            more.addView(moreImage);
+            more.addView(moreImage);            
         }
 
         private void loadBatch() {
@@ -379,6 +451,7 @@ public class LookupActivity extends Activity {
     
     final static int MENU_DICT_INFO = 1;
     final static int MENU_ABOUT = 2;
+    private EditText editText;
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

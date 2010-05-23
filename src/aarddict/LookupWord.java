@@ -38,6 +38,7 @@ public class LookupWord {
 		URI uri = new URI(word);
 		String nameSpace = uri.getScheme();
 		String lookupWord = uri.getSchemeSpecificPart();
+		lookupWord = lookupWord.replace("_", " ");
 		String section = uri.getFragment();
 		return new LookupWord(nameSpace, lookupWord, section);     	
     }
@@ -48,6 +49,7 @@ public class LookupWord {
         String nsWord = (!isEmpty(parts[0]) || !isEmpty(section)) ? parts[0] : word;
         String[] nsParts = nsWord.split(":", 2);      
         String lookupWord = nsParts.length == 1 ? nsParts[0] : nsParts[1];
+        lookupWord = lookupWord.replace("_", " ");
         String nameSpace = nsParts.length == 1 ? null : nsParts[0];
         return new LookupWord(nameSpace, lookupWord, section);			    	
     }

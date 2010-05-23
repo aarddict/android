@@ -34,6 +34,14 @@ public class TestSplitWord extends TestCase {
 		assertEquals("w", result.nameSpace);
 	}		
 	
+	public void testSimpleSplitWithUnderscore() throws URISyntaxException {
+		LookupWord result = LookupWord.splitWordSimple("w_1:a_b#c_d");
+		assertEquals("a b", result.word);
+		assertEquals("c_d", result.section);
+		assertEquals("w_1", result.nameSpace);
+	}			
+	
+	
 	public void testURISplitPlainWord() throws URISyntaxException {
 		LookupWord result = LookupWord.splitWordAsURI("abc");
 		assertEquals("abc", result.word);
@@ -76,5 +84,12 @@ public class TestSplitWord extends TestCase {
 			return;
 		}
 		fail();
+	}			
+	
+	public void testURISplitWithUnderscore() throws URISyntaxException {
+		LookupWord result = LookupWord.splitWordAsURI("w:a_b#c_d");
+		assertEquals("a b", result.word);
+		assertEquals("c_d", result.section);
+		assertEquals("w", result.nameSpace);
 	}			
 }

@@ -28,10 +28,13 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.text.Editable;
+import android.text.Html;
 import android.text.InputType;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
+import android.text.method.LinkMovementMethod;
 import android.text.style.TextAppearanceSpan;
+import android.text.style.URLSpan;
 import android.text.util.Linkify;
 import android.util.Log;
 import android.view.Gravity;
@@ -91,7 +94,9 @@ public class LookupActivity extends Activity {
             LookupActivity.this.finish();
         }
     };
-    private MessageAdapter listMessageAdapter;    
+    private MessageAdapter msgGetDicts;    
+    private MessageAdapter msgNothingFound;
+    private MessageAdapter msgNoDicts;
     
     void updateTitle() {
     	int dictCount = dictionaryService.getVolumes().size();
@@ -99,7 +104,13 @@ public class LookupActivity extends Activity {
 		String dictionaries = r.getQuantityString(R.plurals.dictionaries, dictCount);
     	String appName = r.getString(R.string.app_name);
     	String mainTitle = r.getString(R.string.main_title);
-    	setTitle(String.format(mainTitle, appName, String.format(dictionaries, dictCount)));    	
+    	setTitle(String.format(mainTitle, appName, String.format(dictionaries, dictCount)));
+    	if (dictCount == 0) {
+    	    listView.setAdapter(msgNoDicts);
+    	}
+    	else {
+    	    listView.setAdapter(msgGetDicts);
+    	}
     }
 
     @Override
@@ -121,11 +132,13 @@ public class LookupActivity extends Activity {
         layout.setOrientation(LinearLayout.VERTICAL);
         layout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT, 
                     LinearLayout.LayoutParams.FILL_PARENT, 1));
-                     
-        listView = new ListView(this);
+                             
+        msgGetDicts = new MessageAdapter(this, R.string.getMoreDictionaries);
+        msgNoDicts = new MessageAdapter(this, R.string.welcome);
+        msgNothingFound = new MessageAdapter(this, R.string.nothingFound);
         
-        listMessageAdapter = new MessageAdapter(this);        
-        listView.setAdapter(listMessageAdapter);
+        listView = new ListView(this);        
+        listView.setAdapter(msgGetDicts);
         editText = new EditText(this){
             
             TimerTask currentLookupTask;
@@ -239,10 +252,30 @@ public class LookupActivity extends Activity {
         unbindService(connection);
     }
     
-    private void updateWordListUI(WordAdapter wordAdapter) {
-        Log.d(TAG, "updating word list in " + Thread.currentThread());        
-        listView.setAdapter(wordAdapter);        
-        listView.setOnItemClickListener(wordAdapter);
+    private void updateWordListUI(final Iterator<Entry> results) {        
+        runOnUiThread(new Runnable() {
+            public void run() {                              
+                if (!results.hasNext()) {
+                    Editable text = editText.getText();
+                    if (text != null && !text.toString().equals("")) {
+                        listView.setAdapter(msgNothingFound);
+                    }
+                    else {
+                        if (dictionaryService.getDictionaries().isEmpty()) {
+                            listView.setAdapter(msgNoDicts);
+                        } else {
+                            listView.setAdapter(msgGetDicts);
+                        }
+                    }                
+                }
+                else {
+                    WordAdapter wordAdapter = new WordAdapter(results);
+                    listView.setAdapter(wordAdapter);        
+                    listView.setOnItemClickListener(wordAdapter);
+                }
+                setProgressBarIndeterminateVisibility(false);
+            }
+        });                
     }    
 
     final Runnable updateProgress = new Runnable() {
@@ -258,25 +291,7 @@ public class LookupActivity extends Activity {
             Iterator<Entry> results = dictionaryService.lookup(word);
             Log.d(TAG, "Looked up " + word + " in "
                     + (System.currentTimeMillis() - t0));
-
-            if (!results.hasNext()) {
-                runOnUiThread(new Runnable() {
-                    public void run() {
-                        Editable text = editText.getText();
-                        listMessageAdapter.setShowNothingFound(text != null && !text.toString().equals(""));
-                        listView.setAdapter(listMessageAdapter);
-                        setProgressBarIndeterminateVisibility(false);
-                    }
-                });
-            } else {
-                final WordAdapter wordAdapter = new WordAdapter(results);
-                runOnUiThread(new Runnable() {
-                    public void run() {
-                        updateWordListUI(wordAdapter);
-                        setProgressBarIndeterminateVisibility(false);
-                    }
-                });
-            }
+            updateWordListUI(results);            
         } catch (Exception e) {
             StringBuilder msgBuilder = new StringBuilder(
                     "There was an error while looking up ").append("\"")
@@ -300,44 +315,24 @@ public class LookupActivity extends Activity {
     }
     
     
-    static class MessageAdapter extends BaseAdapter {
+    final static class MessageAdapter extends BaseAdapter {
 
         private LinearLayout layout;
         private TextView     textView;
-        
-        private final static String NOTHING_FOUND = "Nothing found";
-        private final static String GET_DICTS = "Get dictionaries at http://aarddict.org";
-        
-        SpannableStringBuilder nothingFoundText;
-        
-        public MessageAdapter(Context context) {
+                               
+        public MessageAdapter(Context context, int resId) {
             layout = new LinearLayout(context);
             
             textView = new TextView(context);
             textView.setGravity(Gravity.CENTER_HORIZONTAL);
             textView.setLineSpacing(2f, 1);
-            textView.setAutoLinkMask(Linkify.WEB_URLS);
+            textView.setMovementMethod(LinkMovementMethod.getInstance());            
             textView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
-            textView.setText("Get dictionaries at http://aarddict.org");
+            textView.setText(Html.fromHtml(context.getString(resId)));
             layout.setGravity(Gravity.CENTER);
-            layout.addView(textView);
-            
-            nothingFoundText = new SpannableStringBuilder();
-            nothingFoundText.append(NOTHING_FOUND);
-            nothingFoundText.setSpan(new TextAppearanceSpan(context, android.R.style.TextAppearance_Large), 0, NOTHING_FOUND.length(), 0);
-            nothingFoundText.append('\n');
-            nothingFoundText.append(GET_DICTS);            
+            layout.addView(textView);                                                
         }
-        
-        void setShowNothingFound(boolean value) {
-            if (value) {
-                textView.setText(nothingFoundText);                
-            }
-            else {
-                textView.setText(GET_DICTS);
-            }
-        }
-        
+                
         public int getCount() {
             return 1;
         }
@@ -355,8 +350,7 @@ public class LookupActivity extends Activity {
         }
     }
     
-    
-    class WordAdapter extends BaseAdapter implements AdapterView.OnItemClickListener {
+    final class WordAdapter extends BaseAdapter implements AdapterView.OnItemClickListener {
 
         private final List<Entry>    words;
         private final LayoutInflater mInflater;

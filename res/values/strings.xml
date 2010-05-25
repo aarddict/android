@@ -16,4 +16,25 @@
         <item quantity="one">%d volume</item>
         <item quantity="other">%d volumes</item>        
     </plurals>
+    <string name="welcome">
+        <![CDATA[
+        <h1>No dictionaries found</h1>
+        <p>Download dictionaries from <a href="http://aarddict.org">aarddict.org</a>. Put dictionary files anywhere on SD card.</p>
+        <p>Select Wikipedia and Wiktionaries <a href="http://aarddict.org/#wmedia">can be ordered</a> on SD cards or DVD.  
+        Please visit <a href="http://aarddict.org/forum">Aard Dictionary forum</a> if you have any questions, suggestions or issues to report.</p>
+        ]]>
+    </string>
+    <string name="getMoreDictionaries">
+        <![CDATA[
+        <p><small>Get more dictionaries at <a href="http://aarddict.org">http://aarddict.org</a></p>
+        ]]>
+    </string>
+    
+    <string name="nothingFound">
+        <![CDATA[
+        <h1>Nothing found</h1>
+        <p><small>Get more dictionaries at <a href="http://aarddict.org">http://aarddict.org</a></small></p>
+        ]]>
+    </string>    
+        
 </resources>

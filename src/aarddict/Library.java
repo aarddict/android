@@ -2,14 +2,11 @@ package aarddict;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import android.util.Log;
@@ -29,28 +26,12 @@ public final class Library extends ArrayList<Volume> {
 		Log.d(Volume.TAG, lookupWord.toString());
 		String nameSpace = lookupWord.nameSpace;
 
-		if (fromMeta != null && nameSpace != null) {
-			Log.d(Volume.TAG, String.format("Name space: %s", nameSpace));
-			if (fromMeta.siteinfo != null) {
-				Log.d(Volume.TAG, "Siteinfo not null");
-				List interwiki = (List) fromMeta.siteinfo.get("interwikimap");
-				if (interwiki != null) {
-					Log.d(Volume.TAG, "Interwiki map not null");
-					for (Object item : interwiki) {
-						Map interwikiItem = (Map) item;
-						String prefix = (String) interwikiItem.get("prefix");
-						Log.d(Volume.TAG, "Analyzing prefix " + prefix);
-						if (prefix != null && prefix.equals(nameSpace)) {
-							Log.d(Volume.TAG, "Matching prefix found: "
-									+ prefix);
-							target = findMatchingDict((String) interwikiItem
-									.get("url"));
-							break;
-						}
-					}
-				}
-			}
-		}
+		Log.d(Volume.TAG, String.format("Name space: %s", nameSpace));			
+		Map<String, String> interwikiMap = fromMeta.getInterwikiMap();
+		String nsServerUrl = interwikiMap.get(nameSpace);
+		UUID matchingDict = findMatchingDict(nsServerUrl);			
+		if (matchingDict != null)
+		    target = matchingDict;
 
 		final List<Volume> dicts = new ArrayList<Volume>(this);
 		// This is supposed to move volumes of target dict to first positions
@@ -67,7 +48,13 @@ public final class Library extends ArrayList<Volume> {
 			else
 				if (lookupWord.word.length() == 2)
 					comparators = EntryComparators.EXACT_IGNORE_CASE;
-		}		
+		}
+		
+		if (nsServerUrl == null) {
+		    //namespace did not resolve into server url, 
+		    //maybe it's not a name space, just article title with ":" in it
+		    lookupWord.mergeNameSpace();
+		}		    
 		return new MatchIterator(dicts, comparators, lookupWord);
 	}
 
@@ -93,22 +80,12 @@ public final class Library extends ArrayList<Volume> {
 		return null;
 	}
 
-	public Iterator<Entry> bestMatch(final String word, UUID... dictUUIDs) {
-		
-		List<Volume> volumes;
-		if (dictUUIDs.length == 0) {
-			volumes = this;
-		} else {
-			final Set<UUID> dictUUIDSet = new HashSet<UUID>();
-			dictUUIDSet.addAll(Arrays.asList(dictUUIDs));
-			volumes = new ArrayList<Volume>();
-			for (Volume vol : this) {
-				if (dictUUIDSet.contains(vol.header.uuid)) {
-					volumes.add(vol);
-				}
-			}
-		}
-		return new MatchIterator(EntryComparators.ALL, volumes, LookupWord.splitWord(word));
+	public Iterator<Entry> bestMatch(String word) {
+		LookupWord lookupWord = LookupWord.splitWord(word);
+		//best match is used with human input, 
+		//assume ":" is never used as namespace separator
+		lookupWord.mergeNameSpace();
+		return new MatchIterator(EntryComparators.ALL, this, lookupWord);
 	}
 
 	public Article getArticle(Entry e) throws IOException {
@@ -129,8 +106,7 @@ public final class Library extends ArrayList<Volume> {
 			return article;
 		}
 
-		Iterator<Entry> result = bestMatch(article.getRedirect(),
-				article.dictionaryUUID);
+        Iterator<Entry> result = followLink(article.getRedirect(), article.volumeId);
 		if (result.hasNext()) {
 			Entry redirectEntry = result.next();
 			Article redirectArticle = getArticle(redirectEntry);

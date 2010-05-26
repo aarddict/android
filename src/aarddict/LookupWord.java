@@ -22,6 +22,13 @@ public class LookupWord {
 		this.section = section;
 	}	
 	
+	void mergeNameSpace() {
+	    if (!isEmpty(nameSpace)) {
+	        word = nameSpace + ":" + word;
+	        nameSpace = null;
+	    }	    
+	}
+	
     public static LookupWord splitWord(String word) {
         if (word == null || word.equals("") || word.equals("#")) {
             return new LookupWord();

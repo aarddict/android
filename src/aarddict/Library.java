@@ -4,9 +4,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import android.util.Log;
@@ -14,12 +16,11 @@ import android.util.Log;
 public final class Library extends ArrayList<Volume> {
 
 	int maxRedirectLevels = 5;
-
+	
 	public Iterator<Entry> followLink(final String word, String fromVolumeId) {
 		Log.d(Volume.TAG, String.format("Follow link \"%s\", %s", word,
 				fromVolumeId));
 		Volume fromDict = getVolume(fromVolumeId);
-		UUID target = fromDict.getDictionaryId();
 		Metadata fromMeta = fromDict.metadata;
 
 		LookupWord lookupWord = LookupWord.splitWord(word);
@@ -29,40 +30,45 @@ public final class Library extends ArrayList<Volume> {
 		Log.d(Volume.TAG, String.format("Name space: %s", nameSpace));			
 		Map<String, String> interwikiMap = fromMeta.getInterwikiMap();
 		String nsServerUrl = interwikiMap.get(nameSpace);
-		UUID matchingDict = findMatchingDict(nsServerUrl);			
-		if (matchingDict != null)
-		    target = matchingDict;
+		List<UUID> matchingDicts = findMatchingDicts(nsServerUrl);
+		if (matchingDicts.isEmpty())
+		    matchingDicts.add(fromDict.getDictionaryId());
 
-		final List<Volume> dicts = new ArrayList<Volume>(this);
-		// This is supposed to move volumes of target dict to first positions
-		// leaving everything else in place, preferred dictionary
-		// volumes coming next (if preferred and target dictionaries are
-		// different)
-		Comparator<Volume> c = new PreferredDictionaryComparator(target);
-		Collections.sort(dicts, c);
-		Comparator<Entry>[] comparators = EntryComparators.ALL_FULL;
+        if (nsServerUrl == null) {
+            //namespace did not resolve into server url, 
+            //maybe it's not a name space, just article title with ":" in it
+            lookupWord.mergeNameSpace();
+        }           		
 		
-		if (lookupWord.word != null) {
-			if (lookupWord.word.length() == 1)
-				comparators = EntryComparators.EXACT;
-			else
-				if (lookupWord.word.length() == 2)
-					comparators = EntryComparators.EXACT_IGNORE_CASE;
-		}
-		
-		if (nsServerUrl == null) {
-		    //namespace did not resolve into server url, 
-		    //maybe it's not a name space, just article title with ":" in it
-		    lookupWord.mergeNameSpace();
-		}		    
-		return new MatchIterator(dicts, comparators, lookupWord);
+        Comparator<Entry>[] comparators = EntryComparators.ALL_FULL;
+        
+        if (lookupWord.word != null) {
+            if (lookupWord.word.length() == 1)
+                comparators = EntryComparators.EXACT;
+            else
+                if (lookupWord.word.length() == 2)
+                    comparators = EntryComparators.EXACT_IGNORE_CASE;
+        }           
+        
+        final List<Volume> dicts = new ArrayList<Volume>(this);                
+        for (int i = 0; i < matchingDicts.size(); i++) {
+            UUID target = matchingDicts.get(i);
+            Comparator<Volume> c = new PreferredDictionaryComparator(target);
+            Collections.sort(dicts.subList(i, dicts.size()), c);
+        }
+        
+        return new MatchIterator(dicts, comparators, lookupWord);        
 	}
 
-	private UUID findMatchingDict(String serverUrl) {
+	private List<UUID> findMatchingDicts(String serverUrl) {
 		Log.d(Volume.TAG, "Looking for dictionary with server url "
 				+ serverUrl);
-		if (serverUrl == null)
-			return null;
+		Set<UUID> seen = new HashSet<UUID>();
+		List<UUID> result = new ArrayList<UUID>();
+		if (serverUrl == null) {
+	        Log.d(Volume.TAG, "Server url is null");		    
+			return result;
+		}
 		for (Volume d : this) {
 			String articleURLTemplate = d.getArticleURLTemplate();
 			Log.d(Volume.TAG, "Looking at article url template: "
@@ -72,12 +78,15 @@ public final class Library extends ArrayList<Volume> {
 				Log.d(Volume.TAG, String.format(
 						"Dictionary with server url %s found: %s", serverUrl, d
 								.getDictionaryId()));
-				return d.getDictionaryId();
+				if (!seen.contains(d.getDictionaryId()))
+				    result.add(d.getDictionaryId());
 			}
 		}
-		Log.d(Volume.TAG, String.format(
-				"Dictionary with server url %s not found", serverUrl));
-		return null;
+		if (result.isEmpty()) {
+    		Log.d(Volume.TAG, String.format(
+    				"Dictionary with server url %s not found", serverUrl));
+		}
+		return result;
 	}
 
 	public Iterator<Entry> bestMatch(String word) {

@@ -99,7 +99,7 @@ public class ArticleViewActivity extends Activity {
 		}
 	}
     	
-	private final class FlingListener extends SimpleOnGestureListener {
+	private final class ArticleGestureListener extends SimpleOnGestureListener {
 	    
 	    private static final int SWIPE_MIN_DISTANCE = 200;
 	    private static final int SWIPE_MAX_OFF_PATH = 150;
@@ -122,6 +122,11 @@ public class ArticleViewActivity extends Activity {
             }
             return false;	        
 	    }		    
+	    
+	    @Override
+	    public void onLongPress(MotionEvent e) {
+	        finish();
+	    }
 	}
 	
     @Override
@@ -137,14 +142,14 @@ public class ArticleViewActivity extends Activity {
         getWindow().requestFeature(Window.FEATURE_PROGRESS);        
         getWindow().requestFeature(Window.FEATURE_LEFT_ICON);
         
-        flingDetector = new GestureDetector(this, new FlingListener());
+        gestureDetector = new GestureDetector(this, new ArticleGestureListener());
                         
         articleView = new WebView(this);        
         articleView.getSettings().setJavaScriptEnabled(true);
         
         articleView.setOnTouchListener(new View.OnTouchListener() {
             public boolean onTouch(View v, MotionEvent event) {
-                return flingDetector.onTouchEvent(event);
+                return gestureDetector.onTouchEvent(event);
             }
         });
         articleView.addJavascriptInterface(new SectionMatcher(), "matcher");
@@ -360,7 +365,7 @@ public class ArticleViewActivity extends Activity {
     
     private MenuItem miViewOnline; 
     private MenuItem miNextArticle;
-    private GestureDetector flingDetector;
+    private GestureDetector gestureDetector;
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

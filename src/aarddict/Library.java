@@ -16,18 +16,20 @@ import android.util.Log;
 public final class Library extends ArrayList<Volume> {
 
 	int maxRedirectLevels = 5;
+
+	private final static String TAG = Library.class.getName();
 	
 	public Iterator<Entry> followLink(final String word, String fromVolumeId) {
-		Log.d(Volume.TAG, String.format("Follow link \"%s\", %s", word,
+		Log.d(TAG, String.format("Follow link \"%s\", %s", word,
 				fromVolumeId));
 		Volume fromDict = getVolume(fromVolumeId);
 		Metadata fromMeta = fromDict.metadata;
 
 		LookupWord lookupWord = LookupWord.splitWord(word);
-		Log.d(Volume.TAG, lookupWord.toString());
+		Log.d(TAG, lookupWord.toString());
 		String nameSpace = lookupWord.nameSpace;
 
-		Log.d(Volume.TAG, String.format("Name space: %s", nameSpace));			
+		Log.d(TAG, String.format("Name space: %s", nameSpace));			
 		Map<String, String> interwikiMap = fromMeta.getInterwikiMap();
 		String nsServerUrl = interwikiMap.get(nameSpace);
 		List<UUID> matchingDicts = findMatchingDicts(nsServerUrl);
@@ -61,21 +63,21 @@ public final class Library extends ArrayList<Volume> {
 	}
 
 	private List<UUID> findMatchingDicts(String serverUrl) {
-		Log.d(Volume.TAG, "Looking for dictionary with server url "
+		Log.d(TAG, "Looking for dictionary with server url "
 				+ serverUrl);
 		Set<UUID> seen = new HashSet<UUID>();
 		List<UUID> result = new ArrayList<UUID>();
 		if (serverUrl == null) {
-	        Log.d(Volume.TAG, "Server url is null");		    
+	        Log.d(TAG, "Server url is null");		    
 			return result;
 		}
 		for (Volume d : this) {
 			String articleURLTemplate = d.getArticleURLTemplate();
-			Log.d(Volume.TAG, "Looking at article url template: "
+			Log.d(TAG, "Looking at article url template: "
 					+ articleURLTemplate);
 			if (articleURLTemplate != null
 					&& serverUrl.equals(articleURLTemplate)) {
-				Log.d(Volume.TAG, String.format(
+				Log.d(TAG, String.format(
 						"Dictionary with server url %s found: %s", serverUrl, d
 								.getDictionaryId()));
 				if (!seen.contains(d.getDictionaryId()))
@@ -83,7 +85,7 @@ public final class Library extends ArrayList<Volume> {
 			}
 		}
 		if (result.isEmpty()) {
-    		Log.d(Volume.TAG, String.format(
+    		Log.d(TAG, String.format(
     				"Dictionary with server url %s not found", serverUrl));
 		}
 		return result;

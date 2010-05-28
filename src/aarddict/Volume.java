@@ -30,7 +30,7 @@ import android.util.Log;
 
 public final class Volume extends AbstractList<Entry> {
 
-	final static String TAG = Volume.class.getName();
+	private final static String TAG = Volume.class.getName();
 	
     final static Charset UTF8 = Charset.forName("utf8");
    

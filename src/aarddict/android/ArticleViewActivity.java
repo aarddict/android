@@ -328,7 +328,9 @@ public class ArticleViewActivity extends Activity {
             Article prevArticle = prev.article; 
             if (prevArticle.eqalsIgnoreSection(current.article)) {
             	resetTitleToCurrent();
-                goToSection(prevArticle.section);
+            	if (!prevArticle.sectionEquals(current.article)) { 
+            	    goToSection(prevArticle.section);
+            	}
             }   
             else {
             	showCurrentArticle();
@@ -482,11 +484,14 @@ public class ArticleViewActivity extends Activity {
 			        if (oldCurrent != null) {
 			        	HistoryItem newCurrent = item;
 			            if (newCurrent.article.eqalsIgnoreSection(oldCurrent.article)) {
-			            	final String section = newCurrent.article.section;
+			                
+			            	final String section = oldCurrent.article.sectionEquals(newCurrent.article) ? null : newCurrent.article.section;
+			            	
 			            	runOnUiThread(new Runnable() {								
 								public void run() {
 									resetTitleToCurrent();
-									goToSection(section);
+									if (section != null)
+									    goToSection(section);
 									setProgress(10000);
 									currentTask = null;
 								}

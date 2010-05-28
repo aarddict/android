@@ -63,4 +63,9 @@ public final class Article {
     public boolean eqalsIgnoreSection(Article other) {
         return volumeId.equals(other.volumeId) && pointer == other.pointer;
     }
+    
+    public boolean sectionEquals(Article other) {
+        return (section == null && other.section == null) || 
+            (section !=null && other.section != null && section.equals(other.section));
+    }
 }

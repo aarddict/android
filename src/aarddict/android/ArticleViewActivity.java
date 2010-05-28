@@ -29,10 +29,14 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.View;
 import android.view.Window;
+import android.view.GestureDetector.SimpleOnGestureListener;
 import android.webkit.JsResult;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
@@ -94,7 +98,33 @@ public class ArticleViewActivity extends Activity {
 			return entries.get(entryIndex);
 		}
 	}
-    
+    	
+	private final class FlingListener extends SimpleOnGestureListener {
+	    
+	    private static final int SWIPE_MIN_DISTANCE = 200;
+	    private static final int SWIPE_MAX_OFF_PATH = 150;
+	    private static final int SWIPE_THRESHOLD_VELOCITY = 500;
+	    
+	    @Override
+	    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+            try {
+                Log.d(TAG, String.format( "e1: (%s, %s) e2: (%s, %s) vx: %s vy: %s", e1.getX(), e1.getY(), e2.getX(), e2.getY(), velocityX, velocityY));
+                if (Math.abs(e1.getY() - e2.getY()) > SWIPE_MAX_OFF_PATH)
+                    return false;
+                if(e1.getX() - e2.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+                    goBack();
+                    return true;
+                }  else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+                    nextArticle();                    
+                    return true;
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "error while handling fling event", e);
+            }
+            return false;	        
+	    }		    
+	}
+	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -108,10 +138,16 @@ public class ArticleViewActivity extends Activity {
         getWindow().requestFeature(Window.FEATURE_PROGRESS);        
         getWindow().requestFeature(Window.FEATURE_LEFT_ICON);
         
+        flingDetector = new GestureDetector(this, new FlingListener());
+                        
         articleView = new WebView(this);        
-        articleView.getSettings().setBuiltInZoomControls(true);
         articleView.getSettings().setJavaScriptEnabled(true);
         
+        articleView.setOnTouchListener(new View.OnTouchListener() {
+            public boolean onTouch(View v, MotionEvent event) {
+                return flingDetector.onTouchEvent(event);
+            }
+        });
         articleView.addJavascriptInterface(new SectionMatcher(), "matcher");
         
         articleView.setWebChromeClient(new WebChromeClient(){
@@ -254,17 +290,37 @@ public class ArticleViewActivity extends Activity {
     
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if ((keyCode == KeyEvent.KEYCODE_BACK)) {
-            if (goBack()) {
-                return true;
-            }
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_BACK:
+                goBack();   
+                break;
+            case KeyEvent.KEYCODE_VOLUME_UP:
+                zoomIn();
+                break;
+            case KeyEvent.KEYCODE_VOLUME_DOWN:
+                zoomOut();
+                break;
+            default:
+                return super.onKeyDown(keyCode, event);
         }
-        return super.onKeyDown(keyCode, event);
+        return true;
     }
 
-    private boolean goBack() {
+    
+    private boolean zoomIn() {
+        return articleView.zoomIn();
+    }
+    
+    private boolean zoomOut() {
+        return articleView.zoomOut();
+    }
+        
+    private void goBack() {
+        if (backItems.size() == 1) {
+            finish();
+        }        
     	if (currentTask != null) {
-    		return true;
+    		return;
     	}
         if (backItems.size() > 1) {
             HistoryItem current = backItems.remove(backItems.size() - 1); 
@@ -278,9 +334,7 @@ public class ArticleViewActivity extends Activity {
             else {
             	showCurrentArticle();
             }
-            return true;            
         }
-        return false;
     }
             
     private void nextArticle() {
@@ -300,9 +354,12 @@ public class ArticleViewActivity extends Activity {
     final static int MENU_VIEW_ONLINE = 2;
     final static int MENU_NEW_LOOKUP = 3;
     final static int MENU_NEXT = 4;
+    final static int MENU_ZOOM_IN = 5;
+    final static int MENU_ZOOM_OUT = 6;
     
     private MenuItem miViewOnline; 
     private MenuItem miNextArticle;
+    private GestureDetector flingDetector;
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -310,6 +367,8 @@ public class ArticleViewActivity extends Activity {
         miNextArticle = menu.add(0, MENU_NEXT, 0, "Next").setIcon(android.R.drawable.ic_media_next);
         miViewOnline = menu.add(0, MENU_VIEW_ONLINE, 0, "View Online").setIcon(android.R.drawable.ic_menu_view);
         menu.add(0, MENU_NEW_LOOKUP, 0, "New Lookup").setIcon(android.R.drawable.ic_menu_search);        
+        menu.add(0, MENU_ZOOM_IN, 0, "Zoom In").setIcon(android.R.drawable.btn_plus);
+        menu.add(0, MENU_ZOOM_OUT, 0, "Zoom Out").setIcon(android.R.drawable.btn_minus);
         return true;
     }
     
@@ -330,23 +389,29 @@ public class ArticleViewActivity extends Activity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
         case MENU_BACK:
-            if (!goBack()) {
-                finish();
-            };
+            goBack();
             break;
         case MENU_VIEW_ONLINE:
             viewOnline();
-            break;            
+            break;
         case MENU_NEW_LOOKUP:
             onSearchRequested();
             break;
         case MENU_NEXT:
             nextArticle();
-            break;                                    
+            break;
+        case MENU_ZOOM_IN:
+            zoomIn();
+            break;
+        case MENU_ZOOM_OUT:
+            zoomOut();
+            break;
+        default:
+            return super.onOptionsItemSelected(item);
         }
         return true;
     }
-    
+        
     private void viewOnline() {
         if (this.backItems.size() > 0) {            
             Article current = this.backItems.get(this.backItems.size() - 1).article;

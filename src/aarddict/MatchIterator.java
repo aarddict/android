@@ -7,7 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-public class MatchIterator implements Iterator<Entry> {
+public final class MatchIterator implements Iterator<Entry> {
 	
 	public static int MAX_FROM_VOL = 50;
 	

@@ -108,7 +108,6 @@ public class ArticleViewActivity extends Activity {
 	    @Override
 	    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
             try {
-                Log.d(TAG, String.format( "e1: (%s, %s) e2: (%s, %s) vx: %s vy: %s", e1.getX(), e1.getY(), e2.getX(), e2.getY(), velocityX, velocityY));
                 if (Math.abs(e1.getY() - e2.getY()) > SWIPE_MAX_OFF_PATH)
                     return false;
                 if(e1.getX() - e2.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
@@ -307,7 +306,7 @@ public class ArticleViewActivity extends Activity {
     }
 
     
-    private boolean zoomIn() {
+    private boolean zoomIn() {        
         return articleView.zoomIn();
     }
     

@@ -219,7 +219,7 @@ public class ArticleViewActivity extends Activity {
 									Article currentArticle = backItems.get(backItems.size() - 1).article;
 									Iterator<Entry> currentIterator = dictionaryService.followLink(url, currentArticle.volumeId);
 									List<Entry> result = new ArrayList<Entry>();
-									while (currentIterator.hasNext() && result.size() < 10) {
+									while (currentIterator.hasNext() && result.size() < 20) {
 										result.add(currentIterator.next());
 									}									
 									HistoryItem item = new HistoryItem(result);

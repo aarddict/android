@@ -19,7 +19,11 @@ import aarddict.Entry;
 import aarddict.Metadata;
 import aarddict.RedirectError;
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.Uri;
 import android.os.Binder;
 import android.os.Environment;
 import android.os.IBinder;
@@ -39,14 +43,11 @@ public class DictionaryService extends Service {
 	public final static String DISCOVERY_FINISHED = TAG + ".DISCOVERY_FINISHED";
 	public final static String OPEN_STARTED = TAG + ".OPEN_STARTED";
 	public final static String OPENED_DICT = TAG + ".OPENED_DICT";
+	public final static String CLOSED_DICT = TAG + ".CLOSED_DICT";
 	public final static String DICT_OPEN_FAILED = TAG + ".DICT_OPEN_FAILED";
 	public final static String OPEN_FINISHED = TAG + ".OPEN_FINISHED";
 	
-	Library library;
-	
-	private boolean started = false;
-	private boolean starting = false;
-	
+	Library library;		
     FilenameFilter fileFilter = new FilenameFilter() {
 
         @Override
@@ -62,45 +63,76 @@ public class DictionaryService extends Service {
         return binder;
     }
     
-    private final IBinder binder = new LocalBinder();    
+    private final IBinder binder = new LocalBinder();
+
+    private BroadcastReceiver broadcastReceiver;    
 
 	@Override
 	public void onCreate() {
 		Log.d(TAG, "On create");
 		library = new Library();
+		
+		broadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String action = intent.getAction();
+                Uri path = intent.getData();
+                Log.d(TAG, String.format("action: %s, path: %s", action, path));
+                if (action.equals(Intent.ACTION_MEDIA_MOUNTED)) {
+                    startInit();
+                }
+                else {
+                    stopSelf();
+                }
+            }		    
+		};
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addDataScheme("file");
+        intentFilter.addAction(Intent.ACTION_MEDIA_EJECT);
+        intentFilter.addAction(Intent.ACTION_MEDIA_BAD_REMOVAL);
+        intentFilter.addAction(Intent.ACTION_MEDIA_REMOVED);
+        intentFilter.addAction(Intent.ACTION_MEDIA_MOUNTED);
+		registerReceiver(broadcastReceiver, intentFilter);
 	}
 
 	
 	@Override
 	synchronized public void onStart(Intent intent, int flags) {
-		if (!started && !starting) {
-			starting = true;
-			Thread t = new Thread(new Runnable() {
-	        	public void run() {                
-	                Log.d(TAG, "starting service");        		
-	                long t0 = System.currentTimeMillis();
-	                init();
-	                Log.d(TAG, "service start took " + (System.currentTimeMillis() - t0));
-	                starting = false;
-	                started = true;	                
-	        	};
-	        });
-			t.setPriority(Thread.MIN_PRIORITY);
-			t.start();					
-		}
+	    startInit();
 	}	
 	
-	private void init() {
+    synchronized public void refresh() {
+        startInit();
+    }   
+	
+	
+	synchronized private void startInit() {
+        Thread t = new Thread(new Runnable() {
+            public void run() {                
+                Log.d(TAG, "starting service");             
+                long t0 = System.currentTimeMillis();
+                init();
+                Log.d(TAG, "service start took " + (System.currentTimeMillis() - t0));
+            };
+        });
+        t.setPriority(Thread.MIN_PRIORITY);
+        t.start();                  
+	}
+	
+	synchronized private void init() {
 		List<File> candidates = discover();
 		open(candidates);		
 	}
 	
-	public Map<File, Exception> open(File file) {
+	synchronized public Map<File, Exception> open(File file) {
 		return open(Arrays.asList(new File[]{file}));
 	}
 	
-    synchronized public Map<File, Exception> open(List<File> files) {
-    	
+    synchronized private Map<File, Exception> open(List<File> files) {
+        Map<File, Exception> errors = new HashMap<File, Exception>();
+        if (files.size() == 0) {
+            return errors;
+        }
     	Intent notifyOpenStarted = new Intent(OPEN_STARTED);
     	notifyOpenStarted.putExtra("count", files.size());
     	sendBroadcast(notifyOpenStarted);
@@ -114,9 +146,7 @@ public class DictionaryService extends Service {
 	    	}
     	}
     	
-        Map<UUID, Metadata> knownMeta = new HashMap<UUID, Metadata>();
-                    
-        Map<File, Exception> errors = new HashMap<File, Exception>();
+        Map<UUID, Metadata> knownMeta = new HashMap<UUID, Metadata>();                            
         for (int i = 0;  i < files.size(); i++) {
         	File file = files.get(i);
         	Volume d = null;
@@ -157,6 +187,7 @@ public class DictionaryService extends Service {
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
+		unregisterReceiver(broadcastReceiver);
         for (Volume d : library) {
             try {
                 d.close();

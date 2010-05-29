@@ -30,11 +30,8 @@ import android.os.IBinder;
 import android.text.Editable;
 import android.text.Html;
 import android.text.InputType;
-import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.text.method.LinkMovementMethod;
-import android.text.style.TextAppearanceSpan;
-import android.text.style.URLSpan;
 import android.text.util.Linkify;
 import android.util.Log;
 import android.view.Gravity;
@@ -97,6 +94,27 @@ public class LookupActivity extends Activity {
     private MessageAdapter msgGetDicts;    
     private MessageAdapter msgNothingFound;
     private MessageAdapter msgNoDicts;
+    
+    private final static class DiscoveryProgressDialog extends ProgressDialog {        
+        DiscoveryProgressDialog(Context context) {
+            super(context);
+            setCancelable(false);
+            setIndeterminate(true);
+            setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            setMessage("Looking for dictionaries...");            
+        }        
+    }
+
+    private final static class OpeningProgressDialog extends ProgressDialog {        
+        OpeningProgressDialog(Context context) {
+            super(context);
+            setCancelable(false);
+            setIndeterminate(false);
+            setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+            setProgress(0);                  
+            setMessage("Loading dictionaries...");
+        }        
+    }
     
     void updateTitle() {
     	int dictCount = dictionaryService.getVolumes().size();
@@ -189,39 +207,46 @@ public class LookupActivity extends Activity {
                        
         broadcastReceiver = new BroadcastReceiver() {
         
-        	ProgressDialog progressDialog = new ProgressDialog(LookupActivity.this);
-        	
-        	{
-        		progressDialog.setCancelable(false);
-        	}
+        	ProgressDialog discoveryProgress;
+        	ProgressDialog openProgress;
         	
 			@Override
 			public void onReceive(Context context, Intent intent) {
 				String a = intent.getAction();
 				if (a.equals(DictionaryService.DISCOVERY_STARTED)) {
 					Log.d(TAG, "dictionary disconvery started");
-					progressDialog.setIndeterminate(true);
-			        progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-			        progressDialog.setMessage("Looking for dictionaries...");
-			        progressDialog.show();					
-				}
+					if (discoveryProgress == null) {
+					    discoveryProgress = new DiscoveryProgressDialog(context);
+					}
+					discoveryProgress.show();
+				} else
 				if (a.equals(DictionaryService.DISCOVERY_FINISHED)) {
-					Log.d(TAG, "dictionary discovery finished");
-				}				
+				    Log.d(TAG, "dictionary discovery finished");
+				    if (discoveryProgress != null) {
+				        discoveryProgress.dismiss();
+				        discoveryProgress = null;
+				    }					
+				} else
 				if (a.equals(DictionaryService.OPEN_STARTED)) {	
 					Log.d(TAG, "dictionary open started");
-					int count = intent.getIntExtra("count", 0);					
-					progressDialog.setIndeterminate(false);
-					progressDialog.setProgress(0);			        
-			        progressDialog.setMessage("Loading dictionaries...");
-			        progressDialog.setMax(count);
-			        progressDialog.show();
-				}
-				if (a.equals(DictionaryService.DICT_OPEN_FAILED)  || a.equals(DictionaryService.OPENED_DICT)) {
-					progressDialog.incrementProgressBy(1);
-				}
+					int count = intent.getIntExtra("count", 0);
+					if (openProgress == null) {
+					    openProgress = new OpeningProgressDialog(context);
+					}
+			        openProgress.setMax(count);
+			        openProgress.show();
+				} else
+				if (a.equals(DictionaryService.DICT_OPEN_FAILED) || 
+				        a.equals(DictionaryService.OPENED_DICT)) {
+				    if (openProgress != null) {
+				        openProgress.incrementProgressBy(1); 
+				    }
+				} else
 				if (a.equals(DictionaryService.OPEN_FINISHED)) {
-					progressDialog.dismiss();
+				    if (openProgress != null) {				        
+				        openProgress.dismiss();
+				        openProgress = null;
+				    }
 					updateTitle();
 				}								
 			}
@@ -231,8 +256,8 @@ public class LookupActivity extends Activity {
     	final Intent dictServiceIntent = new Intent(this, DictionaryService.class);
     	startService(dictServiceIntent);
     	bindService(dictServiceIntent, connection, 0);
-    }
-            
+    }        
+    
     private void logIntent(Intent intent) {
     	Set<String> cats = intent.getCategories();
     	StringBuilder s = new StringBuilder();
@@ -445,11 +470,13 @@ public class LookupActivity extends Activity {
     
     final static int MENU_DICT_INFO = 1;
     final static int MENU_ABOUT = 2;
+    final static int MENU_DICT_REFRESH = 3;    
     private EditText editText;
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        menu.add(0, MENU_DICT_INFO, 0, "Info").setIcon(android.R.drawable.ic_menu_info_details);        
+        menu.add(0, MENU_DICT_REFRESH, 0, "Refresh").setIcon(android.R.drawable.ic_menu_manage);
+        menu.add(0, MENU_DICT_INFO, 0, "Info").setIcon(android.R.drawable.ic_menu_info_details);
         menu.add(0, MENU_ABOUT, 0, "About").setIcon(R.drawable.aarddict);
         return true;
     }
@@ -462,6 +489,10 @@ public class LookupActivity extends Activity {
             break;
         case MENU_ABOUT:
             showAbout();
+            break;            
+        case MENU_DICT_REFRESH:
+            if (dictionaryService != null)
+                dictionaryService.refresh();
             break;
         }
         return true;

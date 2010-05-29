@@ -1,8 +1,12 @@
 package aarddict.android;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -20,6 +24,7 @@ import aarddict.Library;
 import aarddict.Metadata;
 import aarddict.RedirectError;
 import aarddict.Volume;
+import aarddict.android.DictionariesActivity.VerifyRecord;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -74,7 +79,7 @@ public class DictionaryService extends Service {
 	public void onCreate() {
 		Log.d(TAG, "On create");
 		library = new Library();
-		
+		loadAddedFileList();
 		broadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -124,11 +129,21 @@ public class DictionaryService extends Service {
 	
 	synchronized private void init() {
 		List<File> candidates = discover();
+		for (String path : addedFiles) {
+		    candidates.add(new File(path));
+		}
 		open(candidates);		
 	}
 	
+	List<String> addedFiles = new ArrayList<String>();
+	
 	synchronized public Map<File, Exception> open(File file) {
-		return open(Arrays.asList(new File[]{file}));
+	    Map<File, Exception> errors = open(Arrays.asList(new File[]{file}));
+	    if (errors.isEmpty()) {
+	        addedFiles.add(file.getAbsolutePath());
+	        saveAddedFileList();
+	    }
+		return errors;
 	}
 	
 	private final class DeleteObserver extends FileObserver {
@@ -153,6 +168,8 @@ public class DictionaryService extends Service {
                 Log.d(TAG, String.format("Received file event %s: %s", event, path));
                 if (dictFilesToWatch.contains(path)) {
                     Log.d(TAG, String.format("Dictionary file %s in %s has been deleted, stopping service", path, dir));
+                    if (addedFiles.remove(new File(dir, path).getAbsolutePath()))                    
+                        saveAddedFileList();
                     stopSelf();
                 }                
             }	        	        
@@ -224,6 +241,8 @@ public class DictionaryService extends Service {
                 notifyFailed.putExtra("i", i);
                 sendBroadcast(notifyFailed);  
                 Thread.yield();
+                if (addedFiles.remove(file.getAbsolutePath()))                    
+                    saveAddedFileList();                
                 errors.put(file, e);
             }
         }        
@@ -324,4 +343,33 @@ public class DictionaryService extends Service {
 	public Article getArticle(Entry entry) throws IOException {
 		return library.getArticle(entry);
 	}
+	
+    void saveAddedFileList() {        
+        try {
+            File dir = getDir("addedfiles", 0);
+            File file = new File(dir, "list");
+            FileOutputStream fout = new FileOutputStream(file);
+            ObjectOutputStream oout = new ObjectOutputStream(fout);
+            oout.writeObject(addedFiles);
+        }
+        catch (Exception e) {
+            Log.e(TAG, "Failed to save added file list", e);
+        }        
+    }
+
+    void loadAddedFileList() {
+        try {
+            File dir = getDir("addedfiles", 0);
+            File file = new File(dir, "list");
+            if (file.exists()) {
+                FileInputStream fin = new FileInputStream(file);
+                ObjectInputStream oin = new ObjectInputStream(fin);
+                List<String> data  = (List<String>)oin.readObject();
+                addedFiles.addAll(data); 
+            }
+        }
+        catch (Exception e) {
+            Log.e(TAG, "Failed to load added file list", e);
+        }        
+    }    	
 }

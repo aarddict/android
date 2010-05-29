@@ -6,18 +6,20 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import aarddict.Article;
-import aarddict.Library;
-import aarddict.Volume;
 import aarddict.Entry;
+import aarddict.Library;
 import aarddict.Metadata;
 import aarddict.RedirectError;
+import aarddict.Volume;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -26,6 +28,7 @@ import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Environment;
+import android.os.FileObserver;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -128,6 +131,49 @@ public class DictionaryService extends Service {
 		return open(Arrays.asList(new File[]{file}));
 	}
 	
+	private final class DeleteObserver extends FileObserver {
+	    
+	    private Set<String> dictFilesToWatch;
+        private String dir;
+	    
+	    DeleteObserver(String dir) {
+	        super(dir, DELETE);
+	        dictFilesToWatch = new HashSet<String>();
+	        this.dir = dir;
+	    }
+	    
+	    public void add(String pathToWatch) {
+	        Log.d(TAG, String.format("Watch file %s in %s", pathToWatch, dir));
+	        dictFilesToWatch.add(pathToWatch);
+	    }
+	    
+	    @Override
+	    public void onEvent(int event, String path) {
+            if ((event & FileObserver.DELETE) != 0) {
+                Log.d(TAG, String.format("Received file event %s: %s", event, path));
+                if (dictFilesToWatch.contains(path)) {
+                    Log.d(TAG, String.format("Dictionary file %s in %s has been deleted, stopping service", path, dir));
+                    stopSelf();
+                }                
+            }	        	        
+	    }
+	    
+	}
+	
+	private Map<String, DeleteObserver> deleteObservers = new HashMap<String, DeleteObserver>();
+	
+	private DeleteObserver getDeleteObserver(File file) {
+	    File parent = file.getParentFile();
+	    String dir = parent.getAbsolutePath();
+	    DeleteObserver observer = deleteObservers.get(dir);
+	    if (observer == null) {
+	        observer = new DeleteObserver(dir);
+	        observer.startWatching();
+	        deleteObservers.put(dir, observer);
+	    }
+	    return observer;
+	}
+	
     synchronized private Map<File, Exception> open(List<File> files) {
         Map<File, Exception> errors = new HashMap<File, Exception>();
         if (files.size() == 0) {
@@ -157,6 +203,8 @@ public class DictionaryService extends Service {
                 if (existing == null) {
                 	Log.d(TAG, "Dictionary " + d.getId() + " is not in current collection");
                 	library.add(d);
+                	DeleteObserver observer = getDeleteObserver(file);
+                	observer.add(file.getName());
                 }
                 else {
                 	Log.d(TAG, "Dictionary " + d.getId() + " is already open");
@@ -196,7 +244,10 @@ public class DictionaryService extends Service {
                 Log.e(TAG, "Failed to close " + d, e);
             }
         }
-        library.clear();	
+        library.clear();
+        for (DeleteObserver observer : deleteObservers.values()) {
+            observer.stopWatching();
+        }
         Log.i(TAG, "destroyed");
 	}
 	

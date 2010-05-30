@@ -566,9 +566,6 @@ public class ArticleViewActivity extends Activity {
 		            }
 		        });
 		        dialogBuilder.show();
-		        if (backItems.isEmpty()) {
-		            finish();
-		        }        						        
 			}
 		});    	
     }

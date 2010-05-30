@@ -475,9 +475,9 @@ public class LookupActivity extends Activity {
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        menu.add(0, MENU_DICT_REFRESH, 0, "Refresh").setIcon(android.R.drawable.ic_menu_manage);
+        menu.add(0, MENU_DICT_REFRESH, 0, "Refresh").setIcon(R.drawable.ic_menu_refresh);
         menu.add(0, MENU_DICT_INFO, 0, "Info").setIcon(android.R.drawable.ic_menu_info_details);
-        menu.add(0, MENU_ABOUT, 0, "About").setIcon(R.drawable.aarddict);
+        menu.add(0, MENU_ABOUT, 0, "About").setIcon(R.drawable.ic_menu_aarddict);
         return true;
     }
     

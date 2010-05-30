@@ -381,13 +381,16 @@ public class ArticleViewActivity extends Activity {
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
     	boolean enableViewOnline = false;
+    	boolean enableNextArticle = false;
         if (this.backItems.size() > 0) {
-            Article current = this.backItems.get(this.backItems.size() - 1).article;
+            HistoryItem historyItem = backItems.get(backItems.size() - 1);
+            Article current = historyItem.article;
             Volume d = dictionaryService.getVolume(current.volumeId);
-            enableViewOnline = d.getArticleURLTemplate() != null;
+            enableViewOnline = d.getArticleURLTemplate() != null;            
+            enableNextArticle = historyItem.hasNext();
         }    	    
     	miViewOnline.setEnabled(enableViewOnline);
-    	miNextArticle.setEnabled(this.backItems.get(this.backItems.size() - 1).hasNext());
+    	miNextArticle.setEnabled(enableNextArticle);
     	return true;
     }
     

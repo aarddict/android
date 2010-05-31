@@ -31,6 +31,7 @@ import android.text.Editable;
 import android.text.Html;
 import android.text.InputType;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
 import android.util.Log;
@@ -41,12 +42,17 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.ViewGroup.LayoutParams;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.TwoLineListItem;
@@ -144,56 +150,108 @@ public class LookupActivity extends Activity {
         getWindow().requestFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         getWindow().requestFeature(Window.FEATURE_LEFT_ICON);
         
+        setContentView(R.layout.lookup);
+        
         timer = new Timer();
                 
-        LinearLayout layout = new LinearLayout(this);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT, 
-                    LinearLayout.LayoutParams.FILL_PARENT, 1));
+//        LinearLayout layout = new LinearLayout(this);
+//        layout.setOrientation(LinearLayout.VERTICAL);
+//        layout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT, 
+//                    LinearLayout.LayoutParams.FILL_PARENT, 1));
                              
         msgGetDicts = new MessageAdapter(this, R.string.getMoreDictionaries);
         msgNoDicts = new MessageAdapter(this, R.string.welcome);
         msgNothingFound = new MessageAdapter(this, R.string.nothingFound);
         
-        listView = new ListView(this);        
+        //listView = new ListView(this);
+        
+        listView = (ListView)findViewById(R.id.lookupResult);
+        
         listView.setAdapter(msgGetDicts);
-        editText = new EditText(this){
+        
+        editText = (EditText)findViewById(R.id.wordInput);
+        editText.addTextChangedListener(new TextWatcher() {
             
             TimerTask currentLookupTask;
-                        
-            @Override
-            protected void onTextChanged(CharSequence text, int start,
-            		int before, int after) {            	
+            
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+            
+            public void beforeTextChanged(CharSequence s, int start, int count,
+                    int after) {
+            }
+            
+            public void afterTextChanged(Editable s) {
                 if (currentLookupTask != null) {
                     currentLookupTask.cancel();
                 }                                        
-                
-                if (dictionaryService == null) {
-                	return;
-                }
-                
-                final CharSequence textToLookup = getText();                 
+                                
+                final Editable textToLookup = s;                 
                 currentLookupTask = new TimerTask() {                    
                     @Override
                     public void run() {
                         Log.d(TAG, "running lookup task for " + textToLookup + " in " + Thread.currentThread());
-                        if (textToLookup.equals(getText())) {
+                        if (textToLookup.equals(editText.getText())) {
                             doLookup(textToLookup);
                         }
                     }
                 };                
                 timer.schedule(currentLookupTask, 600);
             }
-            
-        };
+        });
+        
+//        editText = new EditText(this){
+//                                                
+//            @Override
+//            protected void onTextChanged(CharSequence text, int start,
+//            		int before, int after) {            	
+//            }
+//            
+//        };
         editText.setHint("Start typing");
 
         editText.setInputType(InputType.TYPE_CLASS_TEXT | 
                 InputType.TYPE_TEXT_FLAG_AUTO_COMPLETE);
+        editText.setSelectAllOnFocus(true);
         
-        layout.addView(editText);                        
-        layout.addView(listView);        
-        setContentView(layout);        
+//        RelativeLayout wordInputLayout = new RelativeLayout(this);
+////        wordInputLayout.setOrientation(LinearLayout.HORIZONTAL);
+//        wordInputLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT, 
+//                    LinearLayout.LayoutParams.FILL_PARENT, 1));
+//        
+//                        
+//        wordInputLayout.addView(editText);
+//        
+//        ImageButton btnClear = new ImageButton(this);
+//        btnClear.setImageResource(android.R.drawable.ic_input_delete);
+//        btnClear.setOnClickListener(new View.OnClickListener() {
+//
+//            @Override
+//            public void onClick(View v) {
+//                editText.setText("");
+//                editText.requestFocus();                
+//            }            
+//        });
+//        btnClear.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT, 
+//                LinearLayout.LayoutParams.FILL_PARENT, 0));        
+//        wordInputLayout.addView(btnClear);
+        
+//        layout.addView(wordInputLayout);                        
+//        layout.addView(editText);
+//        layout.addView(listView);        
+        //setContentView(layout);
+        
+        ImageButton btnClear = (ImageButton)findViewById(R.id.clearButton);
+        
+        btnClear.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                editText.setText("");
+                editText.requestFocus();
+                InputMethodManager inputMgr = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+                inputMgr.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT);
+            }
+        });
+        
         setProgressBarIndeterminate(true);
         getWindow().setFeatureDrawableResource(Window.FEATURE_LEFT_ICON, R.drawable.aarddict);
                                         

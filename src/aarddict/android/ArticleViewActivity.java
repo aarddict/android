@@ -234,7 +234,7 @@ public class ArticleViewActivity extends Activity {
 									else {
 										showMessage(String.format("Article \"%s\" not found", url));
 									}
-								}
+								}								
 								catch (Exception e) {
 									StringBuilder msgBuilder = new StringBuilder("There was an error following link ")
 									.append("\"").append(url).append("\"");
@@ -247,7 +247,12 @@ public class ArticleViewActivity extends Activity {
 								}
 							}
 						};
-						timer.schedule(currentTask, 0);
+						try {
+						    timer.schedule(currentTask, 0);
+						}
+						catch (Exception e) {
+						    Log.d(TAG, "Failed to schedule task", e);
+						}
                 	}                	
                 }
                 return true;
@@ -520,7 +525,12 @@ public class ArticleViewActivity extends Activity {
 		        }
 			}
     	};
-    	timer.schedule(currentTask, 0);    	    		
+    	try {
+    	    timer.schedule(currentTask, 0);
+    	}
+    	catch (Exception e) {
+    	    Log.d(TAG, "Failed to schedule task", e);
+    	}
     }
         
     private void showCurrentArticle() {

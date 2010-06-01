@@ -58,7 +58,7 @@ public class DictionariesActivity extends Activity {
     	public boolean ok;
     }
     
-    Map<UUID, VerifyRecord> verifyData = new HashMap(); 
+    Map<UUID, VerifyRecord> verifyData = new HashMap<UUID, VerifyRecord>(); 
     
     ServiceConnection connection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
@@ -340,6 +340,7 @@ public class DictionariesActivity extends Activity {
     	oout.writeObject(verifyData);
     }
 
+    @SuppressWarnings("unchecked")
     void loadVerifyData() throws IOException, ClassNotFoundException {
     	File verifyDir = getDir("verify", 0);
     	File verifyFile = new File(verifyDir, "verifydata");

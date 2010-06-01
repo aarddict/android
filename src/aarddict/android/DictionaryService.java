@@ -24,7 +24,6 @@ import aarddict.Library;
 import aarddict.Metadata;
 import aarddict.RedirectError;
 import aarddict.Volume;
-import aarddict.android.DictionariesActivity.VerifyRecord;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -357,6 +356,7 @@ public class DictionaryService extends Service {
         }        
     }
 
+    @SuppressWarnings("unchecked")
     void loadAddedFileList() {
         try {
             File dir = getDir("addedfiles", 0);

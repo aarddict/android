@@ -47,11 +47,10 @@ public class DictionariesActivity extends Activity {
 
 	private final static String TAG = DictionariesActivity.class.getName();
 	
-	final Handler       handler = new Handler();
-	ListView listView;
-    DictionaryService 	dictionaryService;    
-    
-    Map<UUID, VerifyRecord> verifyData = new HashMap<UUID, VerifyRecord>(); 
+    final Handler               handler    = new Handler();
+    ListView                    listView;
+    DictionaryService           dictionaryService;
+    Map<UUID, VerifyRecord>     verifyData = new HashMap<UUID, VerifyRecord>();
     
     ServiceConnection connection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
@@ -69,7 +68,7 @@ public class DictionariesActivity extends Activity {
         }
     };
 
-	private DictListAdapter dataAdapter;    
+    private DictListAdapter dataAdapter;	   
 
     private void init() {
     	dataAdapter = new DictListAdapter(dictionaryService.getVolumes());

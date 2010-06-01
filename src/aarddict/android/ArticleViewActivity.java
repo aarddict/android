@@ -47,19 +47,18 @@ import android.widget.Toast;
 public class ArticleViewActivity extends Activity {
 
     private final static String TAG = "aarddict.ArticleViewActivity";
-    private WebView articleView;
-    private String sharedCSS;
-    private String mediawikiSharedCSS;
-    private String mediawikiMonobookCSS;
-    private String js;
-        
-    private List<HistoryItem> backItems; 
-    
-    DictionaryService 	dictionaryService;
-    ServiceConnection 	connection;
-    
-    Timer               timer;
-    TimerTask 			currentTask;
+    private WebView             articleView;
+    private String              sharedCSS;
+    private String              mediawikiSharedCSS;
+    private String              mediawikiMonobookCSS;
+    private String              js;
+
+    private List<HistoryItem>   backItems;
+
+    DictionaryService           dictionaryService;
+    ServiceConnection           connection;
+    Timer                       timer;
+    TimerTask                   currentTask;
     
 	private final class ArticleGestureListener extends SimpleOnGestureListener {
 	    

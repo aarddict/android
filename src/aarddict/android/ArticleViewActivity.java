@@ -61,44 +61,6 @@ public class ArticleViewActivity extends Activity {
     Timer               timer;
     TimerTask 			currentTask;
     
-	private final static class HistoryItem {
-		List<Entry> entries;
-		int 		entryIndex;
-		Article 	article;
-
-		HistoryItem(Entry entry) {
-			this.entries = new ArrayList<Entry>();
-			this.entries.add(entry);
-			this.entryIndex = -1;
-		}		
-		
-		HistoryItem(List<Entry> entries) {
-			this.entries = entries;
-			this.entryIndex = -1;
-		}		
-				
-		HistoryItem(HistoryItem that) {
-			this.entries = that.entries;
-			this.entryIndex = that.entryIndex;
-			if (that.article != null) {
-				this.article = new Article(that.article);
-			}
-		}		
-		
-		boolean hasNext() {
-			return entryIndex < entries.size() - 1; 
-		}
-		
-		Entry next() {
-			entryIndex ++;
-			return current();
-		}
-		
-		Entry current() {
-			return entries.get(entryIndex);
-		}
-	}
-    	
 	private final class ArticleGestureListener extends SimpleOnGestureListener {
 	    
 	    private static final int SWIPE_MIN_DISTANCE = 200;

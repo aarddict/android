@@ -36,7 +36,7 @@ import android.os.FileObserver;
 import android.os.IBinder;
 import android.util.Log;
 
-public class DictionaryService extends Service {
+public final class DictionaryService extends Service {
 		
     public class LocalBinder extends Binder {
     	DictionaryService getService() {

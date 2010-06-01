@@ -7,7 +7,7 @@ import aarddict.EntryComparators;
 import android.util.Log;
 
 
-public class SectionMatcher {
+final class SectionMatcher {
     
     final static String TAG = "aarddict.SectionMatcher";
         

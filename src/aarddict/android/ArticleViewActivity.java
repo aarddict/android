@@ -44,7 +44,7 @@ import android.webkit.WebViewClient;
 import android.widget.Toast;
 
 
-public class ArticleViewActivity extends Activity {
+public final class ArticleViewActivity extends Activity {
 
     private final static String TAG = "aarddict.ArticleViewActivity";
     private WebView             articleView;

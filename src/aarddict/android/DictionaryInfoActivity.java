@@ -17,7 +17,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.TabHost.TabContentFactory;
 
-public class DictionaryInfoActivity extends Activity implements TabContentFactory {
+public final class DictionaryInfoActivity extends Activity implements TabContentFactory {
 
 	private final static String TAG = DictionaryInfoActivity.class.getName();
 	

@@ -43,7 +43,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 import android.widget.TwoLineListItem;
 
-public class DictionariesActivity extends Activity {
+public final class DictionariesActivity extends Activity {
 
 	private final static String TAG = DictionariesActivity.class.getName();
 	

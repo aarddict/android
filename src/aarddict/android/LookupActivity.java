@@ -54,7 +54,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.TwoLineListItem;
 
-public class LookupActivity extends Activity {
+public final class LookupActivity extends Activity {
     
     final static String TAG     = "aarddict.LookupActivity";
     Timer               timer;

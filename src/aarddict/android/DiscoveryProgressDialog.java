@@ -12,6 +12,6 @@ final class DiscoveryProgressDialog extends ProgressDialog {
         setCancelable(false);
         setIndeterminate(true);
         setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        setMessage("Looking for dictionaries...");            
+        setMessage(context.getString(R.string.msgLooking));            
     }        
 }

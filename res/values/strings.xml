@@ -80,6 +80,9 @@
     <string name="msgDictCorruped">%s is corrupted</string>    
     <string name="msgDictOk">%s is ok</string>
     
+    <string name="msgLooking">Looking for dictionaries...</string>    
+    <string name="msgLoading">Loading dictionaries...</string>
+    
     <string name="verifyOk">ok</string>
     <string name="verifyCorrupted">corrupted</string>
     

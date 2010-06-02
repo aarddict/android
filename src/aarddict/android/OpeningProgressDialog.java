@@ -13,6 +13,6 @@ final class OpeningProgressDialog extends ProgressDialog {
         setIndeterminate(false);
         setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
         setProgress(0);
-        setMessage("Loading dictionaries...");
+        setMessage(context.getString(R.string.msgLoading));
     }        
 }

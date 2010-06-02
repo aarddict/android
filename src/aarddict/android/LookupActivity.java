@@ -271,6 +271,8 @@ public final class LookupActivity extends BaseDictionaryActivity {
     final static int MENU_ABOUT = 2;
     final static int MENU_DICT_REFRESH = 3;    
     private EditText editText;
+
+    private TextWatcher textWatcher;
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -359,7 +361,8 @@ public final class LookupActivity extends BaseDictionaryActivity {
 
     @Override
     void onDictionaryOpenFinished() {
-        updateTitle();        
+        updateTitle();
+        textWatcher.afterTextChanged(editText.getText());
     }
 
     @Override
@@ -379,7 +382,7 @@ public final class LookupActivity extends BaseDictionaryActivity {
         listView.setAdapter(msgGetDicts);
         
         editText = (EditText)findViewById(R.id.wordInput);
-        editText.addTextChangedListener(new TextWatcher() {
+        textWatcher = new TextWatcher() {
             
             TimerTask currentLookupTask;
             
@@ -407,7 +410,8 @@ public final class LookupActivity extends BaseDictionaryActivity {
                 };                
                 timer.schedule(currentLookupTask, 600);
             }
-        });
+        };
+        editText.addTextChangedListener(textWatcher);
                 
         editText.setInputType(InputType.TYPE_CLASS_TEXT | 
                 InputType.TYPE_TEXT_FLAG_AUTO_COMPLETE);

@@ -69,10 +69,10 @@
     <string name="btnDismiss">Dismiss</string>
     <string name="btnCancel">Cancel</string>
     
-    <string name="msgArticleNotFound">Article "%s" not found</string>
-    <string name="msgRedirectNotFound">Redirect "%s" not found</string>    
-    <string name="msgTooManyRedirects">Too many redirects for "%s"</string>
-    <string name="msgErrorLoadingArticle">There was an error loading article "%s"</string>
+    <string name="msgArticleNotFound">Article \"%s\" not found</string>
+    <string name="msgRedirectNotFound">Redirect \"%s\" not found</string>    
+    <string name="msgTooManyRedirects">Too many redirects for \"%s\"</string>
+    <string name="msgErrorLoadingArticle">There was an error loading article \"%s\"</string>
     
     <string name="msgDataIntegrityVerified">%s\nData integrity verified %s: %s</string>
     <string name="msgDataIntegrityNotVerified">%s\nData integrity not verified</string>

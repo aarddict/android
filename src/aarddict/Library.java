@@ -19,7 +19,7 @@ public final class Library extends ArrayList<Volume> {
 
 	private final static String TAG = Library.class.getName();
 	
-	public Iterator<Entry> followLink(final String word, String fromVolumeId) {
+	public Iterator<Entry> followLink(final String word, String fromVolumeId) throws ArticleNotFound {
 		Log.d(TAG, String.format("Follow link \"%s\", %s", word,
 				fromVolumeId));
 		Volume fromDict = getVolume(fromVolumeId);
@@ -59,7 +59,13 @@ public final class Library extends ArrayList<Volume> {
             Collections.sort(dicts.subList(i, dicts.size()), c);
         }
         
-        return new MatchIterator(dicts, comparators, lookupWord);        
+        MatchIterator result = new MatchIterator(dicts, comparators, lookupWord);
+        if (result.hasNext()) {
+            return result;
+        }
+        else {
+            throw new ArticleNotFound(lookupWord);
+        }
 	}
 
 	private List<UUID> findMatchingDicts(String serverUrl) {
@@ -107,8 +113,8 @@ public final class Library extends ArrayList<Volume> {
 		return a;
 	}
 
-	Article redirect(Article article, int level) throws RedirectError,
-			IOException {
+	Article redirect(Article article, int level) 
+	    throws RedirectTooManyLevels, ArticleNotFound, IOException {
 		if (level > maxRedirectLevels) {
 			throw new RedirectTooManyLevels();
 		}
@@ -117,17 +123,14 @@ public final class Library extends ArrayList<Volume> {
 			return article;
 		}
 
-        Iterator<Entry> result = followLink(article.getRedirect(), article.volumeId);
-		if (result.hasNext()) {
-			Entry redirectEntry = result.next();
-			Article redirectArticle = getArticle(redirectEntry);
-			return redirect(redirectArticle, level + 1);
-		} else {
-			throw new RedirectNotFound();
-		}
+	    Iterator<Entry> result = followLink(article.getRedirect(), article.volumeId);
+	    Entry redirectEntry = result.next();
+	    Article redirectArticle = getArticle(redirectEntry);
+	    return redirect(redirectArticle, level + 1);
 	}
 
-	public Article redirect(Article article) throws RedirectError, IOException {
+	public Article redirect(Article article) 
+	    throws RedirectTooManyLevels, ArticleNotFound, IOException {
 		Article result = redirect(article, 0);
 		if (result != article) {
 			result.redirectedFromTitle = article.title;

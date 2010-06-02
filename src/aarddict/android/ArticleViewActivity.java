@@ -13,9 +13,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import aarddict.Article;
+import aarddict.ArticleNotFound;
 import aarddict.Entry;
 import aarddict.LookupWord;
-import aarddict.RedirectNotFound;
 import aarddict.RedirectTooManyLevels;
 import aarddict.Volume;
 import android.app.AlertDialog;
@@ -170,17 +170,16 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
 							public void run() {
 								try {
 									Article currentArticle = backItems.get(backItems.size() - 1).article;
-									Iterator<Entry> currentIterator = dictionaryService.followLink(url, currentArticle.volumeId);
-									List<Entry> result = new ArrayList<Entry>();
-									while (currentIterator.hasNext() && result.size() < 20) {
-										result.add(currentIterator.next());
-									}									
-									HistoryItem item = new HistoryItem(result);
-									if (item.hasNext()) {
-										showNext(item);
+									try {
+									    Iterator<Entry> currentIterator = dictionaryService.followLink(url, currentArticle.volumeId);
+	                                    List<Entry> result = new ArrayList<Entry>();
+	                                    while (currentIterator.hasNext() && result.size() < 20) {
+	                                        result.add(currentIterator.next());
+	                                    }                                   
+	                                    showNext(new HistoryItem(result));									    
 									}
-									else {
-										showMessage(getString(R.string.msgArticleNotFound, url));
+									catch (ArticleNotFound e) {
+									    showMessage(getString(R.string.msgArticleNotFound, e.word.toString()));
 									}
 								}								
 								catch (Exception e) {
@@ -392,8 +391,8 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
 			            a = dictionaryService.redirect(a);
 			            item.article = new Article(a);
 			        }            
-			        catch (RedirectNotFound e) {
-			            showMessage(getString(R.string.msgRedirectNotFound, a.getRedirect()));
+			        catch (ArticleNotFound e) {
+			            showMessage(getString(R.string.msgRedirectNotFound, e.word.toString()));
 			            return;
 			        }
 			        catch (RedirectTooManyLevels e) {

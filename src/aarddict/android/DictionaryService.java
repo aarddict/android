@@ -19,10 +19,11 @@ import java.util.Set;
 import java.util.UUID;
 
 import aarddict.Article;
+import aarddict.ArticleNotFound;
 import aarddict.Entry;
 import aarddict.Library;
 import aarddict.Metadata;
-import aarddict.RedirectError;
+import aarddict.RedirectTooManyLevels;
 import aarddict.Volume;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -309,11 +310,11 @@ public final class DictionaryService extends Service {
         return library.bestMatch(word.toString());
     }
     
-    public Iterator<Entry> followLink(CharSequence word, String fromVolumeId) {
+    public Iterator<Entry> followLink(CharSequence word, String fromVolumeId) throws ArticleNotFound {
         return library.followLink(word.toString(), fromVolumeId);
     }    
 
-    public Article redirect(Article article) throws RedirectError, IOException {
+    public Article redirect(Article article) throws RedirectTooManyLevels, ArticleNotFound, IOException {
         return library.redirect(article);
     }
 

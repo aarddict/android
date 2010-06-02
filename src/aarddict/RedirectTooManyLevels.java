@@ -3,4 +3,4 @@
  */
 package aarddict;
 
-public final class RedirectTooManyLevels extends RedirectError {}
+public final class RedirectTooManyLevels  extends Exception {}

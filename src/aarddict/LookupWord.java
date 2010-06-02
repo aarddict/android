@@ -63,7 +63,17 @@ public class LookupWord {
 	
     @Override
     public String toString() {
-    	return String.format("LookupWord: name space \"%s\", word \"%s\", section \"%s\"", nameSpace, word, section);    	
+        StringBuilder s = new StringBuilder();
+        if (!isEmpty(nameSpace)) {
+            s.append(nameSpace);
+            s.append(":");
+        }               
+        s.append(word == null ? "" : word);
+        if (!isEmpty(section)) {
+            s.append("#");
+            s.append(section);
+        }
+    	return s.toString();    	
     }
     
     public boolean isEmpty() {

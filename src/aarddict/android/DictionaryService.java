@@ -54,6 +54,8 @@ public final class DictionaryService extends Service {
 	public final static String DICT_OPEN_FAILED = TAG + ".DICT_OPEN_FAILED";
 	public final static String OPEN_FINISHED = TAG + ".OPEN_FINISHED";
 	
+	private boolean started;
+	
 	Library library;		
     FilenameFilter fileFilter = new FilenameFilter() {
 
@@ -105,7 +107,8 @@ public final class DictionaryService extends Service {
 	
 	@Override
 	synchronized public void onStart(Intent intent, int flags) {
-	    startInit();
+	    if (!started)
+	        startInit();
 	}	
 	
     synchronized public void refresh() {
@@ -120,6 +123,7 @@ public final class DictionaryService extends Service {
                 long t0 = System.currentTimeMillis();
                 init();
                 Log.d(TAG, "service start took " + (System.currentTimeMillis() - t0));
+                started = true;
             };
         });
         t.setPriority(Thread.MIN_PRIORITY);
@@ -252,7 +256,7 @@ public final class DictionaryService extends Service {
 	
 	@Override
 	public void onDestroy() {
-		super.onDestroy();
+		super.onDestroy();		
 		unregisterReceiver(broadcastReceiver);
         for (Volume d : library) {
             try {

@@ -4,29 +4,20 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import aarddict.Entry;
-import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.ProgressDialog;
-import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.ServiceConnection;
 import android.content.DialogInterface.OnClickListener;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Resources;
 import android.net.Uri;
-import android.os.Bundle;
-import android.os.IBinder;
 import android.text.Editable;
 import android.text.Html;
 import android.text.InputType;
@@ -51,73 +42,17 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 import android.widget.TwoLineListItem;
 
-public final class LookupActivity extends Activity {
+public final class LookupActivity extends BaseDictionaryActivity {
     
-    final static String TAG     = "aarddict.LookupActivity";
-    Timer               timer;
-    ListView            listView;
-    BroadcastReceiver 	broadcastReceiver;
-    DictionaryService 	dictionaryService;
-
-    private ServiceConnection connection = new ServiceConnection() {
-        public void onServiceConnected(ComponentName className, IBinder service) {
-        	dictionaryService = ((DictionaryService.LocalBinder)service).getService();
-        	Log.d(TAG, "Service connected: " + dictionaryService);
-        	updateTitle();
-        	final Intent intent = getIntent();
-        	logIntent(intent);
-        	if (intent.getAction().equals(Intent.ACTION_VIEW)) {
-        		final Uri data = intent.getData();
-        		Log.d(TAG, "Path: " + data.getPath());        		
-        		if (data != null && data.getPath() != null) {
-            		Runnable r = new Runnable() {					
-    					@Override
-    					public void run() {
-    						Log.d(TAG, "opening: " + data.getPath());
-    		        		dictionaryService.open(new File(data.getPath()));						
-    					}
-    				};
-    				new Thread(r).start();        			
-    				Log.d(TAG, "started: " + data.getPath());
-        		}
-        	}
-        }
-
-        public void onServiceDisconnected(ComponentName className) {
-        	Log.d(TAG, "Service disconnected: " + dictionaryService);
-        	dictionaryService = null;
-            Toast.makeText(LookupActivity.this, "Dictionary service disconnected, quitting...",
-                    Toast.LENGTH_LONG).show();
-            LookupActivity.this.finish();
-        }
-    };
-    private MessageAdapter msgGetDicts;    
+    private final static String TAG     = LookupActivity.class.getName();
+    
+    private Timer          timer;
+    private ListView       listView;
+    private MessageAdapter msgGetDicts;
     private MessageAdapter msgNothingFound;
     private MessageAdapter msgNoDicts;
-    
-    private final static class DiscoveryProgressDialog extends ProgressDialog {        
-        DiscoveryProgressDialog(Context context) {
-            super(context);
-            setCancelable(false);
-            setIndeterminate(true);
-            setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            setMessage("Looking for dictionaries...");            
-        }        
-    }
-
-    private final static class OpeningProgressDialog extends ProgressDialog {        
-        OpeningProgressDialog(Context context) {
-            super(context);
-            setCancelable(false);
-            setIndeterminate(false);
-            setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-            setProgress(0);                  
-            setMessage("Loading dictionaries...");
-        }        
-    }
     
     void updateTitle() {
     	int dictCount = dictionaryService.getVolumes().size();
@@ -133,160 +68,11 @@ public final class LookupActivity extends Activity {
     	    listView.setAdapter(msgGetDicts);
     	}
     }
-
-    @Override
-    protected void onNewIntent(Intent intent) {
-    	Log.d(TAG, "New intent");
-    	logIntent(intent);
-    }
-    
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-                        
-        getWindow().requestFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
-        getWindow().requestFeature(Window.FEATURE_LEFT_ICON);
-        
-        setContentView(R.layout.lookup);
-        
-        timer = new Timer();
-                                             
-        msgGetDicts = new MessageAdapter(this, R.string.getMoreDictionaries);
-        msgNoDicts = new MessageAdapter(this, R.string.welcome);
-        msgNothingFound = new MessageAdapter(this, R.string.nothingFound);
-                
-        listView = (ListView)findViewById(R.id.lookupResult);
-        
-        listView.setAdapter(msgGetDicts);
-        
-        editText = (EditText)findViewById(R.id.wordInput);
-        editText.addTextChangedListener(new TextWatcher() {
-            
-            TimerTask currentLookupTask;
-            
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-            }
-            
-            public void beforeTextChanged(CharSequence s, int start, int count,
-                    int after) {
-            }
-            
-            public void afterTextChanged(Editable s) {
-                if (currentLookupTask != null) {
-                    currentLookupTask.cancel();
-                }                                        
-                                
-                final Editable textToLookup = s;                 
-                currentLookupTask = new TimerTask() {                    
-                    @Override
-                    public void run() {
-                        Log.d(TAG, "running lookup task for " + textToLookup + " in " + Thread.currentThread());
-                        if (textToLookup.equals(editText.getText())) {
-                            doLookup(textToLookup);
-                        }
-                    }
-                };                
-                timer.schedule(currentLookupTask, 600);
-            }
-        });
-        
-        editText.setHint("Start typing");
-        editText.setInputType(InputType.TYPE_CLASS_TEXT | 
-                InputType.TYPE_TEXT_FLAG_AUTO_COMPLETE);
-        editText.setSelectAllOnFocus(true);
-                
-        ImageButton btnClear = (ImageButton)findViewById(R.id.clearButton);
-        
-        btnClear.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                editText.setText("");
-                editText.requestFocus();
-                InputMethodManager inputMgr = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-                inputMgr.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT);
-            }
-        });
-        
-        setProgressBarIndeterminate(true);
-        getWindow().setFeatureDrawableResource(Window.FEATURE_LEFT_ICON, R.drawable.aarddict);
-                                        
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(DictionaryService.DICT_OPEN_FAILED);
-        intentFilter.addAction(DictionaryService.DISCOVERY_STARTED);
-        intentFilter.addAction(DictionaryService.DISCOVERY_FINISHED);
-        intentFilter.addAction(DictionaryService.OPEN_FINISHED);
-        intentFilter.addAction(DictionaryService.OPEN_STARTED);
-        intentFilter.addAction(DictionaryService.OPENED_DICT);
-                       
-        broadcastReceiver = new BroadcastReceiver() {
-        
-        	ProgressDialog discoveryProgress;
-        	ProgressDialog openProgress;
-        	
-			@Override
-			public void onReceive(Context context, Intent intent) {
-				String a = intent.getAction();
-				if (a.equals(DictionaryService.DISCOVERY_STARTED)) {
-					Log.d(TAG, "dictionary disconvery started");
-					if (discoveryProgress == null) {
-					    discoveryProgress = new DiscoveryProgressDialog(context);
-					}
-					discoveryProgress.show();
-				} else
-				if (a.equals(DictionaryService.DISCOVERY_FINISHED)) {
-				    Log.d(TAG, "dictionary discovery finished");
-				    if (discoveryProgress != null) {
-				        discoveryProgress.dismiss();
-				        discoveryProgress = null;
-				    }					
-				} else
-				if (a.equals(DictionaryService.OPEN_STARTED)) {	
-					Log.d(TAG, "dictionary open started");
-					int count = intent.getIntExtra("count", 0);
-					if (openProgress == null) {
-					    openProgress = new OpeningProgressDialog(context);
-					}
-			        openProgress.setMax(count);
-			        openProgress.show();
-				} else
-				if (a.equals(DictionaryService.DICT_OPEN_FAILED) || 
-				        a.equals(DictionaryService.OPENED_DICT)) {
-				    if (openProgress != null) {
-				        openProgress.incrementProgressBy(1); 
-				    }
-				} else
-				if (a.equals(DictionaryService.OPEN_FINISHED)) {
-				    if (openProgress != null) {				        
-				        openProgress.dismiss();
-				        openProgress = null;
-				    }
-					updateTitle();
-				}								
-			}
-		};
-		registerReceiver(broadcastReceiver, intentFilter);
-		
-    	final Intent dictServiceIntent = new Intent(this, DictionaryService.class);
-    	startService(dictServiceIntent);
-    	bindService(dictServiceIntent, connection, 0);
-    }        
-    
-    private void logIntent(Intent intent) {
-    	Set<String> cats = intent.getCategories();
-    	StringBuilder s = new StringBuilder();
-    	if (cats != null) {
-	    	for (String c : cats) {
-	    		s.append(c);
-	    	}
-    	}
-    	Log.d(TAG, "intent: " + intent.getAction() + " cats: " + s.toString() + " data: " + intent.getData());    	
-    }    
     
     @Override
     protected void onDestroy() {
         super.onDestroy();
         timer.cancel();
-        unregisterReceiver(broadcastReceiver);
-        unbindService(connection);
     }
     
     private void updateWordListUI(final Iterator<Entry> results) {        
@@ -322,6 +108,8 @@ public final class LookupActivity extends Activity {
     };        
     
     private void doLookup(CharSequence word) {
+        if (dictionaryService == null)
+            return;
         runOnUiThread(updateProgress);
         long t0 = System.currentTimeMillis();
         try {
@@ -554,5 +342,94 @@ public final class LookupActivity extends Activity {
         });
         dialogBuilder.show();
 	}
-    
+
+    @Override
+    void onDictionaryServiceReady() {
+        updateTitle();
+        final Intent intent = getIntent();
+        if (intent.getAction().equals(Intent.ACTION_VIEW)) {
+            final Uri data = intent.getData();
+            Log.d(TAG, "Path: " + data.getPath());              
+            if (data != null && data.getPath() != null) {
+                Runnable r = new Runnable() {                   
+                    @Override
+                    public void run() {
+                        Log.d(TAG, "opening: " + data.getPath());
+                        dictionaryService.open(new File(data.getPath()));                       
+                    }
+                };
+                new Thread(r).start();                  
+                Log.d(TAG, "started: " + data.getPath());
+            }
+        }        
+    }
+
+    @Override
+    void onDictionaryOpenFinished() {
+        updateTitle();        
+    }
+
+    @Override
+    void initUI() {
+        getWindow().requestFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+        
+        setContentView(R.layout.lookup);
+        
+        timer = new Timer();
+                                             
+        msgGetDicts = new MessageAdapter(this, R.string.getMoreDictionaries);
+        msgNoDicts = new MessageAdapter(this, R.string.welcome);
+        msgNothingFound = new MessageAdapter(this, R.string.nothingFound);
+                
+        listView = (ListView)findViewById(R.id.lookupResult);
+        
+        listView.setAdapter(msgGetDicts);
+        
+        editText = (EditText)findViewById(R.id.wordInput);
+        editText.addTextChangedListener(new TextWatcher() {
+            
+            TimerTask currentLookupTask;
+            
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+            
+            public void beforeTextChanged(CharSequence s, int start, int count,
+                    int after) {
+            }
+            
+            public void afterTextChanged(Editable s) {
+                if (currentLookupTask != null) {
+                    currentLookupTask.cancel();
+                }                                        
+                                
+                final Editable textToLookup = s;                 
+                currentLookupTask = new TimerTask() {                    
+                    @Override
+                    public void run() {
+                        Log.d(TAG, "running lookup task for " + textToLookup + " in " + Thread.currentThread());
+                        if (textToLookup.equals(editText.getText())) {
+                            doLookup(textToLookup);
+                        }
+                    }
+                };                
+                timer.schedule(currentLookupTask, 600);
+            }
+        });
+        
+        editText.setHint("Start typing");
+        editText.setInputType(InputType.TYPE_CLASS_TEXT | 
+                InputType.TYPE_TEXT_FLAG_AUTO_COMPLETE);
+        editText.setSelectAllOnFocus(true);
+                
+        ImageButton btnClear = (ImageButton)findViewById(R.id.clearButton);
+        
+        btnClear.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                editText.setText("");
+                editText.requestFocus();
+                InputMethodManager inputMgr = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+                inputMgr.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT);
+            }
+        });        
+    }    
 }

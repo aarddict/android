@@ -15,100 +15,70 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 
-import aarddict.Volume;
 import aarddict.VerifyProgressListener;
-import android.app.Activity;
+import aarddict.Volume;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnClickListener;
 import android.content.res.Resources;
-import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
 import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 import android.widget.TwoLineListItem;
 
-public final class DictionariesActivity extends Activity {
+public final class DictionariesActivity extends BaseDictionaryActivity {
 
 	private final static String TAG = DictionariesActivity.class.getName();
 	
     final Handler               handler    = new Handler();
     ListView                    listView;
-    DictionaryService           dictionaryService;
     Map<UUID, VerifyRecord>     verifyData = new HashMap<UUID, VerifyRecord>();
-    
-    ServiceConnection connection = new ServiceConnection() {
-        public void onServiceConnected(ComponentName className, IBinder service) {
-        	dictionaryService = ((DictionaryService.LocalBinder)service).getService();
-        	Log.d(TAG, "Service connected: " + dictionaryService);
-        	init();
-        }
+    private DictListAdapter     dataAdapter;
 
-        public void onServiceDisconnected(ComponentName className) {
-        	Log.d(TAG, "Service disconnected: " + dictionaryService);
-        	dictionaryService = null;
-            Toast.makeText(DictionariesActivity.this, "Dictionary service disconnected, quitting...",
-                    Toast.LENGTH_LONG).show();
-            DictionariesActivity.this.finish();
-        }
-    };
-
-    private DictListAdapter dataAdapter;	   
-
-    private void init() {
+    @Override
+    void onDictionaryServiceReady() {
     	dataAdapter = new DictListAdapter(dictionaryService.getVolumes());
     	listView.setAdapter(dataAdapter);
     	listView.setOnItemClickListener(dataAdapter);    	
     	listView.setOnItemLongClickListener(dataAdapter);
     }
     
-    
-	protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        
-        getWindow().requestFeature(Window.FEATURE_LEFT_ICON);
-        
+    @Override
+	void initUI() {
+                
         listView = new ListView(this);
         
         setContentView(listView);
         setTitle("Dictionaries");        
-        getWindow().setFeatureDrawableResource(Window.FEATURE_LEFT_ICON, R.drawable.aarddict);
         try {
 			loadVerifyData();
 		} catch (Exception e) {
 			Log.e(TAG, "Failed to load verify data", e);
 		}
-        Intent dictServiceIntent = new Intent(this, DictionaryService.class);                        
-        bindService(dictServiceIntent, connection, 0);        
     }
     
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         dataAdapter.destroy();
-        unbindService(connection);
     }
 
-    class DictListAdapter extends BaseAdapter 
+    final class DictListAdapter extends BaseAdapter 
     		implements AdapterView.OnItemClickListener,
     		AdapterView.OnItemLongClickListener
     
     {
-
 		LayoutInflater inflater;    	
 		List<List<Volume>> volumes;
 		Timer timer = new Timer();
@@ -149,7 +119,7 @@ public final class DictionariesActivity extends Activity {
         	startActivity(i);
         }
 
-        class ProgressListener implements VerifyProgressListener {
+        final class ProgressListener implements VerifyProgressListener {
 
         	boolean proceed = true;
         	ProgressDialog progressDialog;

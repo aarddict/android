@@ -1,66 +1,28 @@
 package aarddict.android;
 
-import aarddict.Volume;
 import aarddict.Metadata;
-import android.app.Activity;
-import android.content.ComponentName;
+import aarddict.Volume;
 import android.content.Intent;
-import android.content.ServiceConnection;
-import android.os.Bundle;
-import android.os.IBinder;
 import android.text.util.Linkify;
-import android.util.Log;
 import android.view.View;
-import android.view.Window;
 import android.widget.TabHost;
 import android.widget.TextView;
-import android.widget.Toast;
 import android.widget.TabHost.TabContentFactory;
 
-public final class DictionaryInfoActivity extends Activity implements TabContentFactory {
-
-	private final static String TAG = DictionaryInfoActivity.class.getName();
+public final class DictionaryInfoActivity extends BaseDictionaryActivity implements TabContentFactory {
 	
-    DictionaryService 	dictionaryService;    
-    ServiceConnection connection = new ServiceConnection() {
-        public void onServiceConnected(ComponentName className, IBinder service) {
-        	dictionaryService = ((DictionaryService.LocalBinder)service).getService();
-        	Log.d(TAG, "Service connected: " + dictionaryService);
-        	init();
-        }
-
-        public void onServiceDisconnected(ComponentName className) {
-        	Log.d(TAG, "Service disconnected: " + dictionaryService);
-        	dictionaryService = null;
-            Toast.makeText(DictionaryInfoActivity.this, "Dictionary service disconnected, quitting...",
-                    Toast.LENGTH_LONG).show();
-            DictionaryInfoActivity.this.finish();
-        }
-    };    	
-	
-    TabHost tabs;
+    private TabHost tabs;
     
 	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-        getWindow().requestFeature(Window.FEATURE_LEFT_ICON);
+	void initUI() {
         setContentView(R.layout.dict_info);
         tabs = (TabHost)findViewById(android.R.id.tabhost);
         tabs.setup();        
         setTitle("Dictionary Info");        
-        getWindow().setFeatureDrawableResource(Window.FEATURE_LEFT_ICON, R.drawable.aarddict);
-                
-        Intent dictServiceIntent = new Intent(this, DictionaryService.class);                        
-        bindService(dictServiceIntent, connection, 0);		
 	}	
 	
 	@Override
-	protected void onDestroy() {
-		super.onDestroy();
-		unbindService(connection);
-	}
-	
-	private void init() {
+	void onDictionaryServiceReady() {
 		tabs.addTab(tabs.newTabSpec("d").setIndicator("Description").setContent(this));
 		tabs.addTab(tabs.newTabSpec("c").setIndicator("Copyright").setContent(this));
 		tabs.addTab(tabs.newTabSpec("s").setIndicator("Source").setContent(this));

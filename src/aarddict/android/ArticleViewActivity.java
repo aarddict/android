@@ -18,16 +18,11 @@ import aarddict.LookupWord;
 import aarddict.RedirectNotFound;
 import aarddict.RedirectTooManyLevels;
 import aarddict.Volume;
-import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.DialogInterface.OnClickListener;
 import android.net.Uri;
-import android.os.Bundle;
-import android.os.IBinder;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.KeyEvent;
@@ -44,9 +39,10 @@ import android.webkit.WebViewClient;
 import android.widget.Toast;
 
 
-public final class ArticleViewActivity extends Activity {
+public final class ArticleViewActivity extends BaseDictionaryActivity {
 
-    private final static String TAG = "aarddict.ArticleViewActivity";
+    private final static String TAG = ArticleViewActivity.class.getName();
+    
     private WebView             articleView;
     private String              sharedCSS;
     private String              mediawikiSharedCSS;
@@ -54,11 +50,8 @@ public final class ArticleViewActivity extends Activity {
     private String              js;
 
     private List<HistoryItem>   backItems;
-
-    DictionaryService           dictionaryService;
-    ServiceConnection           connection;
-    Timer                       timer;
-    TimerTask                   currentTask;
+    private Timer               timer;
+    private TimerTask           currentTask;
     
 	private final class ArticleGestureListener extends SimpleOnGestureListener {
 	    
@@ -91,8 +84,7 @@ public final class ArticleViewActivity extends Activity {
 	}
 	
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    void initUI() {
 
         loadAssets();
 
@@ -101,7 +93,6 @@ public final class ArticleViewActivity extends Activity {
         backItems = Collections.synchronizedList(new LinkedList<HistoryItem>());
         
         getWindow().requestFeature(Window.FEATURE_PROGRESS);        
-        getWindow().requestFeature(Window.FEATURE_LEFT_ICON);
         
         gestureDetector = new GestureDetector(this, new ArticleGestureListener());
                         
@@ -218,30 +209,6 @@ public final class ArticleViewActivity extends Activity {
                         
         setContentView(articleView);
         setProgressBarVisibility(true);
-        getWindow().setFeatureDrawableResource(Window.FEATURE_LEFT_ICON, R.drawable.aarddict);
-        
-        connection = new ServiceConnection() {
-            public void onServiceConnected(ComponentName className, IBinder service) {
-            	dictionaryService = ((DictionaryService.LocalBinder)service).getService();
-                Intent intent = getIntent();
-                String word = intent.getStringExtra("word");                
-                String section = intent.getStringExtra("section");
-                String volumeId = intent.getStringExtra("volumeId");
-                long articlePointer = intent.getLongExtra("articlePointer", -1);
-                dictionaryService.setPreferred(volumeId);
-            	showArticle(volumeId, articlePointer, word, section);
-            } 
-
-            public void onServiceDisconnected(ComponentName className) {
-            	dictionaryService = null;
-                Toast.makeText(ArticleViewActivity.this, "Dictionary service disconnected, quitting...",
-                        Toast.LENGTH_LONG).show();
-                ArticleViewActivity.this.finish();
-            }
-        };                
-        
-        Intent dictServiceIntent = new Intent(this, DictionaryService.class);
-        bindService(dictServiceIntent, connection, 0);                                
     }
 
     private void goToSection(String section) {
@@ -619,7 +586,17 @@ public final class ArticleViewActivity extends Activity {
     protected void onDestroy() {
     	super.onDestroy();
     	timer.cancel();    	
-    	currentTask = null;
-    	unbindService(connection);  
+    }
+
+
+    @Override
+    void onDictionaryServiceReady() {
+        Intent intent = getIntent();
+        String word = intent.getStringExtra("word");                
+        String section = intent.getStringExtra("section");
+        String volumeId = intent.getStringExtra("volumeId");
+        long articlePointer = intent.getLongExtra("articlePointer", -1);
+        dictionaryService.setPreferred(volumeId);
+        showArticle(volumeId, articlePointer, word, section);
     }
 }

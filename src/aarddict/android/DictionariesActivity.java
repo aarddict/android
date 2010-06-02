@@ -25,7 +25,6 @@ import android.content.Intent;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnClickListener;
 import android.content.res.Resources;
-import android.os.Handler;
 import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -41,10 +40,9 @@ public final class DictionariesActivity extends BaseDictionaryActivity {
 
 	private final static String TAG = DictionariesActivity.class.getName();
 	
-    final Handler               handler    = new Handler();
-    ListView                    listView;
-    Map<UUID, VerifyRecord>     verifyData = new HashMap<UUID, VerifyRecord>();
-    private DictListAdapter     dataAdapter;
+    private ListView                listView;
+    private Map<UUID, VerifyRecord> verifyData = new HashMap<UUID, VerifyRecord>();
+    private DictListAdapter         dataAdapter;
 
     @Override
     void onDictionaryServiceReady() {
@@ -133,13 +131,13 @@ public final class DictionariesActivity extends BaseDictionaryActivity {
         	
 			@Override
 			public boolean updateProgress(final Volume d, final double progress) {
-				handler.post(new Runnable() {
-					public void run() {
-						CharSequence m = getTitle(d, true);
-						progressDialog.setMessage(m);
-						progressDialog.setProgress((int)(100*progress/max));
-					}
-				});
+			    runOnUiThread(new Runnable() {
+                    public void run() {
+                        CharSequence m = getTitle(d, true);
+                        progressDialog.setMessage(m);
+                        progressDialog.setProgress((int)(100*progress/max));
+                    }
+                });
 				return proceed;
 			}
 
@@ -153,13 +151,13 @@ public final class DictionariesActivity extends BaseDictionaryActivity {
 					CharSequence message = getString(R.string.msgDictCorruped, getTitle(d, true));					
 					showError(message);					
 				} else {
-					handler.post(new Runnable() {
-						public void run() {
-							Toast.makeText(DictionariesActivity.this,
-							        getString(R.string.msgDictOk, getTitle(d, true)),
-									Toast.LENGTH_SHORT).show();
-						}
-					});					
+				    runOnUiThread(new Runnable() {
+                        public void run() {
+                            Toast.makeText(DictionariesActivity.this,
+                                    getString(R.string.msgDictOk, getTitle(d, true)),
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    });
 					if (verifiedCount == max) {
 						recordVerifyData(d.getDictionaryId(), ok);
 						progressDialog.dismiss();					
@@ -184,26 +182,26 @@ public final class DictionariesActivity extends BaseDictionaryActivity {
         }
         
         private void updateView() {
-			handler.post(new Runnable() {
-				public void run() {
-					notifyDataSetChanged();
-				}
-			});        	
+            runOnUiThread(new Runnable() {
+                public void run() {
+                    notifyDataSetChanged();
+                }
+            });
         }
         
 		private void showError(final CharSequence message) {
-			handler.post(new Runnable() {
-				public void run() {
-			        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(DictionariesActivity.this);
-			        dialogBuilder.setTitle(R.string.titleError).setMessage(message).setNeutralButton(R.string.btnDismiss, new OnClickListener() {            
-			            @Override
-			            public void onClick(DialogInterface dialog, int which) {
-			                dialog.dismiss();
-			            }
-			        });
-			        dialogBuilder.show();						
-				}
-			});
+		    runOnUiThread(new Runnable() {
+                public void run() {
+                    AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(DictionariesActivity.this);
+                    dialogBuilder.setTitle(R.string.titleError).setMessage(message).setNeutralButton(R.string.btnDismiss, new OnClickListener() {            
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    });
+                    dialogBuilder.show();                       
+                }
+            });
 		}
 		
 		public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {

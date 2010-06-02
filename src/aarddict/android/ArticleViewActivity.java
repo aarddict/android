@@ -370,8 +370,23 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
         Volume d = dictionaryService.getVolume(volumeId);        
         Entry entry = new Entry(d.getId(), word, articlePointer);
         entry.section = section;
-        HistoryItem item = new HistoryItem(entry);
-        showNext(item);
+        
+        List<Entry> result = new ArrayList<Entry>();
+        result.add(entry);
+        
+        try {
+            Iterator<Entry> currentIterator = dictionaryService.followLink(word, volumeId);            
+            while (currentIterator.hasNext() && result.size() < 20) {
+                Entry next = currentIterator.next();
+                if (!next.equals(entry)) {
+                    result.add(next);
+                }
+            }                                                                                    
+        }
+        catch (ArticleNotFound e) {
+            Log.d(TAG, String.format("Article \"%s\" not found - unexpected", e.word));
+        }        
+        showNext(new HistoryItem(result));
     }    
         
     private void showNext(HistoryItem item_) {

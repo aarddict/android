@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     
-    <string name="app_name">Aard Dictionary</string>
-    <string name="main_title">%s - %s</string>
-    <string name="short_dict_info">%s in %s, %s open</string>
+    <string name="appName">Aard Dictionary</string>
+    <string name="titleLookupActivity">%s - %s</string>
+    <string name="shortDictInfo">%s in %s, %s open</string>
     <plurals name="dictionaries">
         <item quantity="one">%d dictionary</item>
         <item quantity="other">%d dictionaries</item>        
@@ -35,6 +35,56 @@
         <h1>Nothing found</h1>
         <p><small>Get more dictionaries at <a href="http://aarddict.org">http://aarddict.org</a></small></p>
         ]]>
-    </string>    
-        
+    </string>
+    
+    <string name="about">    
+        <![CDATA[
+        <big>%s %s</big>
+        <p>(C) 2010 Igor Tkach</p>
+        <p><a href="http://aarddict.org">http://aarddict.org</a></p>
+        ]]>    
+    </string>
+    
+    <string name="titleAbout">About</string>
+    <string name="titleError">Error</string>
+    <string name="titleVerifying">Verifying</string>    
+    <string name="titleDictionariesActivity">Dictionaries</string>
+    <string name="titleDictionaryInfoActivity">Dictionary Info</string>
+    
+    <string name="inputHint">Start typing</string>
+    
+    <string name="mnRefresh">Refresh</string>
+    <string name="mnInfo">Info</string>
+    <string name="mnAbout">About</string>
+    <string name="mnBack">Back</string>
+    <string name="mnNextArticle">Next</string>
+    <string name="mnViewOnline">View Online</string>
+    <string name="mnNewLookup">New Lookup</string>
+    <string name="mnZoomIn">Zoom In</string>
+    <string name="mnZoomOut">Zoom Out</string>
+
+
+    <string name="titleArticleViewActivity">%s - %s</string>
+    
+    <string name="btnDismiss">Dismiss</string>
+    <string name="btnCancel">Cancel</string>
+    
+    <string name="msgArticleNotFound">Article "%s" not found</string>
+    <string name="msgRedirectNotFound">Redirect "%s" not found</string>    
+    <string name="msgTooManyRedirects">Too many redirects for "%s"</string>
+    <string name="msgErrorLoadingArticle">There was an error loading article "%s"</string>
+    
+    <string name="msgDataIntegrityVerified">%s\nData integrity verified %s: %s</string>
+    <string name="msgDataIntegrityNotVerified">%s\nData integrity not verified</string>
+    <string name="msgErrorVerifying">Error encountered while verifying %s: %s</string>
+    <string name="msgDictCorruped">%s is corrupted</string>    
+    <string name="msgDictOk">%s is ok</string>
+    
+    <string name="verifyOk">ok</string>
+    <string name="verifyCorrupted">corrupted</string>
+    
+    <string name="tabDescription">Description</string>
+    <string name="tabCopyright">Copyright</string>
+    <string name="tabSource">Source</string>
+    <string name="tabLicense">License</string>
 </resources>

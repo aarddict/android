@@ -17,6 +17,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginTop="1px"
+            android:hint="@string/inputHint"
+            android:selectAllOnFocus="true"
         />
         <ImageButton 
             android:id="@+id/clearButton"

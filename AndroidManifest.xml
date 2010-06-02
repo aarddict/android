@@ -4,9 +4,9 @@
       android:versionCode="1"
       android:versionName="1.0">
     <uses-sdk android:minSdkVersion="3"/>
-    <application android:icon="@drawable/aarddict" android:label="@string/app_name">
+    <application android:icon="@drawable/aarddict" android:label="@string/appName">
         <activity android:name=".LookupActivity"
-                  android:label="@string/app_name">
+                  android:label="@string/appName">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

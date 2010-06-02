@@ -24,7 +24,6 @@ import android.text.InputType;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.method.LinkMovementMethod;
-import android.text.util.Linkify;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -58,9 +57,9 @@ public final class LookupActivity extends BaseDictionaryActivity {
     	int dictCount = dictionaryService.getVolumes().size();
     	Resources r = getResources();
 		String dictionaries = r.getQuantityString(R.plurals.dictionaries, dictCount);
-    	String appName = r.getString(R.string.app_name);
-    	String mainTitle = r.getString(R.string.main_title);
-    	setTitle(String.format(mainTitle, appName, String.format(dictionaries, dictCount)));
+    	String appName = r.getString(R.string.appName);
+    	String mainTitle = r.getString(R.string.titleLookupActivity, appName, String.format(dictionaries, dictCount));
+    	setTitle(mainTitle);
     	if (dictCount == 0) {
     	    listView.setAdapter(msgNoDicts);
     	}
@@ -275,9 +274,9 @@ public final class LookupActivity extends BaseDictionaryActivity {
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        menu.add(0, MENU_DICT_REFRESH, 0, "Refresh").setIcon(R.drawable.ic_menu_refresh);
-        menu.add(0, MENU_DICT_INFO, 0, "Info").setIcon(android.R.drawable.ic_menu_info_details);
-        menu.add(0, MENU_ABOUT, 0, "About").setIcon(R.drawable.ic_menu_aarddict);
+        menu.add(0, MENU_DICT_REFRESH, 0, R.string.mnRefresh).setIcon(R.drawable.ic_menu_refresh);
+        menu.add(0, MENU_DICT_INFO, 0, R.string.mnInfo).setIcon(android.R.drawable.ic_menu_info_details);
+        menu.add(0, MENU_ABOUT, 0, R.string.mnAbout).setIcon(R.drawable.ic_menu_aarddict);
         return true;
     }
     
@@ -307,12 +306,6 @@ public final class LookupActivity extends BaseDictionaryActivity {
 		} catch (NameNotFoundException e) {
 			Log.e(TAG, "Failed to load package info for " + getPackageName(), e) ;
 		}        
-		StringBuilder message = new StringBuilder().
-		append(getString(R.string.app_name)).
-        append(" ").
-        append(versionName).
-        append("\n").
-        append("(C) 2010 Igor Tkach").append("\n").append("http://aarddict.org");
 		
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.HORIZONTAL);
@@ -326,15 +319,15 @@ public final class LookupActivity extends BaseDictionaryActivity {
         TextView textView = new TextView(this);
         textView.setGravity(Gravity.CENTER_HORIZONTAL);
         textView.setLineSpacing(2f, 1);
-        textView.setAutoLinkMask(Linkify.WEB_URLS);
         textView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.FILL_PARENT));
-        textView.setText(message);
+        textView.setMovementMethod(LinkMovementMethod.getInstance());
+        textView.setText(Html.fromHtml(getString(R.string.about, getString(R.string.appName), versionName)));
         
         layout.addView(logo);
         layout.addView(textView);
 		
 		AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-        dialogBuilder.setTitle("About").setView(layout).setNeutralButton("Dismiss", new OnClickListener() {            
+        dialogBuilder.setTitle(R.string.titleAbout).setView(layout).setNeutralButton(R.string.btnDismiss, new OnClickListener() {            
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 dialog.dismiss();
@@ -415,11 +408,9 @@ public final class LookupActivity extends BaseDictionaryActivity {
                 timer.schedule(currentLookupTask, 600);
             }
         });
-        
-        editText.setHint("Start typing");
+                
         editText.setInputType(InputType.TYPE_CLASS_TEXT | 
                 InputType.TYPE_TEXT_FLAG_AUTO_COMPLETE);
-        editText.setSelectAllOnFocus(true);
                 
         ImageButton btnClear = (ImageButton)findViewById(R.id.clearButton);
         

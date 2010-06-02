@@ -180,7 +180,7 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
 										showNext(item);
 									}
 									else {
-										showMessage(String.format("Article \"%s\" not found", url));
+										showMessage(getString(R.string.msgArticleNotFound, url));
 									}
 								}								
 								catch (Exception e) {
@@ -298,12 +298,12 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        menu.add(0, MENU_BACK, 0, "Back").setIcon(android.R.drawable.ic_menu_revert);     
-        miNextArticle = menu.add(0, MENU_NEXT, 0, "Next").setIcon(android.R.drawable.ic_media_next);
-        miViewOnline = menu.add(0, MENU_VIEW_ONLINE, 0, "View Online").setIcon(android.R.drawable.ic_menu_view);
-        menu.add(0, MENU_NEW_LOOKUP, 0, "New Lookup").setIcon(android.R.drawable.ic_menu_search);        
-        menu.add(0, MENU_ZOOM_OUT, 0, "Zoom Out").setIcon(R.drawable.ic_menu_zoom_out);
-        menu.add(0, MENU_ZOOM_IN, 0, "Zoom In").setIcon(R.drawable.ic_menu_zoom_in);
+        menu.add(0, MENU_BACK, 0, R.string.mnBack).setIcon(android.R.drawable.ic_menu_revert);     
+        miNextArticle = menu.add(0, MENU_NEXT, 0, R.string.mnNextArticle).setIcon(android.R.drawable.ic_media_next);
+        miViewOnline = menu.add(0, MENU_VIEW_ONLINE, 0, R.string.mnViewOnline).setIcon(android.R.drawable.ic_menu_view);
+        menu.add(0, MENU_NEW_LOOKUP, 0, R.string.mnNewLookup).setIcon(android.R.drawable.ic_menu_search);        
+        menu.add(0, MENU_ZOOM_OUT, 0, R.string.mnZoomOut).setIcon(R.drawable.ic_menu_zoom_out);
+        menu.add(0, MENU_ZOOM_IN, 0, R.string.mnZoomIn).setIcon(R.drawable.ic_menu_zoom_in);
         return true;
     }
     
@@ -367,14 +367,8 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
         Log.d(TAG, "word: " + word);
         Log.d(TAG, "dictionaryId: " + volumeId);
         Log.d(TAG, "articlePointer: " + articlePointer);
-        Log.d(TAG, "section: " + section);
-                
-        Volume d = dictionaryService.getVolume(volumeId);
-        if (d == null) {
-            showError(String.format("Dictionary %s not found", volumeId));
-            return;
-        }
-        
+        Log.d(TAG, "section: " + section);                
+        Volume d = dictionaryService.getVolume(volumeId);        
         Entry entry = new Entry(d.getId(), word, articlePointer);
         entry.section = section;
         HistoryItem item = new HistoryItem(entry);
@@ -399,16 +393,16 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
 			            item.article = new Article(a);
 			        }            
 			        catch (RedirectNotFound e) {
-			            showMessage(String.format("Redirect \"%s\" not found", a.getRedirect()));
+			            showMessage(getString(R.string.msgRedirectNotFound, a.getRedirect()));
 			            return;
 			        }
 			        catch (RedirectTooManyLevels e) {
-			            showMessage(String.format("Too many redirects for \"%s\"", a.getRedirect()));
+			            showMessage(getString(R.string.msgTooManyRedirects, a.getRedirect()));
 			            return;
 			        }
 			        catch (Exception e) {
 			        	Log.e(TAG, "Redirect failed", e);
-			            showError(String.format("There was an error loading article \"%s\"", a.title));
+			            showError(getString(R.string.msgErrorLoadingArticle, a.title));
 			            return;
 			        }
 			        
@@ -443,7 +437,7 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
 			        }			        			        							
 		        }
 		        catch (Exception e) {
-		        	String msg = String.format("There was an error loading article \"%s\"", entry.title); 
+		            String msg = getString(R.string.msgErrorLoadingArticle, entry.title);
 		        	Log.e(TAG, msg, e);
 		        	showError(msg);
 		        }
@@ -490,7 +484,7 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
 		    	setProgress(10000);
 		    	resetTitleToCurrent();
 		        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(ArticleViewActivity.this);
-		        dialogBuilder.setTitle("Error").setMessage(message).setNeutralButton("Dismiss", new OnClickListener() {            
+		        dialogBuilder.setTitle(R.string.titleError).setMessage(message).setNeutralButton(R.string.btnDismiss, new OnClickListener() {            
 		            @Override
 		            public void onClick(DialogInterface dialog, int which) {
 		                dialog.dismiss();
@@ -506,7 +500,7 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
     
         
     private void setTitle(CharSequence articleTitle, CharSequence dictTitle) {
-    	setTitle(String.format("%s - %s", articleTitle, dictTitle));
+    	setTitle(getString(R.string.titleArticleViewActivity, articleTitle, dictTitle));
     }        
     
     private void resetTitleToCurrent() {    	    		
@@ -587,7 +581,6 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
     	super.onDestroy();
     	timer.cancel();    	
     }
-
 
     @Override
     void onDictionaryServiceReady() {

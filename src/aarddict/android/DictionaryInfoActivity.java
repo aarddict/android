@@ -18,15 +18,15 @@ public final class DictionaryInfoActivity extends BaseDictionaryActivity impleme
         setContentView(R.layout.dict_info);
         tabs = (TabHost)findViewById(android.R.id.tabhost);
         tabs.setup();        
-        setTitle("Dictionary Info");        
+        setTitle(R.string.titleDictionaryInfoActivity);        
 	}	
 	
 	@Override
 	void onDictionaryServiceReady() {
-		tabs.addTab(tabs.newTabSpec("d").setIndicator("Description").setContent(this));
-		tabs.addTab(tabs.newTabSpec("c").setIndicator("Copyright").setContent(this));
-		tabs.addTab(tabs.newTabSpec("s").setIndicator("Source").setContent(this));
-		tabs.addTab(tabs.newTabSpec("l").setIndicator("License").setContent(this));
+		tabs.addTab(tabs.newTabSpec("d").setIndicator(getString(R.string.tabDescription)).setContent(this));
+		tabs.addTab(tabs.newTabSpec("c").setIndicator(getString(R.string.tabCopyright)).setContent(this));
+		tabs.addTab(tabs.newTabSpec("s").setIndicator(getString(R.string.tabSource)).setContent(this));
+		tabs.addTab(tabs.newTabSpec("l").setIndicator(getString(R.string.tabLicense)).setContent(this));
 	}
 
 	@Override

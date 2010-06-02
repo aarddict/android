@@ -60,7 +60,7 @@ public final class DictionariesActivity extends BaseDictionaryActivity {
         listView = new ListView(this);
         
         setContentView(listView);
-        setTitle("Dictionaries");        
+        setTitle(R.string.titleDictionariesActivity);        
         try {
 			loadVerifyData();
 		} catch (Exception e) {
@@ -150,13 +150,13 @@ public final class DictionariesActivity extends BaseDictionaryActivity {
 				if (!ok) {
 					recordVerifyData(d.getDictionaryId(), ok);					
 					progressDialog.dismiss();
-					CharSequence message = String.format("%s is corrupted", getTitle(d, true));					
+					CharSequence message = getString(R.string.msgDictCorruped, getTitle(d, true));					
 					showError(message);					
 				} else {
 					handler.post(new Runnable() {
 						public void run() {
-							Toast.makeText(DictionariesActivity.this, 
-									String.format("%s is ok", getTitle(d, true)), 
+							Toast.makeText(DictionariesActivity.this,
+							        getString(R.string.msgDictOk, getTitle(d, true)),
 									Toast.LENGTH_SHORT).show();
 						}
 					});					
@@ -195,7 +195,7 @@ public final class DictionariesActivity extends BaseDictionaryActivity {
 			handler.post(new Runnable() {
 				public void run() {
 			        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(DictionariesActivity.this);
-			        dialogBuilder.setTitle("Error").setMessage(message).setNeutralButton("Dismiss", new OnClickListener() {            
+			        dialogBuilder.setTitle(R.string.titleError).setMessage(message).setNeutralButton(R.string.btnDismiss, new OnClickListener() {            
 			            @Override
 			            public void onClick(DialogInterface dialog, int which) {
 			                dialog.dismiss();
@@ -211,7 +211,7 @@ public final class DictionariesActivity extends BaseDictionaryActivity {
 			final ProgressDialog progressDialog = new ProgressDialog(DictionariesActivity.this);
 			progressDialog.setIndeterminate(false);
 	        progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-	        progressDialog.setTitle("Verifying");
+	        progressDialog.setTitle(R.string.titleVerifying);
 	        progressDialog.setMessage(getTitle(allDictVols.get(0), false));
 	        progressDialog.setCancelable(true);
 			final ProgressListener progressListener = new ProgressListener(progressDialog, allDictVols.size());	        
@@ -226,13 +226,13 @@ public final class DictionariesActivity extends BaseDictionaryActivity {
 							Log.e(TAG, "There was an error verifying volume " + d.getId(), e);
 							progressListener.proceed = false;
 							progressDialog.dismiss();
-							showError(String.format("Error encountered while verifying %s: %s", d.getDisplayTitle(), e.getLocalizedMessage()));
+							showError(getString(R.string.msgErrorVerifying, d.getDisplayTitle(), e.getLocalizedMessage()));
 						}
 					}
 				}
 			};
 
-	        progressDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "Cancel", new OnClickListener() {
+	        progressDialog.setButton(DialogInterface.BUTTON_NEGATIVE, getString(R.string.btnCancel), new OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					progressListener.proceed = false;					
 				}
@@ -273,15 +273,15 @@ public final class DictionariesActivity extends BaseDictionaryActivity {
 			String articleStr = r.getQuantityString(R.plurals.articles, d.metadata.article_count, d.metadata.article_count);            
             String totalVolumesStr = r.getQuantityString(R.plurals.volumes, d.header.of, d.header.of);
             String volumesStr = r.getQuantityString(R.plurals.volumes, volCount, volCount);
-            String shortInfo = r.getString(R.string.short_dict_info, articleStr, totalVolumesStr, volumesStr);
+            String shortInfo = r.getString(R.string.shortDictInfo, articleStr, totalVolumesStr, volumesStr);
             if (verifyData.containsKey(d.getDictionaryId())) {
             	VerifyRecord record = verifyData.get(d.getDictionaryId()); 
             	CharSequence dateStr = DateUtils.getRelativeTimeSpanString(record.date.getTime());
-            	String resultStr = record.ok ? "ok" : "corrupted";
-            	view.getText2().setText(String.format("%s\nData integrity verified %s: %s", shortInfo, dateStr, resultStr));
+            	String resultStr = getString(record.ok ? R.string.verifyOk : R.string.verifyCorrupted);
+            	view.getText2().setText(getString(R.string.msgDataIntegrityVerified, shortInfo, dateStr, resultStr));
             }
             else {
-            	view.getText2().setText(shortInfo+"\nData integrity not verified");
+            	view.getText2().setText(getString(R.string.msgDataIntegrityNotVerified, shortInfo));
             }            
         	return view;
         }

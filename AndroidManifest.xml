@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="aarddict.android"
       android:versionCode="1"
-      android:versionName="1.0">
+      android:versionName="1.0 beta 1">
     <uses-sdk android:minSdkVersion="3"/>
     <application android:icon="@drawable/aarddict" android:label="@string/appName">
         <activity android:name=".LookupActivity"

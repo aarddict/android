@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    
+    <string name="appName">Aard Dictionary</string>
+    <string name="titleLookupActivity">%s - %s</string>
+    <string name="shortDictInfo">%s 在 %s, %s 打开</string>
+    <plurals name="dictionaries">
+        <item quantity="one">%d 个词典</item>
+        <item quantity="other">%d 个词典</item>        
+    </plurals>    
+    <plurals name="articles">
+        <item quantity="one">%d 篇文章</item>
+        <item quantity="other">%,d 篇文章</item>        
+    </plurals>
+    <plurals name="volumes">
+        <item quantity="one">%d 册</item>
+        <item quantity="other">%d 册</item>        
+    </plurals>
+    <string name="welcome">
+        
+        &lt;h1&gt;未找到词典&lt;/h1&gt;
+        &lt;p&gt;从以下地址下载词典 &lt;a href="http://aarddict.org"&gt;aarddict.org&lt;/a&gt;。将词典文件放在SD卡上的任何位置。&lt;/p&gt;
+        &lt;p&gt;选择的维基百科和维基词典&lt;a href="http://aarddict.org/#wmedia"&gt;可以是&lt;/a&gt; 位于SD卡或者DVD上的。
+        如果你有任何的疑问、建议和问题，请访问&lt;a href="http://aarddict.org/forum"&gt;Aard Dictionary 论坛&lt;/a&gt;提交报告。 &lt;/p&gt;
+        
+    </string>
+    <string name="getMoreDictionaries">
+        
+        &lt;p&gt;&lt;small&gt;在以下地方获取更多词典 &lt;a href="http://aarddict.org"&gt;http://aarddict.org&lt;/a&gt;&lt;/p&gt;
+        
+    </string>
+    
+    <string name="nothingFound">
+        
+        &lt;h1&gt;什么都没找到&lt;/h1&gt;
+        &lt;p&gt;&lt;small&gt;在以下地方获取更多词典 &lt;a href="http://aarddict.org"&gt;http://aarddict.org&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;
+        
+    </string>
+    
+    <string name="about">    
+        
+        &lt;big&gt;%s %s&lt;/big&gt;
+        &lt;p&gt;(C) 2010 Igor Tkach&lt;/p&gt;
+        &lt;p&gt;&lt;a href="http://aarddict.org"&gt;http://aarddict.org&lt;/a&gt;&lt;/p&gt;
+            
+    </string>
+    
+    <string name="titleAbout">关于</string>
+    <string name="titleError">错误</string>
+    <string name="titleVerifying">经验中</string>    
+    <string name="titleDictionariesActivity">词典</string>
+    <string name="titleDictionaryInfoActivity">词典信息</string>
+    
+    <string name="inputHint">开始输入</string>
+    
+    <string name="mnRefresh">刷新</string>
+    <string name="mnInfo">信息</string>
+    <string name="mnAbout">关于</string>
+    <string name="mnBack">返回</string>
+    <string name="mnNextArticle">下一个</string>
+    <string name="mnViewOnline">在线查看</string>
+    <string name="mnNewLookup">新的查找</string>
+    <string name="mnZoomIn">放大</string>
+    <string name="mnZoomOut">缩小</string>
+
+
+    <string name="titleArticleViewActivity">%s - %s</string>
+    
+    <string name="btnDismiss">忽略</string>
+    <string name="btnCancel">取消</string>
+    
+    <string name="msgArticleNotFound">文章 \"%s\" 未找到</string>
+    <string name="msgRedirectNotFound">重定向 \"%s\" 未找到</string>    
+    <string name="msgTooManyRedirects">太多的重定向到 \"%s\"</string>
+    <string name="msgErrorLoadingArticle">加载文章 \"%s\" 时出错</string>
+    
+    <string name="msgDataIntegrityVerified">%s\n数据完整性校验 %s: %s</string>
+    <string name="msgDataIntegrityNotVerified">%s\n未校验数据完整性</string>
+    <string name="msgErrorVerifying">校验时遇到错误 %s: %s</string>
+    <string name="msgDictCorruped">%s 已损坏</string>    
+    <string name="msgDictOk">%s 是良好的</string>
+    
+    <string name="msgLooking">正在查找词库...</string>    
+    <string name="msgLoading">正在加载词典...</string>
+    
+    <string name="verifyOk">确定</string>
+    <string name="verifyCorrupted">被损坏</string>
+    
+    <string name="tabDescription">说明</string>
+    <string name="tabCopyright">版权所有</string>
+    <string name="tabSource">源码</string>
+    <string name="tabLicense">许可协议</string>
+</resources>

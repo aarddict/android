@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    
+    <string name="appName">Аардик</string>
+    <string name="titleLookupActivity">%s - %s</string>
+    <string name="shortDictInfo">%s, %s, %s открыто</string>
+    <plurals name="dictionaries">
+        <item quantity="one">%d словарь</item>
+        <item quantity="few">%d словаря</item>
+        <item quantity="other">%d словарей</item>
+    </plurals>    
+    <plurals name="articles">
+        <item quantity="one">%d статья</item>
+        <item quantity="few">%d статьи</item>
+        <item quantity="other">%,d статей</item>        
+    </plurals>
+    <plurals name="volumes">
+        <item quantity="one">%d том</item>
+        <item quantity="few">%d тома</item>
+        <item quantity="other">%d томов</item>        
+    </plurals>
+    <string name="welcome">
+        <![CDATA[
+        <h1>Словарей не найдено</h1>
+        <p>Скачайте словари с <a href="http://aarddict.org">aarddict.org</a>. Скопируйте на SD карточку.</p>
+        <p>Википедия и Викисловари на некоторых языках <a href="http://aarddict.org/#wmedia">можно заказать на SD карточках и DVD</a>.  
+        С вопросами, пожеланиями и проблемами обращайтесь на <a href="http://aarddict.org/forum">форум Aard Dictionary</a>.</p>
+        ]]>
+    </string>
+    <string name="getMoreDictionaries">
+        <![CDATA[
+        <p><small><a href="http://aarddict.org">http://aarddict.org</a></p>
+        ]]>
+    </string>
+    
+    <string name="nothingFound">
+        <![CDATA[
+        <h1>Ничего не найдено</h1>
+        <p><small><a href="http://aarddict.org">http://aarddict.org</a></small></p>
+        ]]>
+    </string>
+    
+    <string name="about">    
+        <![CDATA[
+        <big>%s %s</big>
+        <p>(C) 2010 Игорь Ткач</p>
+        <p><a href="http://aarddict.org">http://aarddict.org</a></p>
+        ]]>    
+    </string>
+    
+    <string name="titleAbout">О программе</string>
+    <string name="titleError">Ошибка</string>
+    <string name="titleVerifying">Проверка</string>    
+    <string name="titleDictionariesActivity">Словари</string>
+    <string name="titleDictionaryInfoActivity">Инофрмация о словаре</string>
+    
+    <string name="inputHint">Введите слово</string>
+    
+    <string name="mnRefresh">Обновить</string>
+    <string name="mnInfo">Информация</string>
+    <string name="mnAbout">О программе</string>
+    <string name="mnBack">Вернуться</string>
+    <string name="mnNextArticle">Следующая</string>
+    <string name="mnViewOnline">Смотреть онлайн</string>
+    <string name="mnNewLookup">Новый поиск</string>
+    <string name="mnZoomIn">Увеличить</string>
+    <string name="mnZoomOut">Уменьшить</string>
+
+
+    <string name="titleArticleViewActivity">%s - %s</string>
+    
+    <string name="btnDismiss">Закрыть</string>
+    <string name="btnCancel">Отменить</string>
+    
+    <string name="msgArticleNotFound">Статья \"%s\" не найдена</string>
+    <string name="msgRedirectNotFound">Перенаправление \"%s\" не найдено</string>    
+    <string name="msgTooManyRedirects">Слишком много перенаправлений для статьи \"%s\"</string>
+    <string name="msgErrorLoadingArticle">Ошибка при загрузке статьи \"%s\"</string>
+    
+    <string name="msgDataIntegrityVerified">%s\nЦелостность данных проверена %s: %s</string>
+    <string name="msgDataIntegrityNotVerified">%s\nЦелостность данных не проверена</string>
+    <string name="msgErrorVerifying">Ошибка при проверке целостности данных %s: %s</string>
+    <string name="msgDictCorruped">%s испорчен</string>    
+    <string name="msgDictOk">%s в порядке</string>
+    
+    <string name="msgLooking">Идет поиск словарей...</string>    
+    <string name="msgLoading">Идет загрузка словарей...</string>
+    
+    <string name="verifyOk">ok</string>
+    <string name="verifyCorrupted">испорчен</string>
+    
+    <string name="tabDescription">Описание</string>
+    <string name="tabCopyright">Права</string>
+    <string name="tabSource">Источник</string>
+    <string name="tabLicense">Лицензия</string>
+</resources>

@@ -133,7 +133,7 @@ public final class LookupActivity extends BaseDictionaryActivity {
         next.setClass(this, ArticleViewActivity.class);                       
         next.putExtra("word", theWord.title);        
         next.putExtra("section", theWord.section);
-        next.putExtra("volumeId", theWord.getVolumeId());
+        next.putExtra("volumeId", theWord.volumeId);
         next.putExtra("articlePointer", theWord.articlePointer);
         startActivity(next);
     }

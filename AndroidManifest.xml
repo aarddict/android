@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="aarddict.android"
-      android:versionCode="2"
-      android:versionName="1.0 beta 2">
+      android:versionCode="3" android:versionName="1.0">
     <uses-sdk android:minSdkVersion="3"/>
     <application android:icon="@drawable/aarddict" android:label="@string/appName">
         <activity android:name=".LookupActivity"
@@ -11,26 +10,20 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />                
                 <data android:scheme="file" android:pathPattern=".*\\.aar"/>
-            </intent-filter>
-            
+            </intent-filter>            
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />                
                 <data android:scheme="file" android:mimeType="application/aar"/>
             </intent-filter>                        
-                                   
         </activity>
-
         <activity android:name=".ArticleViewActivity"/>
         <activity android:name=".DictionariesActivity"/>        
         <activity android:name=".DictionaryInfoActivity"/>                      
         <service android:name=".DictionaryService"/>
-
     </application>
-
 </manifest> 

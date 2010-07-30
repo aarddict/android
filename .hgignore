@@ -1,0 +1,5 @@
+syntax: glob
+*.orig
+*~
+eclipse-build/
+gen/

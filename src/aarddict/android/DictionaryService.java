@@ -74,8 +74,6 @@ public final class DictionaryService extends Service {
 	
 	Library library;		
     FilenameFilter fileFilter = new FilenameFilter() {
-
-        @Override
         public boolean accept(File dir, String filename) {
 
             return filename.toLowerCase().endsWith(

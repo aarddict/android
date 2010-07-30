@@ -514,7 +514,6 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
 		    	resetTitleToCurrent();
 		        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(ArticleViewActivity.this);
 		        dialogBuilder.setTitle(R.string.titleError).setMessage(message).setNeutralButton(R.string.btnDismiss, new OnClickListener() {            
-		            @Override
 		            public void onClick(DialogInterface dialog, int which) {
 		                dialog.dismiss();
 		                if (backItems.isEmpty()) {

@@ -75,19 +75,16 @@ public final class MatchIterator implements Iterator<Entry> {
         }
     }
 
-    @Override
     public boolean hasNext() {
         return next != null;
     }
 
-    @Override
     public Entry next() {
         Entry current = next;
         prepareNext();
         return current;
     }
 
-    @Override
     public void remove() {
         throw new UnsupportedOperationException();
     }

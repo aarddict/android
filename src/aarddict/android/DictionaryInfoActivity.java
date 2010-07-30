@@ -44,7 +44,6 @@ public final class DictionaryInfoActivity extends BaseDictionaryActivity impleme
 		tabs.addTab(tabs.newTabSpec("l").setIndicator(getString(R.string.tabLicense)).setContent(this));
 	}
 
-	@Override
 	public View createTabContent(String tag) {
 		Intent intent = getIntent();
 		String volumeId = intent.getStringExtra("volumeId");

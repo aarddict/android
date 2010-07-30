@@ -345,7 +345,6 @@ public final class LookupActivity extends BaseDictionaryActivity {
 		
 		AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
         dialogBuilder.setTitle(R.string.titleAbout).setView(layout).setNeutralButton(R.string.btnDismiss, new OnClickListener() {            
-            @Override
             public void onClick(DialogInterface dialog, int which) {
                 dialog.dismiss();
             }
@@ -362,7 +361,6 @@ public final class LookupActivity extends BaseDictionaryActivity {
             Log.d(TAG, "Path: " + data.getPath());              
             if (data != null && data.getPath() != null) {
                 Runnable r = new Runnable() {                   
-                    @Override
                     public void run() {
                         Log.d(TAG, "opening: " + data.getPath());
                         dictionaryService.open(new File(data.getPath()));                       

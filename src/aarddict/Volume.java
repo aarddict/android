@@ -206,12 +206,10 @@ public final class Volume extends AbstractList<Entry> {
                 index++;
             }
 
-            @Override
             public boolean hasNext() {
                 return nextEntry != null && index < header.indexCount - 1;
             }
 
-            @Override
             public Entry next() {
                 Entry current = nextEntry;
                 current.section = section;
@@ -219,7 +217,6 @@ public final class Volume extends AbstractList<Entry> {
                 return current;
             }
 
-            @Override
             public void remove() {
                 throw new UnsupportedOperationException();
             }

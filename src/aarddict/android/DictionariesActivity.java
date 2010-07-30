@@ -144,7 +144,6 @@ public final class DictionariesActivity extends BaseDictionaryActivity {
         		this.max = max;
         	}
         	
-			@Override
 			public boolean updateProgress(final Volume d, final double progress) {
 			    runOnUiThread(new Runnable() {
                     public void run() {
@@ -156,7 +155,6 @@ public final class DictionariesActivity extends BaseDictionaryActivity {
 				return proceed;
 			}
 
-			@Override
 			public void verified(final Volume d, final boolean ok) {
 				verifiedCount++;
 				Log.i(TAG, String.format("Verified %s: %s", d.getDisplayTitle(), (ok ? "ok" : "corrupted")));
@@ -209,7 +207,6 @@ public final class DictionariesActivity extends BaseDictionaryActivity {
                 public void run() {
                     AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(DictionariesActivity.this);
                     dialogBuilder.setTitle(R.string.titleError).setMessage(message).setNeutralButton(R.string.btnDismiss, new OnClickListener() {            
-                        @Override
                         public void onClick(DialogInterface dialog, int which) {
                             dialog.dismiss();
                         }
@@ -230,7 +227,6 @@ public final class DictionariesActivity extends BaseDictionaryActivity {
 			final ProgressListener progressListener = new ProgressListener(progressDialog, allDictVols.size());	        
 	        
 			Runnable verify = new Runnable() {																			
-				@Override
 				public void run() {
 					for (Volume d : allDictVols) {						
 						try {
@@ -251,8 +247,6 @@ public final class DictionariesActivity extends BaseDictionaryActivity {
 				}
 			});			
 	        progressDialog.setOnCancelListener(new OnCancelListener() {
-				
-				@Override
 				public void onCancel(DialogInterface dialog) {
 					progressListener.proceed = false;										
 				}

@@ -304,13 +304,17 @@ public final class DictionaryService extends Service {
 
     private List<File> scanDir(File dir) {
         List<File> candidates = new ArrayList<File>();
-        for (File file : dir.listFiles(fileFilter)) {
-            if (file.isDirectory()) {
-                candidates.addAll(scanDir(file));
-            }
-            else {
-                candidates.add(file);
-            }
+        File[] files = dir.listFiles(fileFilter);
+        if (files != null) {
+	        for (int i = 0; i < files.length; i++) {
+	        	File file = files[i];
+	            if (file.isDirectory()) {
+	                candidates.addAll(scanDir(file));
+	            }
+	            else {
+	                candidates.add(file);
+	            }
+	        }
         }
         return candidates;
     }

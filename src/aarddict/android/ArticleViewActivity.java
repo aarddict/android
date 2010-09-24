@@ -39,14 +39,10 @@ import android.content.Intent;
 import android.content.DialogInterface.OnClickListener;
 import android.net.Uri;
 import android.util.Log;
-import android.view.GestureDetector;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
-import android.view.View;
 import android.view.Window;
-import android.view.GestureDetector.SimpleOnGestureListener;
 import android.webkit.JsResult;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
@@ -67,37 +63,7 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
     private List<HistoryItem>   backItems;
     private Timer               timer;
     private TimerTask           currentTask;
-    
-	private final class ArticleGestureListener extends SimpleOnGestureListener {
-	    
-	    private static final int SWIPE_MIN_DISTANCE = 200;
-	    private static final int SWIPE_MAX_OFF_PATH = 150;
-	    private static final int SWIPE_THRESHOLD_VELOCITY = 500;
-	    
-	    @Override
-	    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-            try {
-                if (Math.abs(e1.getY() - e2.getY()) > SWIPE_MAX_OFF_PATH)
-                    return false;
-                if(e1.getX() - e2.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
-                    goBack();
-                    return true;
-                }  else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
-                    nextArticle();                    
-                    return true;
-                }
-            } catch (Exception e) {
-                Log.e(TAG, "error while handling fling event", e);
-            }
-            return false;	        
-	    }		    
-	    
-	    @Override
-	    public void onLongPress(MotionEvent e) {
-	        finish();
-	    }
-	}
-	
+    	
     @Override
     void initUI() {
 
@@ -108,17 +74,10 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
         backItems = Collections.synchronizedList(new LinkedList<HistoryItem>());
         
         getWindow().requestFeature(Window.FEATURE_PROGRESS);        
-        
-        gestureDetector = new GestureDetector(this, new ArticleGestureListener());
-                        
+                                
         articleView = new WebView(this);        
         articleView.getSettings().setJavaScriptEnabled(true);
         
-        articleView.setOnTouchListener(new View.OnTouchListener() {
-            public boolean onTouch(View v, MotionEvent event) {
-                return gestureDetector.onTouchEvent(event);
-            }
-        });
         articleView.addJavascriptInterface(new SectionMatcher(), "matcher");
         
         articleView.setWebChromeClient(new WebChromeClient(){
@@ -308,7 +267,6 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
     
     private MenuItem miViewOnline; 
     private MenuItem miNextArticle;
-    private GestureDetector gestureDetector;
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

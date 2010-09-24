@@ -426,8 +426,7 @@ public final class LookupActivity extends BaseDictionaryActivity {
         };
         editText.addTextChangedListener(textWatcher);
                 
-        editText.setInputType(InputType.TYPE_CLASS_TEXT | 
-                InputType.TYPE_TEXT_FLAG_AUTO_COMPLETE);
+        editText.setInputType(InputType.TYPE_CLASS_TEXT);
                 
         ImageButton btnClear = (ImageButton)findViewById(R.id.clearButton);
         

@@ -42,8 +42,12 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.Animation.AnimationListener;
 import android.webkit.JsResult;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
@@ -65,11 +69,53 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
     private List<HistoryItem>   backItems;
     private Timer               timer;
     private TimerTask           currentTask;
+    private TimerTask           currentHideNextButtonTask;
+    private AlphaAnimation 		fadeOutAnimation;
+    private AlphaAnimation 		fadeInAnimation;
+    
     	
     @Override
     void initUI() {
 
         loadAssets();
+
+        fadeOutAnimation = new AlphaAnimation(1.0f, 0.0f);
+        fadeOutAnimation.setFillEnabled(true);
+        fadeOutAnimation.setFillAfter(true);
+        fadeOutAnimation.setDuration(300);
+        fadeOutAnimation.setAnimationListener(new AnimationListener() {
+
+        	public void onAnimationStart(Animation animation) {
+        	}
+
+        	public void onAnimationRepeat(Animation animation) {
+        	}
+
+        	public void onAnimationEnd(Animation animation) {
+        		Button nextButton = (Button)findViewById(R.id.NextButton);
+        		nextButton.setVisibility(Button.GONE);									
+        	}
+        });        					
+        
+        
+
+        fadeInAnimation = new AlphaAnimation(0.0f, 1.0f);
+        fadeInAnimation.setFillEnabled(true);
+        fadeInAnimation.setFillAfter(true);
+        fadeInAnimation.setDuration(100);
+        fadeInAnimation.setAnimationListener(new AnimationListener() {
+
+        	public void onAnimationStart(Animation animation) {
+        	}
+
+        	public void onAnimationRepeat(Animation animation) {
+        	}
+
+        	public void onAnimationEnd(Animation animation) {
+        		Button nextButton = (Button)findViewById(R.id.NextButton);
+        		nextButton.setVisibility(Button.VISIBLE);									
+        	}
+        });        					
 
         timer = new Timer();
         
@@ -182,12 +228,23 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
                 return true;
             }
         });
-        Button nextButton = (Button)findViewById(R.id.NextButton);
+        final Button nextButton = (Button)findViewById(R.id.NextButton);
         nextButton.setOnClickListener(new View.OnClickListener() {			
 			public void onClick(View v) {
+				nextButton.setVisibility(Button.GONE);
 				nextArticle();				
 			}
 		});
+		articleView.setOnTouchListener(
+			new View.OnTouchListener() {				
+				public boolean onTouch(View v, MotionEvent event) {
+					if (event.getAction() == MotionEvent.ACTION_MOVE) {
+						updateNextButtonVisibility();
+					}												
+					return false;
+				}
+			}
+		);
         setProgressBarVisibility(true);
     }
 
@@ -453,21 +510,43 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
 		        Article a = backItems.get(backItems.size() - 1).article;
 		        Log.d(TAG, "Show article: " + a.text);        
 		        articleView.loadDataWithBaseURL("", wrap(a.text), "text/html", "utf-8", null);
-		        updateNextButtonVisibility();
 			}
 		});
     }
-    
+        
     private void updateNextButtonVisibility() {
-    	boolean hasNextArticle = false;
+    	if (currentHideNextButtonTask != null) {
+    		currentHideNextButtonTask.cancel();
+    		currentHideNextButtonTask = null;
+    	}
+    	boolean hasNextArticle = false;    	
         if (backItems.size() > 0) {
             HistoryItem historyItem = backItems.get(backItems.size() - 1);
             hasNextArticle = historyItem.hasNext();
         }
-        Button nextButton = (Button)findViewById(R.id.NextButton);		        
-        nextButton.setVisibility(hasNextArticle ? 	Button.VISIBLE : Button.INVISIBLE);    	
+        final Button nextButton = (Button)findViewById(R.id.NextButton);
+        if (hasNextArticle) {
+        	if (nextButton.getVisibility() == Button.GONE){
+	        	nextButton.startAnimation(fadeInAnimation);
+        	}        	
+        	currentHideNextButtonTask = new TimerTask() {			
+        		@Override
+        		public void run() {
+        			runOnUiThread(new Runnable() {					
+        				public void run() {						
+        					nextButton.startAnimation(fadeOutAnimation);
+        					currentHideNextButtonTask = null;
+        				}
+        			});			
+        		}
+        	}; 
+        	timer.schedule(currentHideNextButtonTask, 3000);
+        }        
+        else {
+        	nextButton.setVisibility(Button.GONE);
+        }
     }
-    
+        
     private void showMessage(final String message) {
     	runOnUiThread(new Runnable() {
 			public void run() {

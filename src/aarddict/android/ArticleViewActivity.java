@@ -42,11 +42,13 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.Window;
 import android.webkit.JsResult;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Button;
 import android.widget.Toast;
 
 
@@ -74,8 +76,9 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
         backItems = Collections.synchronizedList(new LinkedList<HistoryItem>());
         
         getWindow().requestFeature(Window.FEATURE_PROGRESS);        
-                                
-        articleView = new WebView(this);        
+        setContentView(R.layout.article_view);                                
+        articleView = (WebView)findViewById(R.id.ArticleView);    
+        
         articleView.getSettings().setJavaScriptEnabled(true);
         
         articleView.addJavascriptInterface(new SectionMatcher(), "matcher");
@@ -178,9 +181,13 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
                 }
                 return true;
             }
-        });        
-                        
-        setContentView(articleView);
+        });
+        Button nextButton = (Button)findViewById(R.id.NextButton);
+        nextButton.setOnClickListener(new View.OnClickListener() {			
+			public void onClick(View v) {
+				nextArticle();				
+			}
+		});
         setProgressBarVisibility(true);
     }
 
@@ -446,8 +453,19 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
 		        Article a = backItems.get(backItems.size() - 1).article;
 		        Log.d(TAG, "Show article: " + a.text);        
 		        articleView.loadDataWithBaseURL("", wrap(a.text), "text/html", "utf-8", null);
+		        updateNextButtonVisibility();
 			}
 		});
+    }
+    
+    private void updateNextButtonVisibility() {
+    	boolean hasNextArticle = false;
+        if (backItems.size() > 0) {
+            HistoryItem historyItem = backItems.get(backItems.size() - 1);
+            hasNextArticle = historyItem.hasNext();
+        }
+        Button nextButton = (Button)findViewById(R.id.NextButton);		        
+        nextButton.setVisibility(hasNextArticle ? 	Button.VISIBLE : Button.INVISIBLE);    	
     }
     
     private void showMessage(final String message) {

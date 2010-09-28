@@ -3,7 +3,9 @@
       package="aarddict.android"
       android:versionCode="4" android:versionName="1.0.1">
     <uses-sdk android:minSdkVersion="3"/>
-    <application android:icon="@drawable/aarddict" android:label="@string/appName">
+    <application android:icon="@drawable/aarddict" 
+    			 android:label="@string/appName"
+    			 android:debuggable="true">
         <activity android:name=".LookupActivity"
                   android:label="@string/appName">
             <intent-filter>

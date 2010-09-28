@@ -168,10 +168,7 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
                     section = current.section;
                 }
                 
-                if (section != null && !section.trim().equals("")) {
-                    goToSection(section);
-                }     
-                
+                goToSection(section);                
             }
             
             @Override

@@ -54,6 +54,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.Toast;
+import android.os.Build;
 
 
 public final class ArticleViewActivity extends BaseDictionaryActivity {
@@ -72,45 +73,53 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
     private TimerTask           currentHideNextButtonTask;
     private AlphaAnimation 		fadeOutAnimation;
     private AlphaAnimation 		fadeInAnimation;
+    private boolean 			useAnimation = false;        
+
+    static class AnimationAdapter implements AnimationListener {
+
+		public void onAnimationEnd(Animation animation) {
+		}
+
+		public void onAnimationRepeat(Animation animation) {
+		}
+
+		public void onAnimationStart(Animation animation) {
+		}    	
+    }
     
-    	
     @Override
     void initUI() {
 
-        loadAssets();
+        loadAssets();                
+        
+        //Animation is broken before 2.1 - animation listener notified,
+        //only sometimes so we can't use it
+        try {
+        	useAnimation = Integer.parseInt(Build.VERSION.SDK) > 6;
+        }        
+        catch (Exception e) {
+        	Log.w(TAG, "Failed to parse SDK version string as int: " + Build.VERSION.SDK);	
+        }
 
+        Log.d(TAG, "Build.VERSION.SDK: " + Build.VERSION.SDK);
+        Log.d(TAG, "use animation? " + useAnimation);
+        
         fadeOutAnimation = new AlphaAnimation(1.0f, 0.0f);
         fadeOutAnimation.setFillEnabled(true);
         fadeOutAnimation.setFillAfter(true);
-        fadeOutAnimation.setDuration(300);
-        fadeOutAnimation.setAnimationListener(new AnimationListener() {
-
-        	public void onAnimationStart(Animation animation) {
-        	}
-
-        	public void onAnimationRepeat(Animation animation) {
-        	}
-
+        fadeOutAnimation.setDuration(500);
+        fadeOutAnimation.setAnimationListener(new AnimationAdapter() {
         	public void onAnimationEnd(Animation animation) {
         		Button nextButton = (Button)findViewById(R.id.NextButton);
         		nextButton.setVisibility(Button.GONE);									
         	}
-        });        					
+        });        					        
         
-        
-
         fadeInAnimation = new AlphaAnimation(0.0f, 1.0f);
         fadeInAnimation.setFillEnabled(true);
         fadeInAnimation.setFillAfter(true);
-        fadeInAnimation.setDuration(100);
-        fadeInAnimation.setAnimationListener(new AnimationListener() {
-
-        	public void onAnimationStart(Animation animation) {
-        	}
-
-        	public void onAnimationRepeat(Animation animation) {
-        	}
-
+        fadeInAnimation.setDuration(300);
+        fadeInAnimation.setAnimationListener(new AnimationAdapter() {
         	public void onAnimationEnd(Animation animation) {
         		Button nextButton = (Button)findViewById(R.id.NextButton);
         		nextButton.setVisibility(Button.VISIBLE);									
@@ -228,16 +237,17 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
         final Button nextButton = (Button)findViewById(R.id.NextButton);
         nextButton.setOnClickListener(new View.OnClickListener() {			
 			public void onClick(View v) {
-				nextButton.setVisibility(Button.GONE);
-				nextArticle();				
+				if (nextButton.getVisibility() == View.VISIBLE) {
+					updateNextButtonVisibility();
+					nextArticle();
+					updateNextButtonVisibility();
+				}											
 			}
 		});
 		articleView.setOnTouchListener(
 			new View.OnTouchListener() {				
 				public boolean onTouch(View v, MotionEvent event) {
-					if (event.getAction() == MotionEvent.ACTION_MOVE) {
-						updateNextButtonVisibility();
-					}												
+					updateNextButtonVisibility();
 					return false;
 				}
 			}
@@ -319,20 +329,15 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
         return true;
     }
     
-    final static int MENU_BACK = 1;
-    final static int MENU_VIEW_ONLINE = 2;
-    final static int MENU_NEW_LOOKUP = 3;
-    final static int MENU_NEXT = 4;
-    final static int MENU_ZOOM_IN = 5;
-    final static int MENU_ZOOM_OUT = 6;
+    final static int MENU_VIEW_ONLINE = 1;
+    final static int MENU_NEW_LOOKUP = 2;
+    final static int MENU_ZOOM_IN = 3;
+    final static int MENU_ZOOM_OUT = 4;
     
     private MenuItem miViewOnline; 
-    private MenuItem miNextArticle;
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        menu.add(0, MENU_BACK, 0, R.string.mnBack).setIcon(android.R.drawable.ic_menu_revert);     
-        miNextArticle = menu.add(0, MENU_NEXT, 0, R.string.mnNextArticle).setIcon(android.R.drawable.ic_media_next);
         miViewOnline = menu.add(0, MENU_VIEW_ONLINE, 0, R.string.mnViewOnline).setIcon(android.R.drawable.ic_menu_view);
         menu.add(0, MENU_NEW_LOOKUP, 0, R.string.mnNewLookup).setIcon(android.R.drawable.ic_menu_search);        
         menu.add(0, MENU_ZOOM_OUT, 0, R.string.mnZoomOut).setIcon(R.drawable.ic_menu_zoom_out);
@@ -343,33 +348,24 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
     	boolean enableViewOnline = false;
-    	boolean enableNextArticle = false;
         if (this.backItems.size() > 0) {
             HistoryItem historyItem = backItems.get(backItems.size() - 1);
             Article current = historyItem.article;
             Volume d = dictionaryService.getVolume(current.volumeId);
             enableViewOnline = d.getArticleURLTemplate() != null;            
-            enableNextArticle = historyItem.hasNext();
         }    	    
     	miViewOnline.setEnabled(enableViewOnline);
-    	miNextArticle.setEnabled(enableNextArticle);
     	return true;
     }
     
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-        case MENU_BACK:
-            goBack();
-            break;
         case MENU_VIEW_ONLINE:
             viewOnline();
             break;
         case MENU_NEW_LOOKUP:
             onSearchRequested();
-            break;
-        case MENU_NEXT:
-            nextArticle();
             break;
         case MENU_ZOOM_IN:
             zoomIn();
@@ -516,31 +512,41 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
     		currentHideNextButtonTask.cancel();
     		currentHideNextButtonTask = null;
     	}
-    	boolean hasNextArticle = false;    	
+    	boolean hasNextArticle = false;
         if (backItems.size() > 0) {
             HistoryItem historyItem = backItems.get(backItems.size() - 1);
             hasNextArticle = historyItem.hasNext();
         }
         final Button nextButton = (Button)findViewById(R.id.NextButton);
         if (hasNextArticle) {
-        	if (nextButton.getVisibility() == Button.GONE){
-	        	nextButton.startAnimation(fadeInAnimation);
+        	if (nextButton.getVisibility() == View.GONE){
+        		if (useAnimation) {
+        			nextButton.startAnimation(fadeInAnimation);
+        		}
+        		else {
+        			nextButton.setVisibility(View.VISIBLE);
+        		}        			
         	}        	
         	currentHideNextButtonTask = new TimerTask() {			
         		@Override
         		public void run() {
         			runOnUiThread(new Runnable() {					
-        				public void run() {						
-        					nextButton.startAnimation(fadeOutAnimation);
+        				public void run() {
+        	        		if (useAnimation) {
+        	        			nextButton.startAnimation(fadeOutAnimation);
+        	        		}
+        	        		else {
+        	        			nextButton.setVisibility(View.GONE);
+        	        		}
         					currentHideNextButtonTask = null;
         				}
         			});			
         		}
         	}; 
-        	timer.schedule(currentHideNextButtonTask, 3000);
+        	timer.schedule(currentHideNextButtonTask, 2500);
         }        
         else {
-        	nextButton.setVisibility(Button.GONE);
+        	nextButton.setVisibility(View.GONE);
         }
     }
         

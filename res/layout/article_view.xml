@@ -27,7 +27,7 @@
 		<Button 
 			android:id="@+id/NextButton" 
 			android:layout_width="wrap_content"
-			android:drawableRight="@android:drawable/ic_media_next"
+			android:drawableRight="@drawable/ic_next"
 			android:layout_height="wrap_content"
 			android:visibility="gone"
 		/>

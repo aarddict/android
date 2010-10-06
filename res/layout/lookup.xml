@@ -10,24 +10,38 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_weight="0"
+        android:paddingTop="4px"
+        android:paddingLeft="4px"
+        android:gravity="center_horizontal"
+        android:baselineAligned="false"
         >
         <EditText 
             android:id="@+id/wordInput" 
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginTop="1px"
             android:hint="@string/inputHint"
             android:selectAllOnFocus="true"
+            android:gravity="top"
         />
-        <ImageButton 
+        <Button 
             android:id="@+id/clearButton"
-            android:src="@android:drawable/ic_input_delete"
+            android:drawableLeft="@android:drawable/ic_input_delete"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="0"            
+            android:gravity="fill_vertical"
+            android:layout_weight="0"
         />            
     </LinearLayout>
+
+    <TextView 
+        android:id="@+id/messageView"         
+        android:layout_width="fill_parent" 
+        android:layout_height="fill_parent"
+        android:layout_weight="1"
+        android:visibility="gone"
+        android:gravity="center_horizontal"
+    />
 
     <ListView 
         android:id="@+id/lookupResult"         

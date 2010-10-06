@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -69,13 +70,11 @@ public final class DictionaryService extends Service {
 	public final static String CLOSED_DICT = TAG + ".CLOSED_DICT";
 	public final static String DICT_OPEN_FAILED = TAG + ".DICT_OPEN_FAILED";
 	public final static String OPEN_FINISHED = TAG + ".OPEN_FINISHED";
+		
+	private Library library;
 	
-	private boolean started;
-	
-	Library library;		
-    FilenameFilter fileFilter = new FilenameFilter() {
+    private FilenameFilter fileFilter = new FilenameFilter() {
         public boolean accept(File dir, String filename) {
-
             return filename.toLowerCase().endsWith(
                     ".aar") || new File(dir, filename).isDirectory();
         }
@@ -94,19 +93,14 @@ public final class DictionaryService extends Service {
 	public void onCreate() {
 		Log.d(TAG, "On create");
 		library = new Library();
-		loadAddedFileList();
+		loadDictFileList();
 		broadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 String action = intent.getAction();
                 Uri path = intent.getData();
                 Log.d(TAG, String.format("action: %s, path: %s", action, path));
-                if (action.equals(Intent.ACTION_MEDIA_MOUNTED)) {
-                    startInit();
-                }
-                else {
-                    stopSelf();
-                }
+                stopSelf();
             }		    
 		};
         IntentFilter intentFilter = new IntentFilter();
@@ -114,53 +108,46 @@ public final class DictionaryService extends Service {
         intentFilter.addAction(Intent.ACTION_MEDIA_EJECT);
         intentFilter.addAction(Intent.ACTION_MEDIA_BAD_REMOVAL);
         intentFilter.addAction(Intent.ACTION_MEDIA_REMOVED);
-        intentFilter.addAction(Intent.ACTION_MEDIA_MOUNTED);
 		registerReceiver(broadcastReceiver, intentFilter);
 	}
 
-	
-	@Override
-	synchronized public void onStart(Intent intent, int flags) {
-	    if (!started)
-	        startInit();
+
+	synchronized public void openDictionaries() {
+		if (library.isEmpty()) {
+	        Log.d(TAG, "opening dictionaries");
+	        long t0 = System.currentTimeMillis();        		
+			List<File> candidates = new ArrayList<File>();
+			for (String path : dictionaryFileNames) {
+			    candidates.add(new File(path));
+			}
+			open(candidates);
+			Log.d(TAG, "dictionaries opened in " + (System.currentTimeMillis() - t0));
+		}
 	}	
 	
+	
     synchronized public void refresh() {
-        startInit();
-    }   
-	
-	
-	synchronized private void startInit() {
-        Thread t = new Thread(new Runnable() {
-            public void run() {                
-                Log.d(TAG, "starting service");             
-                long t0 = System.currentTimeMillis();
-                init();
-                Log.d(TAG, "service start took " + (System.currentTimeMillis() - t0));
-                started = true;
-            };
-        });
-        t.setPriority(Thread.MIN_PRIORITY);
-        t.start();                  
-	}
-	
-	synchronized private void init() {
-		List<File> candidates = discover();
-		for (String path : addedFiles) {
-		    candidates.add(new File(path));
-		}
-		open(candidates);		
-	}
-	
-	List<String> addedFiles = new ArrayList<String>();
+    	Log.d(TAG, "starting dictionary discovery");             
+    	long t0 = System.currentTimeMillis();
+    	List<File> candidates = discover();    	
+    	Map<File, Exception> errors = open(candidates);    	
+    	for (File file : candidates) {
+    		String absolutePath = file.getAbsolutePath();
+    		if (!errors.containsKey(file)) {        		
+    			dictionaryFileNames.add(absolutePath);    			
+    		}
+    		else {
+    			Log.w(TAG, "Failed to open file " + absolutePath, errors.get(file));
+    		}
+    	}
+    	saveDictFileList();    	    	    	
+    	Log.d(TAG, "dictionary discovery took " + (System.currentTimeMillis() - t0));    	
+    }   	
+		
+	private Set<String> dictionaryFileNames = new LinkedHashSet<String>();
 	
 	synchronized public Map<File, Exception> open(File file) {
-	    Map<File, Exception> errors = open(Arrays.asList(new File[]{file}));
-	    if (errors.isEmpty()) {
-	        addedFiles.add(file.getAbsolutePath());
-	        saveAddedFileList();
-	    }
-		return errors;
+	    return open(Arrays.asList(new File[]{file}));
 	}
 	
 	private final class DeleteObserver extends FileObserver {
@@ -185,8 +172,8 @@ public final class DictionaryService extends Service {
                 Log.d(TAG, String.format("Received file event %s: %s", event, path));
                 if (dictFilesToWatch.contains(path)) {
                     Log.d(TAG, String.format("Dictionary file %s in %s has been deleted, stopping service", path, dir));
-                    if (addedFiles.remove(new File(dir, path).getAbsolutePath()))                    
-                        saveAddedFileList();
+                    if (dictionaryFileNames.remove(new File(dir, path).getAbsolutePath()))                    
+                        saveDictFileList();
                     stopSelf();
                 }                
             }	        	        
@@ -258,8 +245,6 @@ public final class DictionaryService extends Service {
                 notifyFailed.putExtra("i", i);
                 sendBroadcast(notifyFailed);  
                 Thread.yield();
-                if (addedFiles.remove(file.getAbsolutePath()))                    
-                    saveAddedFileList();                
                 errors.put(file, e);
             }
         }        
@@ -365,33 +350,36 @@ public final class DictionaryService extends Service {
 		return library.getArticle(entry);
 	}
 	
-    void saveAddedFileList() {        
+    void saveDictFileList() {        
         try {
-            File dir = getDir("addedfiles", 0);
-            File file = new File(dir, "list");
+            File dir = getDir(DICTDIR, 0);
+            File file = new File(dir, DICTFILE);
             FileOutputStream fout = new FileOutputStream(file);
             ObjectOutputStream oout = new ObjectOutputStream(fout);
-            oout.writeObject(addedFiles);
+            oout.writeObject(new ArrayList<String>(dictionaryFileNames));
         }
         catch (Exception e) {
-            Log.e(TAG, "Failed to save added file list", e);
+            Log.e(TAG, "Failed to save dictionary file list", e);
         }        
     }
 
+    private final static String DICTDIR = "dicts";
+    private final static String DICTFILE = "dicts.list";
+    
     @SuppressWarnings("unchecked")
-    void loadAddedFileList() {
+    void loadDictFileList() {
         try {
-            File dir = getDir("addedfiles", 0);
-            File file = new File(dir, "list");
+            File dir = getDir(DICTDIR, 0);
+            File file = new File(dir, DICTFILE);
             if (file.exists()) {
                 FileInputStream fin = new FileInputStream(file);
                 ObjectInputStream oin = new ObjectInputStream(fin);
                 List<String> data  = (List<String>)oin.readObject();
-                addedFiles.addAll(data); 
+                dictionaryFileNames.addAll(data); 
             }
         }
         catch (Exception e) {
-            Log.e(TAG, "Failed to load added file list", e);
+            Log.e(TAG, "Failed to load dictionary file list", e);
         }        
     }    	
 }

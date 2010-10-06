@@ -282,7 +282,6 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
         }
         return true;
     }
-
     
     private boolean zoomIn() {        
         return articleView.zoomIn();

@@ -50,8 +50,8 @@ import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -64,9 +64,6 @@ public final class LookupActivity extends BaseDictionaryActivity {
     
     private Timer          timer;
     private ListView       listView;
-    private MessageAdapter msgGetDicts;
-    private MessageAdapter msgNothingFound;
-    private MessageAdapter msgNoDicts;
     
     void updateTitle() {
     	int dictCount = dictionaryService.getVolumes().size();
@@ -74,13 +71,7 @@ public final class LookupActivity extends BaseDictionaryActivity {
 		String dictionaries = r.getQuantityString(R.plurals.dictionaries, dictCount);
     	String appName = r.getString(R.string.appName);
     	String mainTitle = r.getString(R.string.titleLookupActivity, appName, String.format(dictionaries, dictCount));
-    	setTitle(mainTitle);
-    	if (dictCount == 0) {
-    	    listView.setAdapter(msgNoDicts);
-    	}
-    	else {
-    	    listView.setAdapter(msgGetDicts);
-    	}
+    	setTitle(mainTitle);    	
     }
     
     @Override
@@ -88,28 +79,27 @@ public final class LookupActivity extends BaseDictionaryActivity {
         super.onDestroy();
         timer.cancel();
     }
-    
+        
     private void updateWordListUI(final Iterator<Entry> results) {        
         runOnUiThread(new Runnable() {
-            public void run() {                              
-                if (!results.hasNext()) {
+            public void run() {
+                TextView messageView = (TextView)findViewById(R.id.messageView);
+                if (!results.hasNext()) {                	
                     Editable text = editText.getText();
-                    if (text != null && !text.toString().equals("")) {
-                        listView.setAdapter(msgNothingFound);
+                    if (text != null && !text.toString().equals("")) {                    	
+                    	messageView.setText(Html.fromHtml(getString(R.string.nothingFound)));
+                    	messageView.setVisibility(View.VISIBLE);
                     }
                     else {
-                        if (dictionaryService.getDictionaries().isEmpty()) {
-                            listView.setAdapter(msgNoDicts);
-                        } else {
-                            listView.setAdapter(msgGetDicts);
-                        }
-                    }                
+                    	messageView.setVisibility(View.GONE);
+                    }
                 }
                 else {
-                    WordAdapter wordAdapter = new WordAdapter(results);
-                    listView.setAdapter(wordAdapter);        
-                    listView.setOnItemClickListener(wordAdapter);
+                	messageView.setVisibility(View.GONE);
                 }
+                WordAdapter wordAdapter = new WordAdapter(results);
+                listView.setAdapter(wordAdapter);        
+                listView.setOnItemClickListener(wordAdapter);                
                 setProgressBarIndeterminateVisibility(false);
             }
         });                
@@ -152,43 +142,7 @@ public final class LookupActivity extends BaseDictionaryActivity {
         next.putExtra("articlePointer", theWord.articlePointer);
         startActivity(next);
     }
-    
-    
-    final static class MessageAdapter extends BaseAdapter {
-
-        private LinearLayout layout;
-        private TextView     textView;
-                               
-        public MessageAdapter(Context context, int resId) {
-            layout = new LinearLayout(context);
-            
-            textView = new TextView(context);
-            textView.setGravity(Gravity.CENTER_HORIZONTAL);
-            textView.setLineSpacing(2f, 1);
-            textView.setMovementMethod(LinkMovementMethod.getInstance());            
-            textView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
-            textView.setText(Html.fromHtml(context.getString(resId)));
-            layout.setGravity(Gravity.CENTER);
-            layout.addView(textView);                                                
-        }
-                
-        public int getCount() {
-            return 1;
-        }
-
-        public Object getItem(int position) {
-            return position;
-        }
-
-        public long getItemId(int position) {
-            return position;
-        }
-        
-        public View getView(int position, View convertView, ViewGroup parent) {
-                return layout;
-        }
-    }
-    
+           
     final class WordAdapter extends BaseAdapter implements AdapterView.OnItemClickListener {
 
         private final List<Entry>    words;
@@ -291,7 +245,6 @@ public final class LookupActivity extends BaseDictionaryActivity {
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        menu.add(0, MENU_DICT_REFRESH, 0, R.string.mnRefresh).setIcon(R.drawable.ic_menu_refresh);
         menu.add(0, MENU_DICT_INFO, 0, R.string.mnInfo).setIcon(android.R.drawable.ic_menu_info_details);
         menu.add(0, MENU_ABOUT, 0, R.string.mnAbout).setIcon(R.drawable.ic_menu_aarddict);
         return true;
@@ -306,10 +259,6 @@ public final class LookupActivity extends BaseDictionaryActivity {
         case MENU_ABOUT:
             showAbout();
             break;            
-        case MENU_DICT_REFRESH:
-            if (dictionaryService != null)
-                dictionaryService.refresh();
-            break;
         }
         return true;
     }
@@ -355,8 +304,10 @@ public final class LookupActivity extends BaseDictionaryActivity {
     @Override
     void onDictionaryServiceReady() {
         updateTitle();
+        textWatcher.afterTextChanged(editText.getText());
         final Intent intent = getIntent();
-        if (intent.getAction().equals(Intent.ACTION_VIEW)) {
+        String action = intent.getAction();
+        if (action != null && action.equals(Intent.ACTION_VIEW)) {
             final Uri data = intent.getData();
             Log.d(TAG, "Path: " + data.getPath());              
             if (data != null && data.getPath() != null) {
@@ -374,10 +325,10 @@ public final class LookupActivity extends BaseDictionaryActivity {
 
     @Override
     void onDictionaryOpenFinished() {
-        updateTitle();
-        textWatcher.afterTextChanged(editText.getText());
+    	updateTitle();
+    	textWatcher.afterTextChanged(editText.getText());
     }
-
+        
     @Override
     void initUI() {
         getWindow().requestFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
@@ -385,15 +336,9 @@ public final class LookupActivity extends BaseDictionaryActivity {
         setContentView(R.layout.lookup);
         
         timer = new Timer();
-                                             
-        msgGetDicts = new MessageAdapter(this, R.string.getMoreDictionaries);
-        msgNoDicts = new MessageAdapter(this, R.string.welcome);
-        msgNothingFound = new MessageAdapter(this, R.string.nothingFound);
-                
+                                                             
         listView = (ListView)findViewById(R.id.lookupResult);
-        
-        listView.setAdapter(msgGetDicts);
-        
+                
         editText = (EditText)findViewById(R.id.wordInput);
         textWatcher = new TextWatcher() {
             
@@ -428,7 +373,7 @@ public final class LookupActivity extends BaseDictionaryActivity {
                 
         editText.setInputType(InputType.TYPE_CLASS_TEXT);
                 
-        ImageButton btnClear = (ImageButton)findViewById(R.id.clearButton);
+        Button btnClear = (Button)findViewById(R.id.clearButton);
         
         btnClear.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -437,6 +382,6 @@ public final class LookupActivity extends BaseDictionaryActivity {
                 InputMethodManager inputMgr = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
                 inputMgr.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT);
             }
-        });        
+        });  
     }    
 }

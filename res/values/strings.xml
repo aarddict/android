@@ -16,24 +16,15 @@
         <item quantity="one">%d volume</item>
         <item quantity="other">%d volumes</item>        
     </plurals>
-    <string name="welcome">
+    <string name="noDictionaries">
         <![CDATA[
-        <h1>No dictionaries found</h1>
-        <p>Download dictionaries from <a href="http://aarddict.org">aarddict.org</a>. Put dictionary files anywhere on SD card.</p>
-        <p>Select Wikipedia and Wiktionaries <a href="http://aarddict.org/#wmedia">can be ordered</a> on SD cards or DVD.  
-        Please visit <a href="http://aarddict.org/forum">Aard Dictionary forum</a> if you have any questions, suggestions or issues to report.</p>
+        <h1>No dictionaries</h1>
+        <p>Get dictionaries at <a href="http://aarddict.org">http://aarddict.org</a></p>        
         ]]>
-    </string>
-    <string name="getMoreDictionaries">
-        <![CDATA[
-        <p><small>Get more dictionaries at <a href="http://aarddict.org">http://aarddict.org</a></p>
-        ]]>
-    </string>
-    
+    </string>    
     <string name="nothingFound">
         <![CDATA[
         <h1>Nothing found</h1>
-        <p><small>Get more dictionaries at <a href="http://aarddict.org">http://aarddict.org</a></small></p>
         ]]>
     </string>
     
@@ -48,13 +39,12 @@
     <string name="titleAbout">About</string>
     <string name="titleError">Error</string>
     <string name="titleVerifying">Verifying</string>    
-    <string name="titleDictionariesActivity">Dictionaries</string>
+    <string name="titleDictionariesActivity">%s - Dictionaries</string>
     <string name="titleDictionaryInfoActivity">Dictionary Info</string>
     
     <string name="inputHint">Start typing</string>
     
-    <string name="mnRefresh">Refresh</string>
-    <string name="mnInfo">Info</string>
+    <string name="mnInfo">Dictionaries</string>
     <string name="mnAbout">About</string>
     <string name="mnBack">Back</string>
     <string name="mnNextArticle">Next</string>
@@ -63,6 +53,9 @@
     <string name="mnZoomIn">Zoom In</string>
     <string name="mnZoomOut">Zoom Out</string>
 
+	<string name="mnDictDetails">Info</string>
+	<string name="mnDictVerify">Verify</string>
+	<string name="mnDictRefresh">Scan SD Card</string>
 
     <string name="titleArticleViewActivity">%s - %s</string>
     
@@ -90,4 +83,6 @@
     <string name="tabCopyright">Copyright</string>
     <string name="tabSource">Source</string>
     <string name="tabLicense">License</string>
+    
+    <string name="scanSDCard">Scan SD Card</string>    
 </resources>

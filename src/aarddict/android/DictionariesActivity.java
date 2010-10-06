@@ -40,14 +40,21 @@ import android.content.Intent;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnClickListener;
 import android.content.res.Resources;
+import android.text.Html;
 import android.text.format.DateUtils;
+import android.text.method.LinkMovementMethod;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.TwoLineListItem;
 
@@ -61,30 +68,67 @@ public final class DictionariesActivity extends BaseDictionaryActivity {
 
     @Override
     void onDictionaryServiceReady() {
-    	dataAdapter = new DictListAdapter(dictionaryService.getVolumes());
-    	listView.setAdapter(dataAdapter);
-    	listView.setOnItemClickListener(dataAdapter);    	
-    	listView.setOnItemLongClickListener(dataAdapter);
+    	TextView messageView = (TextView)findViewById(R.id.dictionariesMessageView);
+    	Button scanSDButton = (Button)findViewById(R.id.scanSDButton);
+    	if (dictionaryService.getDictionaries().isEmpty()) {        	
+        	messageView.setVisibility(View.VISIBLE);                    	
+        	scanSDButton.setVisibility(View.VISIBLE);
+        	listView.setVisibility(View.GONE);
+    	}
+    	else {    		
+    		Intent intent = getIntent();
+    		String action = intent.getAction();
+    		if (action != null && action.equals(Intent.ACTION_MAIN)) {
+    	        Intent next = new Intent();
+    	        next.setClass(this, LookupActivity.class);                       
+    	        startActivity(next);    			
+    			finish();    			
+    		}    		
+    		else {
+    			messageView.setVisibility(View.GONE);                    	
+    			scanSDButton.setVisibility(View.GONE);
+    			listView.setVisibility(View.VISIBLE);
+    	    	dataAdapter = new DictListAdapter(dictionaryService.getVolumes());
+    	    	listView.setAdapter(dataAdapter);
+    	    	listView.setOnItemClickListener(dataAdapter);    	
+    	    	listView.setOnItemLongClickListener(dataAdapter);    			
+    		}
+    	}
     }
     
     @Override
 	void initUI() {
-                
-        listView = new ListView(this);
+                        
+        setContentView(R.layout.dictionaries);
         
-        setContentView(listView);
-        setTitle(R.string.titleDictionariesActivity);        
+        listView = (ListView)findViewById(R.id.dictionariesList);
+        
+        Button scanSDButton = (Button)findViewById(R.id.scanSDButton);
+        scanSDButton.setOnClickListener(new View.OnClickListener() {			
+			public void onClick(View v) {
+				scandSDCard();
+			}
+		});
+        
+    	TextView messageView = (TextView)findViewById(R.id.dictionariesMessageView);
+    	messageView.setMovementMethod(LinkMovementMethod.getInstance());            
+    	messageView.setText(Html.fromHtml(getString(R.string.noDictionaries)));        
+    	
+    	String appName = getString(R.string.appName);
+    	setTitle(getString(R.string.titleDictionariesActivity, appName));    	
         try {
 			loadVerifyData();
 		} catch (Exception e) {
 			Log.e(TAG, "Failed to load verify data", e);
 		}
     }
-    
+            
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        dataAdapter.destroy();
+        if (dataAdapter != null) {
+        	dataAdapter.destroy();
+        }        
     }
 
     final class DictListAdapter extends BaseAdapter 
@@ -127,11 +171,15 @@ public final class DictionariesActivity extends BaseDictionaryActivity {
         }
         
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        	showDetail(position);
+        }
+        
+        private void showDetail(int position) {
         	Intent i = new Intent(DictionariesActivity.this, DictionaryInfoActivity.class);
         	i.putExtra("volumeId", volumes.get(position).get(0).getId());
-        	startActivity(i);
+        	startActivity(i);        	
         }
-
+        
         final class ProgressListener implements VerifyProgressListener {
 
         	boolean proceed = true;
@@ -216,7 +264,12 @@ public final class DictionariesActivity extends BaseDictionaryActivity {
             });
 		}
 		
-		public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+		public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {			
+			verify(position);
+			return true;
+		}
+
+		private void verify(int position) {
 			final List<Volume> allDictVols = volumes.get(position);
 			final ProgressDialog progressDialog = new ProgressDialog(DictionariesActivity.this);
 			progressDialog.setIndeterminate(false);
@@ -255,7 +308,6 @@ public final class DictionariesActivity extends BaseDictionaryActivity {
 	        t.setPriority(Thread.MIN_PRIORITY);
 	        t.start();
 	        progressDialog.show();
-			return true;
 		}
         
 		CharSequence getTitle(Volume d, boolean withVol) {
@@ -301,7 +353,64 @@ public final class DictionariesActivity extends BaseDictionaryActivity {
         
     }   
 
-    void saveVerifyData() throws IOException {
+    final static int MENU_INFO = 1;
+    final static int MENU_VERIFY = 2;
+    final static int MENU_REFRESH = 3;    
+    
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+    	menu.add(0, MENU_INFO, 0, R.string.mnDictDetails).setIcon(android.R.drawable.ic_menu_info_details);
+        menu.add(0, MENU_VERIFY, 1, R.string.mnDictVerify).setIcon(android.R.drawable.ic_menu_manage);
+        menu.add(0, MENU_REFRESH, 2, R.string.mnDictRefresh).setIcon(R.drawable.ic_menu_refresh);
+        return true;
+    }
+    
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+    	int selected = listView.getSelectedItemPosition();
+    	boolean validSelection = selected != ListView.INVALID_POSITION;
+    	menu.getItem(0).setEnabled(validSelection);
+    	menu.getItem(1).setEnabled(validSelection);
+    	menu.getItem(2).setEnabled(true);
+    	return true;
+    }
+    
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		int selected = listView.getSelectedItemPosition();
+		boolean validSelection = selected != ListView.INVALID_POSITION;
+		switch (item.getItemId()) {
+		case MENU_INFO:
+			if (validSelection) {
+				dataAdapter.showDetail(selected);
+			}
+			break;
+		case MENU_VERIFY:
+			if (validSelection) {
+				dataAdapter.verify(selected);
+			}
+			break;
+		case MENU_REFRESH:
+			scandSDCard();
+			break;
+		}
+		return true;
+	}    
+    
+    private void scandSDCard() {
+		new Thread(new Runnable() {					
+			public void run() {
+				dictionaryService.refresh();
+				runOnUiThread(new Runnable() {							
+					public void run() {
+						onDictionaryServiceReady();
+					}
+				});
+			}
+		}).start();
+	}
+
+	void saveVerifyData() throws IOException {
     	File verifyDir = getDir("verify", 0);
     	File verifyFile = new File(verifyDir, "verifydata");
     	FileOutputStream fout = new FileOutputStream(verifyFile);

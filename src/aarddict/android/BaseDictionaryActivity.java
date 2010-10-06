@@ -41,7 +41,16 @@ abstract class BaseDictionaryActivity extends Activity {
         public void onServiceConnected(ComponentName className, IBinder service) {
             dictionaryService = ((DictionaryService.LocalBinder)service).getService();
             Log.d(TAG, "Service connected: " + dictionaryService);
-            onDictionaryServiceReady();
+            new Thread(new Runnable() {				
+				public void run() {
+					dictionaryService.openDictionaries();
+					runOnUiThread(new Runnable() {						
+						public void run() {
+							onDictionaryServiceReady();
+						}
+					});
+				}
+			}).start();
         }
 
         public void onServiceDisconnected(ComponentName className) {
@@ -121,15 +130,13 @@ abstract class BaseDictionaryActivity extends Activity {
         startService(dictServiceIntent);
         bindService(dictServiceIntent, connection, 0);        
     };
-    
-    
+            
     abstract void initUI();
     
     abstract void onDictionaryServiceReady();
     
-    void onDictionaryOpenFinished() {        
-    }
-    
+    void onDictionaryOpenFinished(){};
+        
     protected void onDestroy() {
         super.onDestroy();
         unregisterReceiver(broadcastReceiver);

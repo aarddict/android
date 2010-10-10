@@ -36,8 +36,12 @@ import aarddict.Volume;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.DialogInterface.OnClickListener;
+import android.content.SharedPreferences.Editor;
 import android.net.Uri;
+import android.os.Build;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -54,7 +58,6 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.Toast;
-import android.os.Build;
 
 
 public final class ArticleViewActivity extends BaseDictionaryActivity {
@@ -284,11 +287,17 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
     }
     
     private boolean zoomIn() {        
-        return articleView.zoomIn();
+        boolean zoomed = articleView.zoomIn();
+        float scale = articleView.getScale();
+        articleView.setInitialScale(Math.round(scale*100));
+        return zoomed;
     }
     
     private boolean zoomOut() {
-        return articleView.zoomOut();
+        boolean zoomed = articleView.zoomOut();
+        float scale = articleView.getScale();
+        articleView.setInitialScale(Math.round(scale*100));
+        return zoomed;    	
     }
         
     private void goBack() {
@@ -659,6 +668,29 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
           }
         } while (read>=0);
         return out.toString();
+    }
+
+    
+    @Override
+    protected void onPause() {
+    	super.onPause();
+    	SharedPreferences prefs = getPreferences(MODE_PRIVATE);
+    	Editor e = prefs.edit();
+    	e.putFloat("articleView.scale", articleView.getScale());
+    	boolean success = e.commit();
+    	if (!success) {
+    		Log.w(TAG, "Failed to save article view scale pref");
+    	}
+    }
+    
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+    	super.onCreate(savedInstanceState);
+    	SharedPreferences prefs = getPreferences(MODE_PRIVATE);    	
+    	float scale = prefs.getFloat("articleView.scale", 1.0f);
+    	int initialScale = Math.round(scale*100);
+    	Log.d(TAG, "Setting initial article view scale to " + initialScale);
+    	articleView.setInitialScale(initialScale);
     }
     
     @Override

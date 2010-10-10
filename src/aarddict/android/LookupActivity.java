@@ -15,7 +15,6 @@
 
 package aarddict.android;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -32,7 +31,6 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Resources;
-import android.net.Uri;
 import android.text.Editable;
 import android.text.Html;
 import android.text.InputType;
@@ -62,8 +60,9 @@ public final class LookupActivity extends BaseDictionaryActivity {
     
     private final static String TAG     = LookupActivity.class.getName();
     
-    private Timer          timer;
-    private ListView       listView;
+    private Timer          	timer;
+    private ListView       	listView;
+    private Iterator<Entry> empty = new ArrayList<Entry>().iterator();
     
     void updateTitle() {
     	int dictCount = dictionaryService.getVolumes().size();
@@ -114,6 +113,11 @@ public final class LookupActivity extends BaseDictionaryActivity {
     private void doLookup(CharSequence word) {
         if (dictionaryService == null)
             return;
+        if (word.toString().equals("")) {
+        	Log.d(TAG, "Nothing to look up");
+        	updateWordListUI(empty);
+        	return;
+        }
         runOnUiThread(updateProgress);
         long t0 = System.currentTimeMillis();
         try {
@@ -300,33 +304,16 @@ public final class LookupActivity extends BaseDictionaryActivity {
         });
         dialogBuilder.show();
 	}
-
+	
     @Override
-    void onDictionaryServiceReady() {
-        updateTitle();
-        textWatcher.afterTextChanged(editText.getText());
-        final Intent intent = getIntent();
-        String action = intent.getAction();
-        if (action != null && action.equals(Intent.ACTION_VIEW)) {
-            final Uri data = intent.getData();
-            Log.d(TAG, "Path: " + data.getPath());              
-            if (data != null && data.getPath() != null) {
-                Runnable r = new Runnable() {                   
-                    public void run() {
-                        Log.d(TAG, "opening: " + data.getPath());
-                        dictionaryService.open(new File(data.getPath()));                       
-                    }
-                };
-                new Thread(r).start();                  
-                Log.d(TAG, "started: " + data.getPath());
-            }
-        }        
-    }
-
-    @Override
-    void onDictionaryOpenFinished() {
+    void onDictionaryServiceReady() {    	
     	updateTitle();
     	textWatcher.afterTextChanged(editText.getText());
+    }
+    
+    @Override
+    void onDictionaryOpenFinished() {
+    	onDictionaryServiceReady();
     }
         
     @Override
@@ -374,7 +361,6 @@ public final class LookupActivity extends BaseDictionaryActivity {
         editText.setInputType(InputType.TYPE_CLASS_TEXT);
                 
         Button btnClear = (Button)findViewById(R.id.clearButton);
-        
         btnClear.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 editText.setText("");

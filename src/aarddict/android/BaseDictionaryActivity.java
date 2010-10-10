@@ -33,24 +33,17 @@ abstract class BaseDictionaryActivity extends Activity {
     private final static String         TAG        = BaseDictionaryActivity.class
                                                    .getName();
     
-    private BroadcastReceiver   broadcastReceiver;    
+    protected final static String ACTION_NO_DICTIONARIES = "aarddict.android.ACTION_NO_DICTIONARIES";
+    
+    protected BroadcastReceiver   broadcastReceiver;    
     protected DictionaryService dictionaryService;
     
     
     private ServiceConnection connection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
             dictionaryService = ((DictionaryService.LocalBinder)service).getService();
-            Log.d(TAG, "Service connected: " + dictionaryService);
-            new Thread(new Runnable() {				
-				public void run() {
-					dictionaryService.openDictionaries();
-					runOnUiThread(new Runnable() {						
-						public void run() {
-							onDictionaryServiceReady();
-						}
-					});
-				}
-			}).start();
+            Log.d(TAG, "Service connected: " + dictionaryService);            
+            onDictionaryServiceConnected();
         }
 
         public void onServiceDisconnected(ComponentName className) {
@@ -133,10 +126,43 @@ abstract class BaseDictionaryActivity extends Activity {
             
     abstract void initUI();
     
-    abstract void onDictionaryServiceReady();
+    void onDictionaryServiceConnected() {    	    	
+		if (dictionaryService.getDictionaries().isEmpty()) {
+	        new Thread(new Runnable() {				
+				public void run() {
+					dictionaryService.openDictionaries();
+					Log.d(TAG, 
+							String.format("After openDictionaries() we have %d dictionaries", 
+									dictionaryService.getDictionaries().size()));
+					if (dictionaryService.getDictionaries().isEmpty()) {
+						runOnUiThread(new Runnable() {							
+							public void run() {
+								Intent next = new Intent();
+								next.setAction(ACTION_NO_DICTIONARIES);
+								next.setClass(getApplicationContext(), DictionariesActivity.class);
+								Log.d(TAG, "No dictionaries, starting Dictionaries activity");
+								startActivity(next);
+								finish();
+							}
+						});
+					} else {
+						runOnUiThread(new Runnable() {								
+							public void run() {
+								onDictionaryServiceReady();
+							}
+						});    						
+					}
+				}
+			}).start();
+		}
+		else {
+			onDictionaryServiceReady();
+		}
+    };
     
+    abstract void onDictionaryServiceReady();
     void onDictionaryOpenFinished(){};
-        
+            
     protected void onDestroy() {
         super.onDestroy();
         unregisterReceiver(broadcastReceiver);

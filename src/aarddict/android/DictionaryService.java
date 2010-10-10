@@ -111,18 +111,33 @@ public final class DictionaryService extends Service {
 		registerReceiver(broadcastReceiver, intentFilter);
 	}
 
-
+	@Override
+	public void onStart(Intent intent, int startId) {		
+      String action = intent.getAction();
+      if (action != null && action.equals(Intent.ACTION_VIEW)) {
+          final Uri data = intent.getData();
+          Log.d(TAG, "Path: " + data.getPath());              
+          if (data != null && data.getPath() != null) {
+              Runnable r = new Runnable() {                   
+                  public void run() {
+                      Log.d(TAG, "opening: " + data.getPath());
+                      open(new File(data.getPath()));                       
+                  }
+              };
+              new Thread(r).start();                  
+          }
+      }        
+	}
+		
 	synchronized public void openDictionaries() {
-		if (library.isEmpty()) {
-	        Log.d(TAG, "opening dictionaries");
-	        long t0 = System.currentTimeMillis();        		
-			List<File> candidates = new ArrayList<File>();
-			for (String path : dictionaryFileNames) {
-			    candidates.add(new File(path));
-			}
-			open(candidates);
-			Log.d(TAG, "dictionaries opened in " + (System.currentTimeMillis() - t0));
+		Log.d(TAG, "opening dictionaries");
+		long t0 = System.currentTimeMillis();        		
+		List<File> candidates = new ArrayList<File>();
+		for (String path : dictionaryFileNames) {
+			candidates.add(new File(path));
 		}
+		open(candidates);
+		Log.d(TAG, "dictionaries opened in " + (System.currentTimeMillis() - t0));
 	}	
 	
 	
@@ -146,8 +161,13 @@ public final class DictionaryService extends Service {
 		
 	private Set<String> dictionaryFileNames = new LinkedHashSet<String>();
 	
-	synchronized public Map<File, Exception> open(File file) {
-	    return open(Arrays.asList(new File[]{file}));
+	synchronized public Map<File, Exception> open(File file) {					
+		Map<File, Exception> errors = open(Arrays.asList(new File[]{file}));
+		if (errors.size()  == 0 && 
+				!dictionaryFileNames.contains(file.getAbsoluteFile())) {
+			saveDictFileList();
+		}
+		return errors;
 	}
 	
 	private final class DeleteObserver extends FileObserver {

@@ -21,7 +21,6 @@ a[href ^="#_r"] {
     text-decoration: none;
 }
 
-pre:empty,
 .thumbinner, .thumbcaption, .magnify, 
 .vertical-navbox, .tmbox, .maptable,
 .printonly  {

@@ -46,6 +46,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
@@ -55,6 +56,7 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.TwoLineListItem;
+import android.widget.AbsListView.OnScrollListener;
 
 public final class LookupActivity extends BaseDictionaryActivity {
     
@@ -146,13 +148,13 @@ public final class LookupActivity extends BaseDictionaryActivity {
         next.putExtra("articlePointer", theWord.articlePointer);
         startActivity(next);
     }
-           
+
+    
     final class WordAdapter extends BaseAdapter implements AdapterView.OnItemClickListener {
 
         private final List<Entry>    words;
         private final LayoutInflater mInflater;
         private int                  itemCount;
-        private LinearLayout         more;
         private Iterator<Entry>      results;
         private boolean              displayMore;
 
@@ -162,12 +164,6 @@ public final class LookupActivity extends BaseDictionaryActivity {
             loadBatch();
             mInflater = (LayoutInflater) LookupActivity.this.getSystemService(
                     Context.LAYOUT_INFLATER_SERVICE);
-
-            more = new LinearLayout(mInflater.getContext());
-            ImageView moreImage = new ImageView(mInflater.getContext());
-            moreImage.setImageResource(android.R.drawable.ic_menu_more);
-            more.setGravity(Gravity.CENTER);
-            more.addView(moreImage);            
         }
 
         private void loadBatch() {
@@ -177,7 +173,7 @@ public final class LookupActivity extends BaseDictionaryActivity {
                 words.add(results.next());
             }                                        
             displayMore = results.hasNext();
-            itemCount = displayMore  ? words.size() + 1 : words.size();              
+            itemCount = words.size();              
         }
         
         public int getCount() {
@@ -191,30 +187,36 @@ public final class LookupActivity extends BaseDictionaryActivity {
         public long getItemId(int position) {
             return position;
         }
-
-        @Override
-        public int getViewTypeCount() {
-            return displayMore ? 2 : 1;
-        }
-        
-        @Override
-        public int getItemViewType(int position) {
-            if (displayMore)
-                return position == itemCount - 1 ? 1 : 0;
-            else
-                return 0;
-        }
         
         public View getView(int position, View convertView, ViewGroup parent) {
             if (displayMore && position == itemCount - 1) {
-                return more;
-            }
+            	loadMore(position);
+            }            
             TwoLineListItem view = (convertView != null) ? (TwoLineListItem) convertView :
                     createView(parent);            
             bindView(view, words.get(position));
             return view;
         }
+        
+        private int loadingMoreForPos;
 
+        private void loadMore(int forPos) {
+        	if (loadingMoreForPos == forPos) {
+        		return;
+        	}
+        	loadingMoreForPos = forPos;
+        	new Thread(new Runnable() {				
+        		public void run() {
+        			loadBatch();
+        			runOnUiThread(new Runnable() {						
+        				public void run() {
+        					notifyDataSetChanged();
+        				}
+        			});
+        		}
+        	}).start();        	        	
+        }        
+        
         private TwoLineListItem createView(ViewGroup parent) {
             TwoLineListItem item = (TwoLineListItem) mInflater.inflate(
                     android.R.layout.simple_list_item_2, parent, false);
@@ -229,16 +231,10 @@ public final class LookupActivity extends BaseDictionaryActivity {
         }
 
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            if (displayMore && position == itemCount - 1) {
-                loadBatch();
-                notifyDataSetChanged();
-            }            
-            else {
-                launchWord(words.get(position));
-            }
+        	launchWord(words.get(position));
         }
     }
-    
+        
     
     final static int MENU_DICT_INFO = 1;
     final static int MENU_ABOUT = 2;
@@ -369,5 +365,6 @@ public final class LookupActivity extends BaseDictionaryActivity {
                 inputMgr.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT);
             }
         });  
+        
     }    
 }

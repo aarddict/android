@@ -75,19 +75,12 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
     private TimerTask           currentTask;
     private TimerTask           currentHideNextButtonTask;
     private AlphaAnimation 		fadeOutAnimation;
-    private AlphaAnimation 		fadeInAnimation;
     private boolean 			useAnimation = false;        
-
+    
     static class AnimationAdapter implements AnimationListener {
-
-		public void onAnimationEnd(Animation animation) {
-		}
-
-		public void onAnimationRepeat(Animation animation) {
-		}
-
-		public void onAnimationStart(Animation animation) {
-		}    	
+		public void onAnimationEnd(Animation animation) {}
+		public void onAnimationRepeat(Animation animation) {}
+		public void onAnimationStart(Animation animation) {}    	
     }
     
     @Override
@@ -107,28 +100,15 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
         Log.d(TAG, "Build.VERSION.SDK: " + Build.VERSION.SDK);
         Log.d(TAG, "use animation? " + useAnimation);
         
-        fadeOutAnimation = new AlphaAnimation(1.0f, 0.0f);
-        fadeOutAnimation.setFillEnabled(true);
-        fadeOutAnimation.setFillAfter(true);
-        fadeOutAnimation.setDuration(500);
+        fadeOutAnimation = new AlphaAnimation(1f, 0f);
+        fadeOutAnimation.setDuration(600);
         fadeOutAnimation.setAnimationListener(new AnimationAdapter() {
         	public void onAnimationEnd(Animation animation) {
         		Button nextButton = (Button)findViewById(R.id.NextButton);
-        		nextButton.setVisibility(Button.GONE);									
+        		nextButton.setVisibility(Button.GONE);
         	}
         });        					        
         
-        fadeInAnimation = new AlphaAnimation(0.0f, 1.0f);
-        fadeInAnimation.setFillEnabled(true);
-        fadeInAnimation.setFillAfter(true);
-        fadeInAnimation.setDuration(300);
-        fadeInAnimation.setAnimationListener(new AnimationAdapter() {
-        	public void onAnimationEnd(Animation animation) {
-        		Button nextButton = (Button)findViewById(R.id.NextButton);
-        		nextButton.setVisibility(Button.VISIBLE);									
-        	}
-        });        					
-
         timer = new Timer();
         
         backItems = Collections.synchronizedList(new LinkedList<HistoryItem>());
@@ -238,6 +218,7 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
             }
         });
         final Button nextButton = (Button)findViewById(R.id.NextButton);
+        nextButton.getBackground().setAlpha(180);
         nextButton.setOnClickListener(new View.OnClickListener() {			
 			public void onClick(View v) {
 				if (nextButton.getVisibility() == View.VISIBLE) {
@@ -528,12 +509,7 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
         final Button nextButton = (Button)findViewById(R.id.NextButton);
         if (hasNextArticle) {
         	if (nextButton.getVisibility() == View.GONE){
-        		if (useAnimation) {
-        			nextButton.startAnimation(fadeInAnimation);
-        		}
-        		else {
-        			nextButton.setVisibility(View.VISIBLE);
-        		}        			
+        		nextButton.setVisibility(View.VISIBLE);
         	}        	
         	currentHideNextButtonTask = new TimerTask() {			
         		@Override
@@ -551,7 +527,7 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
         			});			
         		}
         	}; 
-        	timer.schedule(currentHideNextButtonTask, 2500);
+        	timer.schedule(currentHideNextButtonTask, 1800);
         }        
         else {
         	nextButton.setVisibility(View.GONE);

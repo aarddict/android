@@ -46,7 +46,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
@@ -56,7 +55,6 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.TwoLineListItem;
-import android.widget.AbsListView.OnScrollListener;
 
 public final class LookupActivity extends BaseDictionaryActivity {
     

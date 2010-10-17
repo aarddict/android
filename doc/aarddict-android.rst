@@ -103,6 +103,18 @@ new dictionaries. Select `Scan SD Card` menu item in `Dictionaries` to
 do this. Alternatively, new dictionaries can be opened from a file
 manager.
 
+Contributors
+============
+
+- Iryna Gerasymova (Aard Dictionary logo, testing)
+
+- Igor Tkach (`SDict Viewer`_ and Aard Dictionary author)
+
+- Chinese translation by `bbs.goapk.com`_
+
+.. _SDict Viewer: http://sdictviewer.sourceforge.net
+.. _bbs.goapk.com: http://bbs.goapk.com
+
  
 Reporting Issues
 ================

@@ -122,7 +122,7 @@ Reporting Issues
 Please submit issue reports and enhancement requests to `Aard
 Dictionary for Android issue tracker`_.
 
-.. _Aard Dictionary for Android issue tracker: http://bitbucket.org/itkach/aarddict-android/issues/
+.. _Aard Dictionary for Android issue tracker: http://github.com/aarddict/android/issues
 
 
 Release Notes
@@ -131,12 +131,14 @@ Release Notes
 1.1
 ---
 
-- Do not scan SD card automatically on initial application startup. 
+- Do not scan SD card automatically on initial application startup
+  (:android-issue:`1`). 
  
 - More lookup results are loaded as user scrolls ("More" button is
   removed). 
 
-- Fixed article view not properly updating on Next/Back navigation.
+- Fixed article view not properly updating on Next/Back navigation
+  (:android-issue:`3`).
   This was an issue only on Android 2.x: handling gestures breaks
   WebView, so swipe and long press gestures had to be removed. 
 
@@ -145,8 +147,8 @@ Release Notes
 - Don't set article text margin to zero in Wikipedia CSS, zero margin
   makes it less readable.
 
-- Preformatted text (<pre> elements) in articles was all hidden, now
-  fixed. This due to bug in WebKit's implementation of :empty
+- Preformatted text (``<pre>`` elements) in articles was all hidden, now
+  fixed. This due to bug in WebKit's implementation of ``:empty``
   pseudo-class.   
 
 - Allow moving the application to SD Card (Android 2.2)

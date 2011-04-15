@@ -15,13 +15,14 @@
 
 package aarddict.android;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 import aarddict.Article;
 import aarddict.Entry;
 
-final class HistoryItem {
+final class HistoryItem implements Serializable {
 	List<Entry> entries;
 	int 		entryIndex;
 	Article 	article;

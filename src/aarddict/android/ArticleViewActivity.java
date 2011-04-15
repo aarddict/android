@@ -683,12 +683,29 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
 
     @Override
     void onDictionaryServiceReady() {
-        Intent intent = getIntent();
-        String word = intent.getStringExtra("word");                
-        String section = intent.getStringExtra("section");
-        String volumeId = intent.getStringExtra("volumeId");
-        long articlePointer = intent.getLongExtra("articlePointer", -1);
-        dictionaryService.setPreferred(volumeId);
-        showArticle(volumeId, articlePointer, word, section);
+    	if (this.backItems.isEmpty()) {
+	        Intent intent = getIntent();
+	        String word = intent.getStringExtra("word");                
+	        String section = intent.getStringExtra("section");
+	        String volumeId = intent.getStringExtra("volumeId");
+	        long articlePointer = intent.getLongExtra("articlePointer", -1);
+	        dictionaryService.setPreferred(volumeId);
+	        showArticle(volumeId, articlePointer, word, section);
+    	}
+    	else {
+    		showCurrentArticle();    		
+    	}
     }
+    
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+    	super.onSaveInstanceState(outState);
+    	outState.putSerializable("backItems", new LinkedList<HistoryItem>(backItems));
+    }
+    
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+    	super.onRestoreInstanceState(savedInstanceState);
+    	backItems = Collections.synchronizedList((LinkedList)savedInstanceState.getSerializable("backItems"));    	
+    }	
 }

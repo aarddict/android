@@ -16,10 +16,11 @@
 package aarddict;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Map;
 import java.util.UUID;
 
-public final class Article {
+public final class Article implements Serializable {
 
     public UUID     dictionaryUUID;  
     public String   volumeId;

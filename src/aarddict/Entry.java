@@ -15,10 +15,12 @@
 
 package aarddict;
 
+import java.io.Serializable;
+
 /**
  * @author itkach
  */
-public final class Entry {
+public final class Entry implements Serializable {
 
     public String     title;
     public String     section;

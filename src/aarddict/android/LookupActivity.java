@@ -346,8 +346,14 @@ public final class LookupActivity extends BaseDictionaryActivity {
                             doLookup(textToLookup);
                         }
                     }
-                };                
-                timer.schedule(currentLookupTask, 600);
+                };
+                try {
+                	timer.schedule(currentLookupTask, 600);                	
+                }
+                catch(IllegalStateException e) {
+                	//this may happen if orientation changes while loading                	
+                	Log.d(TAG, "Failed to schedule lookup task", e);
+                }
             }
         };
         editText.addTextChangedListener(textWatcher);

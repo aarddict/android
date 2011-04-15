@@ -527,7 +527,13 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
         			});			
         		}
         	}; 
-        	timer.schedule(currentHideNextButtonTask, 1800);
+        	try {
+        		timer.schedule(currentHideNextButtonTask, 1800);        		
+        	}
+        	catch (IllegalStateException e) {
+            	//this may happen if orientation changes while users touches screen               	
+            	Log.d(TAG, "Failed to schedule \"Next\" button hide", e);        		
+        	}
         }        
         else {
         	nextButton.setVisibility(View.GONE);

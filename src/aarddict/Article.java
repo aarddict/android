@@ -72,7 +72,7 @@ public final class Article {
         return this.redirect != null;
     }
     
-    public boolean eqalsIgnoreSection(Article other) {
+    public boolean equalsIgnoreSection(Article other) {
         return volumeId.equals(other.volumeId) && pointer == other.pointer;
     }
     

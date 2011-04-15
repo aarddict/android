@@ -293,7 +293,7 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
             HistoryItem prev = backItems.get(backItems.size() - 1);
             
             Article prevArticle = prev.article; 
-            if (prevArticle.eqalsIgnoreSection(current.article)) {
+            if (prevArticle.equalsIgnoreSection(current.article)) {
             	resetTitleToCurrent();
             	if (!prevArticle.sectionEquals(current.article)) { 
             	    goToSection(prevArticle.section);
@@ -447,7 +447,7 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
 			        
 			        if (oldCurrent != null) {
 			        	HistoryItem newCurrent = item;
-			            if (newCurrent.article.eqalsIgnoreSection(oldCurrent.article)) {
+			            if (newCurrent.article.equalsIgnoreSection(oldCurrent.article)) {
 			                
 			            	final String section = oldCurrent.article.sectionEquals(newCurrent.article) ? null : newCurrent.article.section;
 			            	

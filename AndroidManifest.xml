@@ -21,13 +21,16 @@
             </intent-filter>                			  	
     	</activity>
     			 
-        <activity android:name=".LookupActivity">
+        <activity android:name=".LookupActivity" 
+            android:configChanges="orientation">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>                        
         </activity>
-        <activity android:name=".ArticleViewActivity"/>        
+        
+        <activity android:name=".ArticleViewActivity" 
+            android:configChanges="orientation"/>        
                 
         <activity android:name=".DictionaryInfoActivity"/>                      
         <service android:name=".DictionaryService">        

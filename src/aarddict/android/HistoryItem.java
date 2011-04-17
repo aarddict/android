@@ -26,7 +26,7 @@ final class HistoryItem implements Serializable {
 	List<Entry> entries;
 	int 		entryIndex;
 	Article 	article;
-
+	
 	HistoryItem(Entry entry) {
 		this.entries = new ArrayList<Entry>();
 		this.entries.add(entry);
@@ -57,5 +57,5 @@ final class HistoryItem implements Serializable {
 	
 	Entry current() {
 		return entries.get(entryIndex);
-	}
+	}	
 }

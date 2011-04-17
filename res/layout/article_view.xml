@@ -10,7 +10,7 @@
 		android:orientation="vertical"
 		android:layout_width="fill_parent" 
 		android:layout_height="fill_parent">
-		<android.webkit.WebView
+		<aarddict.android.ArticleView
 			android:id="@+id/ArticleView" 
 			android:layout_width="fill_parent"
 			android:layout_height="fill_parent" 

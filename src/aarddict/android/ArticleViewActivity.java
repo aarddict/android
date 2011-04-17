@@ -21,9 +21,11 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -47,6 +49,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
+import android.view.Surface;
 import android.view.View;
 import android.view.Window;
 import android.view.animation.AlphaAnimation;
@@ -64,7 +67,7 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
 
     private final static String TAG = ArticleViewActivity.class.getName();
     
-    private WebView             articleView;
+    private ArticleView         articleView;
     private String              sharedCSS;
     private String              mediawikiSharedCSS;
     private String              mediawikiMonobookCSS;
@@ -77,6 +80,11 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
     private AlphaAnimation 		fadeOutAnimation;
     private boolean 			useAnimation = false;        
     
+	private Map<Article, ScrollXY> scrollPositionsH;
+	private Map<Article, ScrollXY> scrollPositionsV;
+	private boolean                saveScrollPos = true;
+    
+    
     static class AnimationAdapter implements AnimationListener {
 		public void onAnimationEnd(Animation animation) {}
 		public void onAnimationRepeat(Animation animation) {}
@@ -85,7 +93,8 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
     
     @Override
     void initUI() {
-
+    	this.scrollPositionsH = Collections.synchronizedMap(new HashMap<Article, ScrollXY>());
+    	this.scrollPositionsV = Collections.synchronizedMap(new HashMap<Article, ScrollXY>());
         loadAssets();                
         
         //Animation is broken before 2.1 - animation listener notified,
@@ -115,12 +124,18 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
         
         getWindow().requestFeature(Window.FEATURE_PROGRESS);        
         setContentView(R.layout.article_view);                                
-        articleView = (WebView)findViewById(R.id.ArticleView);    
+        articleView = (ArticleView)findViewById(R.id.ArticleView);    
+        
+        articleView.setOnScrollListener(new ArticleView.ScrollListener(){
+			public void onScroll(int l, int t, int oldl, int oldt) {
+				saveScrollPos(l, t);
+			}        	
+        });
         
         articleView.getSettings().setJavaScriptEnabled(true);
         
         articleView.addJavascriptInterface(new SectionMatcher(), "matcher");
-        
+                                
         articleView.setWebChromeClient(new WebChromeClient(){
             
             @Override
@@ -136,7 +151,7 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
                 setProgress(5000 + newProgress * 50);                
             }
         });
-                       
+                            
         articleView.setWebViewClient(new WebViewClient() {
                     	        	
             @Override
@@ -144,7 +159,7 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
                 Log.d(TAG, "Page finished: " + url);
                 currentTask = null;
                 String section = null;
-                                
+                                                
                 if (url.contains("#")) {
                 	LookupWord lookupWord = LookupWord.splitWord(url);                    
                     section = lookupWord.section;
@@ -159,8 +174,9 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
                     Article current = backItems.get(backItems.size() - 1).article;
                     section = current.section;
                 }
-                
-                goToSection(section);                
+                if (!restoreScrollPos()) {
+                	goToSection(section);
+                }
             }
             
             @Override
@@ -239,10 +255,21 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
         setProgressBarVisibility(true);
     }
 
+    private void scrollTo(ScrollXY s) {
+    	scrollTo(s.x, s.y);
+    }
+    
+    private void scrollTo(int x, int y) {
+    	saveScrollPos = false; 
+    	Log.d(TAG, "Scroll to " + x + ", " + y);
+    	articleView.scrollTo(x, y);
+    	saveScrollPos = true;
+    }
+    
     private void goToSection(String section) {
     	Log.d(TAG, "Go to section " + section);
     	if (section == null || section.trim().equals("")) {
-    		articleView.scrollTo(0, 0);
+    		scrollTo(0, 0);
     	}
     	else {
     		articleView.loadUrl(String.format("javascript:scrollToMatch(\"%s\")", section));
@@ -295,8 +322,8 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
             Article prevArticle = prev.article; 
             if (prevArticle.equalsIgnoreSection(current.article)) {
             	resetTitleToCurrent();
-            	if (!prevArticle.sectionEquals(current.article)) { 
-            	    goToSection(prevArticle.section);
+            	if (!prevArticle.sectionEquals(current.article) && !restoreScrollPos()) {
+            		goToSection(prevArticle.section);
             	}
             }   
             else {
@@ -407,7 +434,53 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
         }        
         showNext(new HistoryItem(result));
     }    
-        
+
+    private Map<Article, ScrollXY> getScrollPositions() {
+		int orientation = getWindowManager().getDefaultDisplay().getOrientation();
+		switch (orientation) {
+			case Surface.ROTATION_0:
+			case Surface.ROTATION_180:
+				return scrollPositionsV;
+			default:
+				return scrollPositionsH;
+		}
+    }
+    
+    private void saveScrollPos(int x, int y) {
+    	if (!saveScrollPos) {
+    		//Log.d(TAG, "Not saving scroll position (disabled)");
+    		return;
+    	}
+    	if (backItems.size() > 0) {
+	    	Article a = backItems.get(backItems.size() - 1).article;
+	    	Map<Article, ScrollXY> positions = getScrollPositions();
+	    	ScrollXY s = positions.get(a);
+	    	if (s == null) {
+		    	s = new ScrollXY(x, y);
+		    	positions.put(a, s);
+	    	}
+	    	else {
+	    		s.x = x;
+	    		s.y = y;
+	    	}
+	    	//Log.d(TAG, String.format("Saving scroll position %s for %s", s, a.title));
+	    	getScrollPositions().put(a, s);    	
+    	}
+    }
+    
+    private boolean restoreScrollPos() {
+    	if (backItems.size() > 0) { 
+	    	Article a = backItems.get(backItems.size() - 1).article;    	
+	    	ScrollXY s = getScrollPositions().get(a);
+	    	if (s == null) {
+	    		return false;
+	    	}
+	    	scrollTo(s);
+	    	return true;
+    	}
+    	return false;
+    }
+    
     private void showNext(HistoryItem item_) {
     	final HistoryItem item = new HistoryItem(item_);
     	final Entry entry = item.next();
@@ -454,8 +527,9 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
 			            	runOnUiThread(new Runnable() {								
 								public void run() {
 									resetTitleToCurrent();
-									if (section != null)
+									if (section != null) {
 									    goToSection(section);
+									}
 									setProgress(10000);
 									currentTask = null;
 								}
@@ -678,7 +752,10 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
     @Override
     protected void onDestroy() {
     	super.onDestroy();
-    	timer.cancel();    	
+    	timer.cancel();
+    	scrollPositionsH.clear();
+    	scrollPositionsV.clear();
+    	backItems.clear();
     }
 
     @Override
@@ -695,17 +772,23 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
     	else {
     		showCurrentArticle();    		
     	}
-    }
+    }    
     
+    @SuppressWarnings("unchecked")
     @Override
     protected void onSaveInstanceState(Bundle outState) {
     	super.onSaveInstanceState(outState);
-    	outState.putSerializable("backItems", new LinkedList<HistoryItem>(backItems));
+    	outState.putSerializable("backItems", new LinkedList(backItems));
+    	outState.putSerializable("scrollPositionsH", new HashMap(scrollPositionsH));
+    	outState.putSerializable("scrollPositionsV", new HashMap(scrollPositionsV));    	
     }
     
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
     	super.onRestoreInstanceState(savedInstanceState);
-    	backItems = Collections.synchronizedList((LinkedList)savedInstanceState.getSerializable("backItems"));    	
+    	backItems = Collections.synchronizedList((LinkedList)savedInstanceState.getSerializable("backItems"));
+    	scrollPositionsH = Collections.synchronizedMap((Map)savedInstanceState.getSerializable("scrollPositionsH"));
+    	scrollPositionsV = Collections.synchronizedMap((Map)savedInstanceState.getSerializable("scrollPositionsV"));
     }	
 }

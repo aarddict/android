@@ -125,8 +125,23 @@ Dictionary for Android issue tracker`_.
 .. _Aard Dictionary for Android issue tracker: http://github.com/aarddict/android/issues
 
 
-Release Notes
-=============
+Changes
+=======
+
+1.2
+---
+
+- Save/restore current article and history on orientation change
+  (:android-issue:`8`) 
+
+- Keep article scroll positions (:android-issue:`11`)
+
+- Don't crash in lookup view on orientation change during dictionary
+  load (:android-issue:`15`)
+
+- Don't crash in article view on orientation change during view touch (when
+  there is next article) (:android-issue:`16`)
+
 
 1.1
 ---

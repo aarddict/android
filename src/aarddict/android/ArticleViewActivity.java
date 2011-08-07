@@ -787,7 +787,7 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
 	@Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
     	super.onRestoreInstanceState(savedInstanceState);
-    	backItems = Collections.synchronizedList((LinkedList)savedInstanceState.getSerializable("backItems"));
+    	backItems = Collections.synchronizedList((List)savedInstanceState.getSerializable("backItems"));
     	scrollPositionsH = Collections.synchronizedMap((Map)savedInstanceState.getSerializable("scrollPositionsH"));
     	scrollPositionsV = Collections.synchronizedMap((Map)savedInstanceState.getSerializable("scrollPositionsV"));
     }	

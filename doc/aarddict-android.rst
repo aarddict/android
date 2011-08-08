@@ -128,6 +128,12 @@ Dictionary for Android issue tracker`_.
 Changes
 =======
 
+1.2.1
+-----
+
+- Fix crash an article view state restore (:android-issue:`19`)
+
+
 1.2
 ---
 

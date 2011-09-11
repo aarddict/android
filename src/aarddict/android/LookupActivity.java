@@ -113,7 +113,8 @@ public final class LookupActivity extends BaseDictionaryActivity {
     private void doLookup(CharSequence word) {
         if (dictionaryService == null)
             return;
-        if (word.toString().equals("")) {
+        word = trimLeft(word.toString());
+        if (word.equals("")) {
         	Log.d(TAG, "Nothing to look up");
         	updateWordListUI(empty);
         	return;
@@ -370,5 +371,9 @@ public final class LookupActivity extends BaseDictionaryActivity {
             }
         });  
         
-    }    
+    }
+    
+    static String trimLeft(String s) {
+        return s.replaceAll("^\\s+", "");
+    }
 }

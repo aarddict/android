@@ -2,8 +2,8 @@
 <resources>
     
     <string name="appName">Аардик</string>
-    <string name="titleLookupActivity">%s - %s</string>
-    <string name="shortDictInfo">%s, %s, %s открыто</string>
+    <string name="titleLookupActivity">%1$s - %2$s</string>
+    <string name="shortDictInfo">%1$s, %2$s, %3$s открыто</string>
     <plurals name="dictionaries">
         <item quantity="one">%d словарь</item>
         <item quantity="few">%d словаря</item>
@@ -34,7 +34,7 @@
     
     <string name="about">    
         <![CDATA[
-        <big>%s %s</big>
+        <big>%1$s %2$s</big>
         <p>(C) 2011 Игорь Ткач</p>
         <p><a href="http://aarddict.org">http://aarddict.org</a></p>
         ]]>    
@@ -62,7 +62,7 @@
 	<string name="mnDictVerify">Проверить</string>
 	<string name="mnDictRefresh">Сканировать SD карточку</string>
 
-    <string name="titleArticleViewActivity">%s - %s</string>
+    <string name="titleArticleViewActivity">%1$s - %2$s</string>
     
     <string name="btnDismiss">Закрыть</string>
     <string name="btnCancel">Отменить</string>
@@ -72,9 +72,9 @@
     <string name="msgTooManyRedirects">Слишком много перенаправлений для статьи \"%s\"</string>
     <string name="msgErrorLoadingArticle">Ошибка при загрузке статьи \"%s\"</string>
     
-    <string name="msgDataIntegrityVerified">%s\nЦелостность данных проверена %s: %s</string>
+    <string name="msgDataIntegrityVerified">%1$s\nЦелостность данных проверена %2$s: %3$s</string>
     <string name="msgDataIntegrityNotVerified">%s\nЦелостность данных не проверена</string>
-    <string name="msgErrorVerifying">Ошибка при проверке целостности данных %s: %s</string>
+    <string name="msgErrorVerifying">Ошибка при проверке целостности данных %1$s: %2$s</string>
     <string name="msgDictCorruped">%s испорчен</string>    
     <string name="msgDictOk">%s в порядке</string>
     

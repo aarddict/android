@@ -2,8 +2,8 @@
 <resources>
     
     <string name="appName">Aard Dictionary</string>
-    <string name="titleLookupActivity">%s - %s</string>
-    <string name="shortDictInfo">%s 在 %s, %s 打开</string>
+    <string name="titleLookupActivity">%1$s - %2$s</string>
+    <string name="shortDictInfo">%1$s 在 %2$s, %3$s 打开</string>
     <plurals name="dictionaries">
         <item quantity="one">%d 个词典</item>
         <item quantity="other">%d 个词典</item>        
@@ -30,7 +30,7 @@
     
     <string name="about">    
         
-        &lt;big&gt;%s %s&lt;/big&gt;
+        &lt;big&gt;%1$s %2$s&lt;/big&gt;
         &lt;p&gt;(C) 2011 Igor Tkach&lt;/p&gt;
         &lt;p&gt;&lt;a href="http://aarddict.org"&gt;http://aarddict.org&lt;/a&gt;&lt;/p&gt;
             
@@ -57,7 +57,7 @@
 	<string name="mnDictVerify">校验</string>
 	<string name="mnDictRefresh">扫描SD卡</string>
 
-    <string name="titleArticleViewActivity">%s - %s</string>
+    <string name="titleArticleViewActivity">%1$s - %2$s</string>
     
     <string name="btnDismiss">忽略</string>
     <string name="btnCancel">取消</string>
@@ -67,9 +67,9 @@
     <string name="msgTooManyRedirects">太多的重定向到 \"%s\"</string>
     <string name="msgErrorLoadingArticle">加载文章 \"%s\" 时出错</string>
     
-    <string name="msgDataIntegrityVerified">%s\n数据完整性校验 %s: %s</string>
+    <string name="msgDataIntegrityVerified">%1$s\n数据完整性校验 %2$s: %3$s</string>
     <string name="msgDataIntegrityNotVerified">%s\n未校验数据完整性</string>
-    <string name="msgErrorVerifying">校验时遇到错误 %s: %s</string>
+    <string name="msgErrorVerifying">校验时遇到错误 %1$s: %2$s</string>
     <string name="msgDictCorruped">%s 已损坏</string>    
     <string name="msgDictOk">%s 是良好的</string>
     

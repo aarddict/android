@@ -55,14 +55,22 @@ the `Next` button.
 Use device's `Back` button to go back (to previous article, or, if
 there is no previous article, to `Lookup` activity screen). Use
 device's `Search` button to close `Article View` activity screen and
-go straight to `Lookup Activity`.
+go straight to `Lookup Activity`. If `Article View` was launched from
+another application, closing `Article View` will return user to that
+application instead.
 
-Use device's volume control buttons or `Zoom In` and `Zoom Out` menu
-items in `Article View` activity to adjust article's text size. Use
-`View Online` menu item to see online version of current article in
-the web browser (this only works if dictionary's metadata includes
-server URL as is usually the case with Wikipedia, Wiktionary,
-Wikiquote and such).
+Use `Zoom In` and `Zoom Out` menu items in `Article View` activity to
+adjust article's text size. 
+
+Use device's volume control buttons to scroll article text and to
+navigate to next/previous article. Volume down button will navigate to
+the next article when article is already scrolled to the
+bottom. Similarly, volume up button will navigate back when at the top.
+
+Use `View Online` menu item to see online
+version of current article in the web browser (this only works if
+dictionary's metadata includes server URL as is usually the case with
+Wikipedia, Wiktionary, Wikiquote and such).
 
 View list of currently open dictionaries by opening menu in `Lookup`
 activity and tapping `Dictionaries`. 
@@ -103,6 +111,7 @@ new dictionaries. Select `Scan SD Card` menu item in `Dictionaries` to
 do this. Alternatively, new dictionaries can be opened from a file
 manager.
 
+
 Contributors
 ============
 
@@ -128,10 +137,24 @@ Dictionary for Android issue tracker`_.
 Changes
 =======
 
+1.3.0
+-----
+
+- Use volume up/down to scroll article text and to navigate to
+  next/previous article (:android-issue:`20`)
+
+- Explicitly declare large screen support so that UI is stretched on
+  tables instead of zoomed (:android-issue:`21`)
+
+- Ignore leading white space in entered lookup text.
+
+- Add activities to allow external applications to initiate a lookup
+  or view an article.
+
 1.2.1
 -----
 
-- Fix crash an article view state restore (:android-issue:`19`)
+- Fix crash on article view state restore (:android-issue:`19`)
 
 
 1.2

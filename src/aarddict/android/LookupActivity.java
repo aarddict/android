@@ -56,7 +56,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.TwoLineListItem;
 
-public final class LookupActivity extends BaseDictionaryActivity {
+public class LookupActivity extends BaseDictionaryActivity {
     
     private final static String TAG     = LookupActivity.class.getName();
     
@@ -125,7 +125,7 @@ public final class LookupActivity extends BaseDictionaryActivity {
             Iterator<Entry> results = dictionaryService.lookup(word);
             Log.d(TAG, "Looked up " + word + " in "
                     + (System.currentTimeMillis() - t0));
-            updateWordListUI(results);            
+            updateWordListUI(results);
         } catch (Exception e) {
             StringBuilder msgBuilder = new StringBuilder(
                     "There was an error while looking up ").append("\"")
@@ -140,7 +140,7 @@ public final class LookupActivity extends BaseDictionaryActivity {
     
     private void launchWord(Entry theWord) {
         Intent next = new Intent();
-        next.setClass(this, ArticleViewActivity.class);                       
+        next.setClass(this, ArticleViewActivity.class);
         next.putExtra("word", theWord.title);        
         next.putExtra("section", theWord.section);
         next.putExtra("volumeId", theWord.volumeId);
@@ -303,7 +303,21 @@ public final class LookupActivity extends BaseDictionaryActivity {
     @Override
     void onDictionaryServiceReady() {    	
     	updateTitle();
-    	textWatcher.afterTextChanged(editText.getText());
+    	Intent intent = getIntent();
+        if (intent != null && intent.getAction() != null && intent.getAction().equals(Intent.ACTION_SEARCH)) {
+            final String word = intent.getStringExtra("query");
+            editText.setText(word);
+            timer.schedule(new TimerTask() {                    
+                @Override
+                public void run() {
+                    Log.d(TAG, "running lookup task for " + word + " in " + Thread.currentThread());
+                        doLookup(word);
+                }
+                }, 0);
+        }
+        else {            
+            textWatcher.afterTextChanged(editText.getText());
+        }
     }
     
     @Override

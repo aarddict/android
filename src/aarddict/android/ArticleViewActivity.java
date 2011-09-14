@@ -63,7 +63,7 @@ import android.widget.Button;
 import android.widget.Toast;
 
 
-public final class ArticleViewActivity extends BaseDictionaryActivity {
+public class ArticleViewActivity extends BaseDictionaryActivity {
 
     private final static String TAG = ArticleViewActivity.class.getName();
     
@@ -430,16 +430,19 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
         Log.d(TAG, "word: " + word);
         Log.d(TAG, "dictionaryId: " + volumeId);
         Log.d(TAG, "articlePointer: " + articlePointer);
-        Log.d(TAG, "section: " + section);                
+        Log.d(TAG, "section: " + section);                       
         Volume d = dictionaryService.getVolume(volumeId);        
         Entry entry = new Entry(d.getId(), word, articlePointer);
-        entry.section = section;
-        
+        entry.section = section;        
+        this.showArticle(entry);
+    }
+    
+    private void showArticle(Entry entry) {        
         List<Entry> result = new ArrayList<Entry>();
         result.add(entry);
         
         try {
-            Iterator<Entry> currentIterator = dictionaryService.followLink(word, volumeId);            
+            Iterator<Entry> currentIterator = dictionaryService.followLink(entry.title, entry.volumeId);            
             while (currentIterator.hasNext() && result.size() < 20) {
                 Entry next = currentIterator.next();
                 if (!next.equals(entry)) {
@@ -505,7 +508,7 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
     	runOnUiThread(new Runnable() {
 			public void run() {
 				setTitle(item);
-				setProgress(500);
+				setProgress(1000);
 			}
 		});    	
     	currentTask = new TimerTask() {
@@ -779,13 +782,48 @@ public final class ArticleViewActivity extends BaseDictionaryActivity {
     @Override
     void onDictionaryServiceReady() {
     	if (this.backItems.isEmpty()) {
-	        Intent intent = getIntent();
-	        String word = intent.getStringExtra("word");                
-	        String section = intent.getStringExtra("section");
-	        String volumeId = intent.getStringExtra("volumeId");
-	        long articlePointer = intent.getLongExtra("articlePointer", -1);
-	        dictionaryService.setPreferred(volumeId);
-	        showArticle(volumeId, articlePointer, word, section);
+	        final Intent intent = getIntent();	        
+	        if (intent != null && intent.getAction() != null && intent.getAction().equals(Intent.ACTION_SEARCH)) {
+	            final String word = intent.getStringExtra("query");
+	            
+	            if (currentTask != null) {
+	                currentTask.cancel();	                
+	            }
+	            
+	            currentTask = new TimerTask() {                    
+                    @Override
+                    public void run() {
+                        setProgress(500);                                      
+                        Log.d(TAG, "intent.getDataString(): " + intent.getDataString());
+                        Iterator<Entry> results = dictionaryService.lookup(word);
+                        Log.d(TAG, "Looked up " + word );
+                        if (results.hasNext()) {
+                            currentTask = null;
+                            Entry entry = results.next();
+                            showArticle(entry);
+                        }
+                        else {
+                            showMessage(getString(R.string.msgArticleNotFound, word));
+                        }
+                    }
+                };
+	            
+                try {
+                    timer.schedule(currentTask, 0);
+                }
+                catch (Exception e) {
+                    Log.d(TAG, "Failed to schedule task", e);
+                    showError(getString(R.string.msgErrorLoadingArticle, word));
+                }	            
+	        }
+	        else {
+	            String word = intent.getStringExtra("word");                
+	            String section = intent.getStringExtra("section");	        
+	            String volumeId = intent.getStringExtra("volumeId");
+	            long articlePointer = intent.getLongExtra("articlePointer", -1);
+	            dictionaryService.setPreferred(volumeId);
+	            showArticle(volumeId, articlePointer, word, section);
+	        }
     	}
     	else {
     		showCurrentArticle();    		

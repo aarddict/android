@@ -31,12 +31,32 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>                        
+            </intent-filter>
         </activity>
         
         <activity android:name=".ArticleViewActivity" 
-            android:configChanges="orientation"/>        
-                
+            android:configChanges="orientation">
+        </activity>
+
+
+        <activity android:name=".Lookup" 
+            android:configChanges="orientation" 
+            android:excludeFromRecents="true"
+            android:taskAffinity="aarddict.external">
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+            </intent-filter>                                                                        
+        </activity>
+        
+        <activity android:name=".Article" 
+            android:configChanges="orientation"
+            android:excludeFromRecents="true"
+            android:taskAffinity="aarddict.external">            
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+            </intent-filter>                                                            
+        </activity>
+                         
         <activity android:name=".DictionaryInfoActivity"/>                      
         <service android:name=".DictionaryService">        
         </service>

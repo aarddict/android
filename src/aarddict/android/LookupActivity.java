@@ -307,13 +307,19 @@ public class LookupActivity extends BaseDictionaryActivity {
         if (intent != null && intent.getAction() != null && intent.getAction().equals(Intent.ACTION_SEARCH)) {
             final String word = intent.getStringExtra("query");
             editText.setText(word);
-            timer.schedule(new TimerTask() {                    
-                @Override
-                public void run() {
-                    Log.d(TAG, "running lookup task for " + word + " in " + Thread.currentThread());
+
+            try {
+                timer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        Log.d(TAG, "running lookup task for " + word + " in " + Thread.currentThread());
                         doLookup(word);
-                }
+                    }
                 }, 0);
+            }
+            catch(IllegalStateException e) {
+                Log.e(TAG, "Failed to schedule lookup task", e);
+            }
         }
         else {            
             textWatcher.afterTextChanged(editText.getText());

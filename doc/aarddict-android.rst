@@ -151,6 +151,9 @@ Changes
 - Add activities to allow external applications to initiate a lookup
   or view an article.
 
+- Reduce application size
+
+
 1.2.1
 -----
 

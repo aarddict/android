@@ -146,12 +146,12 @@ Changes
 - Explicitly declare large screen support so that UI is stretched on
   tables instead of zoomed (:android-issue:`21`)
 
-- Ignore leading white space in entered lookup text.
+- Reduce application size (:android-issue:`23`)
+
+- Ignore leading white space in entered lookup text (:android-issue:`24`)
 
 - Add activities to allow external applications to initiate a lookup
-  or view an article.
-
-- Reduce application size
+  or view an article (:android-issue:`25`)
 
 
 1.2.1

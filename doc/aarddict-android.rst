@@ -144,7 +144,7 @@ Changes
   next/previous article (:android-issue:`20`)
 
 - Explicitly declare large screen support so that UI is stretched on
-  tables instead of zoomed (:android-issue:`21`)
+  tablets instead of zoomed (:android-issue:`21`)
 
 - Reduce application size (:android-issue:`23`)
 

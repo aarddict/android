@@ -137,7 +137,7 @@ Dictionary for Android issue tracker`_.
 Changes
 =======
 
-1.3.0
+1.3
 -----
 
 - Use volume up/down to scroll article text and to navigate to

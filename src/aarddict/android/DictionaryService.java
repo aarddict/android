@@ -112,21 +112,21 @@ public final class DictionaryService extends Service {
 	}
 
 	@Override
-	public void onStart(Intent intent, int startId) {		
-      String action = intent.getAction();
-      if (action != null && action.equals(Intent.ACTION_VIEW)) {
-          final Uri data = intent.getData();
-          Log.d(TAG, "Path: " + data.getPath());              
-          if (data != null && data.getPath() != null) {
-              Runnable r = new Runnable() {                   
-                  public void run() {
-                      Log.d(TAG, "opening: " + data.getPath());
-                      open(new File(data.getPath()));                       
-                  }
-              };
-              new Thread(r).start();                  
-          }
-      }        
+	public void onStart(Intent intent, int startId) {
+		String action = intent.getAction();
+		if (action != null && action.equals(Intent.ACTION_VIEW)) {
+			final Uri data = intent.getData();
+			Log.d(TAG, "Path: " + data.getPath());              
+			if (data != null && data.getPath() != null) {
+				Runnable r = new Runnable() {                   
+					public void run() {
+						Log.d(TAG, "opening: " + data.getPath());
+						open(new File(data.getPath()));                       
+					}
+				};
+				new Thread(r).start();                  
+			}
+		}        
 	}
 		
 	synchronized public void openDictionaries() {

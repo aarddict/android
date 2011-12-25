@@ -113,7 +113,7 @@ public final class DictionaryService extends Service {
 
 	@Override
 	public void onStart(Intent intent, int startId) {
-		String action = intent.getAction();
+		String action = intent == null ? null : intent.getAction();
 		if (action != null && action.equals(Intent.ACTION_VIEW)) {
 			final Uri data = intent.getData();
 			Log.d(TAG, "Path: " + data.getPath());              

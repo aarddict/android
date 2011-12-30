@@ -137,7 +137,14 @@ Dictionary for Android issue tracker`_.
 Changes
 =======
 
-1.3
+1.3.1
+-----
+
+- Fix crash on Android 4.0 when swiping out from list of recent apps
+  (:android-issue:`26`) 
+
+
+1.3.0
 -----
 
 - Use volume up/down to scroll article text and to navigate to

@@ -45,10 +45,9 @@ public class EinkArticleView extends ArticleView {
 
     public boolean pageDown(boolean bottom) {
     	int cury = articleView.getScrollY();
-        int hmax = articleView.getContentHeight() - HSCROLL_SIZE;
-        if (hmax < 0) {
-          hmax = 0;
-        }
+    	int hmax = 0;
+    	if (HSCROLL_SIZE < articleView.getContentHeight() )
+    		hmax = (int) (articleView.getContentHeight() * articleView.getScale()) - HSCROLL_SIZE; 
         if (cury == hmax) { return false; }        
         int newy = cury + HSCROLL_SIZE;
         if (newy > hmax) {

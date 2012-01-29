@@ -36,6 +36,7 @@ import aarddict.LookupWord;
 import aarddict.RedirectTooManyLevels;
 import aarddict.Volume;
 import android.app.AlertDialog;
+import android.app.SearchManager;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -377,9 +378,17 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
     		showNext(current);
     	}
     }
-    
+
     @Override
     public boolean onSearchRequested() {
+        Intent intent = getIntent();
+        if (intent != null && intent.getAction() != null && intent.getAction().equals(Intent.ACTION_SEARCH)) {
+	    	Intent next = new Intent();
+	        next.setClass(this, LookupActivity.class);
+	    	next.setAction(Intent.ACTION_SEARCH);
+	      	next.putExtra(SearchManager.QUERY, intent.getStringExtra("query"));
+	      	startActivity(next);
+        }
         finish();
         return true;
     }

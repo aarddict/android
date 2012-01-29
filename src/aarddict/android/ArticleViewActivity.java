@@ -833,7 +833,7 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
                             showArticle(entry);
                         }
                         else {
-                            showMessage(getString(R.string.msgArticleNotFound, word));
+                        	onSearchRequested();
                         }
                     }
                 };

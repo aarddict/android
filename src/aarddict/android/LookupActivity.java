@@ -31,6 +31,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Resources;
+import android.graphics.Color;
 import android.text.Editable;
 import android.text.Html;
 import android.text.InputType;
@@ -39,10 +40,12 @@ import android.text.TextWatcher;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnKeyListener;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
@@ -217,8 +220,13 @@ public class LookupActivity extends BaseDictionaryActivity {
         }        
         
         private TwoLineListItem createView(ViewGroup parent) {
-            TwoLineListItem item = (TwoLineListItem) mInflater.inflate(
-                    android.R.layout.simple_list_item_2, parent, false);
+        	TwoLineListItem item;
+        	if (DeviceInfo.EINK_SCREEN)
+        		item = (TwoLineListItem) mInflater.inflate(
+                        R.layout.eink_simple_list_item_2, parent, false);
+        	else
+                item = (TwoLineListItem) mInflater.inflate(
+                        android.R.layout.simple_list_item_2, parent, false);
             item.getText2().setSingleLine();
             item.getText2().setEllipsize(TextUtils.TruncateAt.END);
             return item;
@@ -335,13 +343,21 @@ public class LookupActivity extends BaseDictionaryActivity {
     void initUI() {
         getWindow().requestFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         
-        setContentView(R.layout.lookup);
+        if (DeviceInfo.EINK_SCREEN)
+        {
+        	setContentView(R.layout.eink_lookup);
+            listView = (ListView)findViewById(R.id.einkLookupResult);
+        }
+        else
+        {
+        	setContentView(R.layout.lookup);
+            listView = (ListView)findViewById(R.id.lookupResult);
+        }
         
         timer = new Timer();
                                                              
-        listView = (ListView)findViewById(R.id.lookupResult);
-                
         editText = (EditText)findViewById(R.id.wordInput);
+                        
         textWatcher = new TextWatcher() {
             
             TimerTask currentLookupTask;
@@ -378,7 +394,18 @@ public class LookupActivity extends BaseDictionaryActivity {
             }
         };
         editText.addTextChangedListener(textWatcher);
-                
+        
+        editText.setOnKeyListener(new OnKeyListener() {
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+            	 if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
+            		 InputMethodManager inputManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            		 inputManager.hideSoftInputFromWindow(editText.getApplicationWindowToken(), 0);
+            		 return true;
+            	 }
+            	 return false;
+            }
+        });        
+
         editText.setInputType(InputType.TYPE_CLASS_TEXT);
                 
         Button btnClear = (Button)findViewById(R.id.clearButton);

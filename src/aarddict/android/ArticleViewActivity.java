@@ -393,6 +393,15 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
         return true;
     }
     
+    public boolean onKeyLongPress(int keyCode, KeyEvent event) {
+    	if (keyCode == KeyEvent.KEYCODE_SEARCH){
+    		finish();
+    		return true;
+    	}
+    	return super.onKeyLongPress(keyCode, event);
+    }
+
+    
     final static int MENU_VIEW_ONLINE = 1;
     final static int MENU_NEW_LOOKUP = 2;
     final static int MENU_ZOOM_IN = 3;

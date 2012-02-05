@@ -31,7 +31,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Resources;
-import android.graphics.Color;
+import android.net.Uri;
 import android.text.Editable;
 import android.text.Html;
 import android.text.InputType;
@@ -53,6 +53,7 @@ import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -295,10 +296,29 @@ public class LookupActivity extends BaseDictionaryActivity {
         textView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.FILL_PARENT));
         textView.setMovementMethod(LinkMovementMethod.getInstance());
         textView.setText(Html.fromHtml(getString(R.string.about, getString(R.string.appName), versionName)));
+
+        ImageView btnFlattr = new ImageView(this);
+        btnFlattr.setImageResource(R.drawable.flattr);
+        btnFlattr.setPadding(5, 5, 5, 5);
+        btnFlattr.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, 
+        												ViewGroup.LayoutParams.WRAP_CONTENT));
+        btnFlattr.setOnClickListener(new View.OnClickListener() {			
+			public void onClick(View v) {
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, 
+                        Uri.parse(getString(R.string.flattrUrl))); 
+                startActivity(browserIntent);
+			}
+		});
+        
+        LinearLayout textViewLayout = new LinearLayout(this);
+        textViewLayout.setOrientation(LinearLayout.VERTICAL);
+        textViewLayout.setPadding(0, 0, 0, 10);
+        textViewLayout.addView(textView);      
+        textViewLayout.addView(btnFlattr);
         
         layout.addView(logo);
-        layout.addView(textView);
-		
+        layout.addView(textViewLayout);
+        
 		AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
         dialogBuilder.setTitle(R.string.titleAbout).setView(layout).setNeutralButton(R.string.btnDismiss, new OnClickListener() {            
             public void onClick(DialogInterface dialog, int which) {

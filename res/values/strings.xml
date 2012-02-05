@@ -31,9 +31,13 @@
     <string name="about">    
         <![CDATA[
         <big>%1$s %2$s</big>
-        <p>(C) 2011 Igor Tkach</p>
+        <p>(C) 2012 Igor Tkach and contributors</p>
         <p><a href="http://aarddict.org">http://aarddict.org</a></p>
         ]]>    
+    </string>
+    
+    <string name="flattrUrl">
+        <![CDATA[https://flattr.com/submit/auto?user_id=aarddict&url=http://aarddict.org]]>
     </string>
     
     <string name="titleAbout">About</string>

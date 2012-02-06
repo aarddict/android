@@ -16,6 +16,8 @@
 package aarddict;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public final class Header {
@@ -34,6 +36,11 @@ public final class Header {
     public final String articleLengthFormat;
     public final long   index1Offset;
     public final long   index2Offset;
+    public final int    index1ItemSize;
+    public final char   keyPointerSpec;
+    public final char   articlePointerSpec;
+    public final char   keyLengthSpec;
+    public final char   articleLengthSpec;
 
     Header(RandomAccessFile file) throws IOException {
         int specLen = 0;
@@ -69,11 +76,44 @@ public final class Header {
 
         this.keyLengthFormat = file.readUTF8(2);
         specLen += 2;
+        this.keyLengthSpec = this.keyLengthFormat.charAt(1);
 
         this.articleLengthFormat = file.readUTF8(2);
         specLen += 2;
-
+        this.articleLengthSpec = this.articleLengthFormat.charAt(1);
+        
+        this.index1ItemSize = calcSize(this.index1ItemFormat);
+        
         this.index1Offset = specLen + this.metaLength;
-        this.index2Offset = this.index1Offset + this.indexCount * 8;
+        this.index2Offset = this.index1Offset + this.indexCount*this.index1ItemSize;
+        this.keyPointerSpec = this.index1ItemFormat.charAt(1);
+        this.articlePointerSpec = this.index1ItemFormat.charAt(2);
+    }
+    
+    static Map<Character, Integer> structSizes = new HashMap<Character, Integer>() {
+                                                   {
+                                                       put('h', 2);
+                                                       put('H', 2);
+                                                       put('i', 4);
+                                                       put('I', 4);
+                                                       put('l', 4);
+                                                       put('L', 4);
+                                                       put('q', 8);
+                                                       put('Q', 8);
+                                                   }
+                                               };
+    
+    static int calcSize(String structSpec) {
+        int size = 0;
+        int length = structSpec.length();
+        //ignore byte order spec at index 0
+        for (int i = 1; i < length; i++) {
+            char c = structSpec.charAt(i);
+            Integer unitSize = structSizes.get(c);
+            if (unitSize != null) {
+                size += unitSize;
+            }
+        }
+        return size;
     }
 }

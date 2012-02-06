@@ -36,6 +36,7 @@ import aarddict.LookupWord;
 import aarddict.RedirectTooManyLevels;
 import aarddict.Volume;
 import android.app.AlertDialog;
+import android.app.SearchManager;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -66,6 +67,12 @@ import android.widget.Toast;
 public class ArticleViewActivity extends BaseDictionaryActivity {
 
     private final static String TAG = ArticleViewActivity.class.getName();
+
+    public static final int NOOK_KEY_PREV_LEFT = 92;
+    public static final int NOOK_KEY_NEXT_LEFT = 93;
+
+    public static final int NOOK_KEY_PREV_RIGHT = 94;
+    public static final int NOOK_KEY_NEXT_RIGHT = 95;
     
     private ArticleView         articleView;
     private String              sharedCSS;
@@ -96,35 +103,46 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
     	this.scrollPositionsH = Collections.synchronizedMap(new HashMap<Article, ScrollXY>());
     	this.scrollPositionsV = Collections.synchronizedMap(new HashMap<Article, ScrollXY>());
         loadAssets();                
-        
-        //Animation is broken before 2.1 - animation listener notified,
-        //only sometimes so we can't use it
-        try {
-        	useAnimation = Integer.parseInt(Build.VERSION.SDK) > 6;
-        }        
-        catch (Exception e) {
-        	Log.w(TAG, "Failed to parse SDK version string as int: " + Build.VERSION.SDK);	
-        }
+
+        if (DeviceInfo.EINK_SCREEN)	{
+			useAnimation = false;
+			N2EpdController.setGL16Mode(2);  // force full screen refresh when changing articles
+
+	    	setContentView(R.layout.eink_article_view);
+	        articleView = (ArticleView)findViewById(R.id.EinkArticleView);
+		}
+		// Setup animations only on non-eink screens
+		else
+		{
+	        //Animation is broken before 2.1 - animation listener notified,
+	        //only sometimes so we can't use it
+	        try {
+	        	useAnimation = Integer.parseInt(Build.VERSION.SDK) > 6;
+	        }        
+	        catch (Exception e) {
+	        	Log.w(TAG, "Failed to parse SDK version string as int: " + Build.VERSION.SDK);	
+	        }
+
+	        fadeOutAnimation = new AlphaAnimation(1f, 0f);
+	        fadeOutAnimation.setDuration(600);
+	        fadeOutAnimation.setAnimationListener(new AnimationAdapter() {
+	        	public void onAnimationEnd(Animation animation) {
+	        		Button nextButton = (Button)findViewById(R.id.NextButton);
+	        		nextButton.setVisibility(Button.GONE);
+	        	}
+	        });
+
+	    	getWindow().requestFeature(Window.FEATURE_PROGRESS);
+	    	setContentView(R.layout.article_view);
+	    	articleView = (ArticleView)findViewById(R.id.ArticleView);    
+		}
 
         Log.d(TAG, "Build.VERSION.SDK: " + Build.VERSION.SDK);
         Log.d(TAG, "use animation? " + useAnimation);
-        
-        fadeOutAnimation = new AlphaAnimation(1f, 0f);
-        fadeOutAnimation.setDuration(600);
-        fadeOutAnimation.setAnimationListener(new AnimationAdapter() {
-        	public void onAnimationEnd(Animation animation) {
-        		Button nextButton = (Button)findViewById(R.id.NextButton);
-        		nextButton.setVisibility(Button.GONE);
-        	}
-        });        					        
-        
+
         timer = new Timer();
         
-        backItems = Collections.synchronizedList(new LinkedList<HistoryItem>());
-        
-        getWindow().requestFeature(Window.FEATURE_PROGRESS);        
-        setContentView(R.layout.article_view);                                
-        articleView = (ArticleView)findViewById(R.id.ArticleView);    
+        backItems = Collections.synchronizedList(new LinkedList<HistoryItem>());        
         
         articleView.setOnScrollListener(new ArticleView.ScrollListener(){
 			public void onScroll(int l, int t, int oldl, int oldt) {
@@ -132,7 +150,7 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
 			}        	
         });
         
-        articleView.getSettings().setJavaScriptEnabled(true);
+    	articleView.getSettings().setJavaScriptEnabled(true);
         
         articleView.addJavascriptInterface(new SectionMatcher(), "matcher");
                                 
@@ -153,7 +171,7 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
         });
                             
         articleView.setWebViewClient(new WebViewClient() {
-                    	        	
+        	
             @Override
             public void onPageFinished(WebView view, String url) {
                 Log.d(TAG, "Page finished: " + url);
@@ -282,12 +300,16 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
             case KeyEvent.KEYCODE_BACK:
                 goBack();   
                 break;
+		    case NOOK_KEY_PREV_LEFT:
+		    case NOOK_KEY_PREV_RIGHT:
             case KeyEvent.KEYCODE_VOLUME_UP:
                 if (!articleView.pageUp(false)) {
                     goBack();
                 }
                 break;
             case KeyEvent.KEYCODE_VOLUME_DOWN:
+		    case NOOK_KEY_NEXT_LEFT:
+		    case NOOK_KEY_NEXT_RIGHT:
                 if (!articleView.pageDown(false)) {
                     nextArticle();
                 };
@@ -356,12 +378,29 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
     		showNext(current);
     	}
     }
-    
+
     @Override
     public boolean onSearchRequested() {
+        Intent intent = getIntent();
+        if (intent != null && intent.getAction() != null && intent.getAction().equals(Intent.ACTION_SEARCH)) {
+	    	Intent next = new Intent();
+	        next.setClass(this, LookupActivity.class);
+	    	next.setAction(Intent.ACTION_SEARCH);
+	      	next.putExtra(SearchManager.QUERY, intent.getStringExtra("query"));
+	      	startActivity(next);
+        }
         finish();
         return true;
     }
+    
+    public boolean onKeyLongPress(int keyCode, KeyEvent event) {
+    	if (keyCode == KeyEvent.KEYCODE_SEARCH){
+    		finish();
+    		return true;
+    	}
+    	return super.onKeyLongPress(keyCode, event);
+    }
+
     
     final static int MENU_VIEW_ONLINE = 1;
     final static int MENU_NEW_LOOKUP = 2;
@@ -803,7 +842,7 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
                             showArticle(entry);
                         }
                         else {
-                            showMessage(getString(R.string.msgArticleNotFound, word));
+                        	onSearchRequested();
                         }
                     }
                 };

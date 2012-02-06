@@ -1,2 +1,4 @@
 eclipse-build
 gen
+bin
+project.properties

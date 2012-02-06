@@ -84,7 +84,7 @@
     <string name="tabSource">源码</string>
     <string name="tabLicense">许可协议</string>
     
-    <string name="scanSDCard">扫描SD卡</string>
+    <string name="scanDevice">扫描SD卡</string>
     
     <string name="toastDictFileLoaded">已从 %s 中载入了词典</string>
     <string name="toastDictFileFailed">从 %s 中载入词典失败</string>       

@@ -88,7 +88,7 @@
     <string name="tabSource">Source</string>
     <string name="tabLicense">License</string>
     
-    <string name="scanSDCard">Scan Device</string>
+    <string name="scanDevice">Scan Device</string>
     
     <string name="toastDictFileLoaded">Loaded dictionary from %s</string>
     <string name="toastDictFileFailed">Failed to load dictionary from %s</string>       

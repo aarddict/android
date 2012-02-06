@@ -89,7 +89,7 @@
     <string name="tabSource">Источник</string>
     <string name="tabLicense">Лицензия</string>
     
-    <string name="scanSDCard">Сканировать устройство</string>
+    <string name="scanDevice">Сканировать устройство</string>
     
     <string name="toastDictFileLoaded">Словарь из %s загружен</string>
     <string name="toastDictFileFailed">Не удалось загрузить словарь из %s</string>       

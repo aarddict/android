@@ -24,6 +24,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -48,7 +49,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Binder;
-import android.os.Environment;
 import android.os.FileObserver;
 import android.os.IBinder;
 import android.util.Log;
@@ -70,9 +70,20 @@ public final class DictionaryService extends Service {
 	public final static String CLOSED_DICT = TAG + ".CLOSED_DICT";
 	public final static String DICT_OPEN_FAILED = TAG + ".DICT_OPEN_FAILED";
 	public final static String OPEN_FINISHED = TAG + ".OPEN_FINISHED";
-		
-	private Library library;
-	
+
+    private Library             library;
+
+    private Set<String>         excludedScanDirs   = new HashSet<String>() {
+                                                       {
+                                                           add("/proc");
+                                                           add("/dev");
+                                                           add("/etc");
+                                                           add("/sys");
+                                                           add("/acct");
+                                                           add("/cache");
+                                                       }
+                                                   };
+
     private FilenameFilter fileFilter = new FilenameFilter() {
         public boolean accept(File dir, String filename) {
             return filename.toLowerCase().endsWith(
@@ -295,35 +306,74 @@ public final class DictionaryService extends Service {
     public List<File> discover() {
 		sendBroadcast(new Intent(DISCOVERY_STARTED));
 		Thread.yield();
-        File extStorage = Environment.getExternalStorageDirectory();
+        File scanRoot = new File ("/");
         List<File> result = new ArrayList<File>();
-        if (extStorage != null) {
-        	result.addAll(scanDir(extStorage));
-        }
+        result.addAll(scanDir(scanRoot));
         Intent intent = new Intent(DISCOVERY_FINISHED);
         intent.putExtra("count", result.size());
         sendBroadcast(intent);
         Thread.yield();
         return result;
     }
-
+    
     private List<File> scanDir(File dir) {
+        String absolutePath = dir.getAbsolutePath();
+        if (excludedScanDirs.contains(absolutePath)) {
+            Log.d(TAG, String.format("%s is excluded", absolutePath));
+            return Collections.EMPTY_LIST;
+        }
+        boolean symlink = false;
+        try {
+            symlink = isSymlink(dir);
+        } catch (IOException e) {
+            Log.e(TAG,
+                    String.format("Failed to check if %s is symlink",
+                            dir.getAbsolutePath()));
+        }
+
+        if (symlink) {
+            Log.d(TAG, String.format("%s is a symlink", absolutePath));
+            return Collections.EMPTY_LIST;
+        }
+
+        if (dir.isHidden()) {
+            Log.d(TAG, String.format("%s is hidden", absolutePath));
+            return Collections.EMPTY_LIST;
+        }
+        Log.d(TAG, "Scanning " + absolutePath);
         List<File> candidates = new ArrayList<File>();
         File[] files = dir.listFiles(fileFilter);
         if (files != null) {
-	        for (int i = 0; i < files.length; i++) {
-	        	File file = files[i];
-	            if (file.isDirectory()) {
-	                candidates.addAll(scanDir(file));
-	            }
-	            else {
-	                candidates.add(file);
-	            }
-	        }
+            for (int i = 0; i < files.length; i++) {
+                File file = files[i];
+                if (file.isDirectory()) {
+                    candidates.addAll(scanDir(file));
+                } else {
+                    if (!file.isHidden() && file.isFile()) {
+                        candidates.add(file);
+                    }
+                }
+            }
         }
         return candidates;
     }
 
+    static boolean isSymlink(File file) throws IOException {
+        File fileInCanonicalDir = null;
+        if (file.getParent() == null) {
+            fileInCanonicalDir = file;
+        } else {
+            File canonicalDir = file.getParentFile().getCanonicalFile();
+            fileInCanonicalDir = new File(canonicalDir, file.getName());
+        }
+        if (fileInCanonicalDir.getCanonicalFile().equals(
+                fileInCanonicalDir.getAbsoluteFile())) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+    
     public void setPreferred(String volumeId) {
     	library.makeFirst(volumeId);    	
     }

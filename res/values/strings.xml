@@ -59,7 +59,7 @@
 
 	<string name="mnDictDetails">Info</string>
 	<string name="mnDictVerify">Verify</string>
-	<string name="mnDictRefresh">Scan SD Card</string>
+	<string name="mnDictRefresh">Scan Device</string>
 
     <string name="titleArticleViewActivity">%1$s - %2$s</string>
     
@@ -88,7 +88,7 @@
     <string name="tabSource">Source</string>
     <string name="tabLicense">License</string>
     
-    <string name="scanSDCard">Scan SD Card</string>
+    <string name="scanSDCard">Scan Device</string>
     
     <string name="toastDictFileLoaded">Loaded dictionary from %s</string>
     <string name="toastDictFileFailed">Failed to load dictionary from %s</string>       

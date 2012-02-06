@@ -35,7 +35,7 @@
     <string name="about">    
         <![CDATA[
         <big>%1$s %2$s</big>
-        <p>(C) 2011 Игорь Ткач</p>
+        <p>(C) 2012 Игорь Ткач </p>
         <p><a href="http://aarddict.org">http://aarddict.org</a></p>
         ]]>    
     </string>
@@ -60,7 +60,7 @@
 
 	<string name="mnDictDetails">Информация</string>
 	<string name="mnDictVerify">Проверить</string>
-	<string name="mnDictRefresh">Сканировать SD карточку</string>
+	<string name="mnDictRefresh">Сканировать устройство</string>
 
     <string name="titleArticleViewActivity">%1$s - %2$s</string>
     
@@ -89,7 +89,7 @@
     <string name="tabSource">Источник</string>
     <string name="tabLicense">Лицензия</string>
     
-    <string name="scanSDCard">Сканировать SD карточку</string>
+    <string name="scanSDCard">Сканировать устройство</string>
     
     <string name="toastDictFileLoaded">Словарь из %s загружен</string>
     <string name="toastDictFileFailed">Не удалось загрузить словарь из %s</string>       

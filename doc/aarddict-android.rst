@@ -14,21 +14,20 @@ Aard Dictionary for Android consists of two main activities (`Lookup`,
 
 Application starts with `Lookup` activity. It goes through the list of
 previously open dictionaries and loads them again. If no dictionaries
-are open, user can initiate SD card scan to find dictionaries.
+are open, user can device scan to find dictionaries.
 
-.. image:: aarddict-android-1.1-no_dictionaries.png
+.. image:: aarddict-android-1.4-no_dictionaries.png
    :scale: 50
 
 .. note::
 
-   Aard Dictionary is looking for files with :file:`.aar` extension on
-   device's external storage. External storage is typically SD card
-   (with corresponding file system path being :file:`/sdcard`). Some
-   Android devices also have internal storage which may be mounted as
-   a subdirectory of external storage (in which case dictionaries will
-   be found there) or separately (in which cases dictionaries will
-   *not* be found). Dictionaries that are stored outside of external
-   storage can still be opened from a file manager such as `Ghost
+   Aard Dictionary is looking for files with :file:`.aar` extension
+   by recursively scanning device's file system starting from
+   :file:``/`` (excluding some system directories
+   such as ``/proc`` or ``/etc``, hidden directories and ignoring
+   symlinks), all dictionaries normally should be
+   discovered by this process. However, dictionaries can also be
+   opened manually from a file manager such as `Ghost
    Commander`_: navigate to the dictionary file to be opened, tap on
    it, choose `Aard Dictionary` to complete the action if prompted.
 
@@ -105,9 +104,9 @@ large dictionaries and/or slow devices.
    version of Aard Dictionary to establish whether the error occurred
    during download or file transfer.
 
-If more dictionaries were copied to SD card after Aard Dictionary
+If more dictionaries were copied to device after Aard Dictionary
 scanned it, it needs to be re-scanned for Aard Dictionary to pick up
-new dictionaries. Select `Scan SD Card` menu item in `Dictionaries` to
+new dictionaries. Select `Scan Device` menu item in `Dictionaries` to
 do this. Alternatively, new dictionaries can be opened from a file
 manager.
 
@@ -118,6 +117,8 @@ Contributors
 - Iryna Gerasymova (Aard Dictionary logo, testing)
 
 - Igor Tkach (`SDict Viewer`_ and Aard Dictionary author)
+
+- Jeff Doozan (EInk display support, fixes)
 
 - Chinese translation by `bbs.goapk.com`_
 
@@ -136,6 +137,28 @@ Dictionary for Android issue tracker`_.
 
 Changes
 =======
+
+1.4.0
+-----
+
+- Scan entire file system when looking for dictionaries (except hidden
+  directories, symlinks and some system directories) instead of just
+  external storage (:android-issue:`13`)
+
+- On EInk devices, page up/down without animation to reduce flicker
+  (:android-issue:`28`)
+
+- Page up/down with Nook's page keys (:android-issue:`31`)
+
+- Hide keyboard when `Done` key is pressed (:android-issue:`37`)
+
+- Search button now opens Lookup activity if article was opened with
+  `aarddict.android.Article` intent, old behavior moved to search
+  button's long press (:android-issue:`39`)
+
+- Some dictionaries were unusable due to incomplete
+  `.aar` binary file format support, now fixed (:android-issue:`41`)
+
 
 1.3.1
 -----

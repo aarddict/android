@@ -74,7 +74,7 @@ Wikipedia, Wiktionary, Wikiquote and such).
 View list of currently open dictionaries by opening menu in `Lookup`
 activity and tapping `Dictionaries`. 
 
-.. image:: aarddict-android-1.1-dictionaries.png
+.. image:: aarddict-android-1.4-dictionaries.png
    :scale: 50
 
 Tap on an item (or select `Info`

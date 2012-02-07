@@ -145,18 +145,20 @@ public final class Volume extends AbstractList<Entry> {
     };
     
     IndexItem readIndexItem(long i) throws IOException {
-        long pos = this.header.index1Offset + i * 8;
+        long pos = this.header.index1Offset + i * this.header.index1ItemSize;
         this.file.seek(pos);
         IndexItem indexItem = new IndexItem();
-        indexItem.keyPointer = this.file.readUnsignedInt();
-        indexItem.articlePointer = this.file.readUnsignedInt();
+        indexItem.keyPointer = this.file.readSpec(this.header.keyPointerSpec);
+        indexItem.articlePointer = this.file.readSpec(this.header.articlePointerSpec);
+        Log.d(TAG, String.format("keyPointer %s articlePointer %s", 
+                indexItem.keyPointer, indexItem.articlePointer));
         return indexItem;
     }
 
     String readKey(long pointer) throws IOException {
         long pos = this.header.index2Offset + pointer;
         this.file.seek(pos);
-        int keyLength = this.file.readUnsignedShort();
+        int keyLength = (int)this.file.readSpec(this.header.keyLengthSpec);
         return this.file.readUTF8(keyLength);
     }
 
@@ -168,7 +170,7 @@ public final class Volume extends AbstractList<Entry> {
     		return a;
         long pos = this.header.articleOffset + pointer;
         this.file.seek(pos);
-        long articleLength = this.file.readUnsignedInt();
+        long articleLength = this.file.readSpec(this.header.articleLengthSpec);
 
         byte[] articleBytes = new byte[(int) articleLength];
         this.file.read(articleBytes);

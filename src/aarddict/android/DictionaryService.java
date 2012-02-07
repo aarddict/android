@@ -38,6 +38,7 @@ import java.util.UUID;
 import aarddict.Article;
 import aarddict.ArticleNotFound;
 import aarddict.Entry;
+import aarddict.Header;
 import aarddict.Library;
 import aarddict.Metadata;
 import aarddict.RedirectTooManyLevels;

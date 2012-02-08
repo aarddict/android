@@ -23,8 +23,8 @@ are open, user can device scan to find dictionaries.
 
    Aard Dictionary is looking for files with :file:`.aar` extension
    by recursively scanning device's file system starting from
-   :file:``/`` (excluding some system directories
-   such as ``/proc`` or ``/etc``, hidden directories and ignoring
+   :file:`/` (excluding some system directories
+   such as :file:`/proc` or :file:`/etc`, hidden directories and ignoring
    symlinks), all dictionaries normally should be
    discovered by this process. However, dictionaries can also be
    opened manually from a file manager such as `Ghost
@@ -98,7 +98,8 @@ large dictionaries and/or slow devices.
 
    If data verification indicates that dictionary files are corrupted
    it means there were errors while downloading or copying the files
-   to SD card. It may also point to a defective SD card. You may need
+   to SD card or internal device storage. It may also point to bad
+   hardware, such as defective SD card. You may need
    to download and/or copy dictionary files again, or replace SD card
    if defective. Dictionary data can also be verified using desktop
    version of Aard Dictionary to establish whether the error occurred

@@ -110,10 +110,10 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
 
         if (DeviceInfo.EINK_SCREEN)	{
 			useAnimation = false;
-			N2EpdController.setGL16Mode(2);  // force full screen refresh when changing articles
 
 	    	setContentView(R.layout.eink_article_view);
 	        articleView = (ArticleView)findViewById(R.id.EinkArticleView);
+			EinkScreen.ResetController(2, articleView);  // force full screen refresh when changing articles
 		}
 		// Setup animations only on non-eink screens
 		else

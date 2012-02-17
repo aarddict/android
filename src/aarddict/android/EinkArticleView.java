@@ -17,12 +17,16 @@ public class EinkArticleView extends ArticleView {
 	}
 
 	private ArticleView articleView;
+	private boolean partial;
 	public static int HSCROLL_SIZE;
 
 	@Override
 	protected void onDraw (Canvas canvas) {
-		N2EpdController.setGL16Mode(0); // partial refresh
+		if (partial) EinkScreen.PrepareController(this, false); // partial refresh
+		else EinkScreen.ResetController(1, this);
+
 		super.onDraw(canvas);
+		partial = false;
 	}
 	
     public void onSizeChanged(int w, int h, int ow, int oh) {
@@ -40,6 +44,8 @@ public class EinkArticleView extends ArticleView {
           newy = 0;
         }
         articleView.scrollTo(0, newy);
+
+		partial = true;
         return true;
     }
 
@@ -56,6 +62,8 @@ public class EinkArticleView extends ArticleView {
         if (cury != newy) {
           articleView.scrollTo(0, newy);
         }
+
+		partial = true;
         return true;
     }
 }

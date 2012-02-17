@@ -27,10 +27,9 @@
         />
         <Button 
             android:id="@+id/clearButton"
-            android:drawableLeft="@android:drawable/ic_input_delete"
+            android:drawableLeft="@drawable/sym_kbd_bne_delete_off"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="-1dip"
             android:gravity="fill_vertical"
             android:layout_weight="0"
         />            

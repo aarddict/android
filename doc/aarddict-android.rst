@@ -139,6 +139,11 @@ Dictionary for Android issue tracker`_.
 Changes
 =======
 
+1.4.1
+-----
+
+- Re-release of 1.4.0. Final 1.4.0 .apk didn't include all changes.
+
 1.4.0
 -----
 

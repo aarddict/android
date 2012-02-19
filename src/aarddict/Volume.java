@@ -150,8 +150,6 @@ public final class Volume extends AbstractList<Entry> {
         IndexItem indexItem = new IndexItem();
         indexItem.keyPointer = this.file.readSpec(this.header.keyPointerSpec);
         indexItem.articlePointer = this.file.readSpec(this.header.articlePointerSpec);
-        Log.d(TAG, String.format("keyPointer %s articlePointer %s", 
-                indexItem.keyPointer, indexItem.articlePointer));
         return indexItem;
     }
 

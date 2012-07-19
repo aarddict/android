@@ -44,7 +44,7 @@
     <string name="titleError">Ошибка</string>
     <string name="titleVerifying">Проверка</string>    
     <string name="titleDictionariesActivity">%s - Словари</string>
-    <string name="titleDictionaryInfoActivity">Инофрмация о словаре</string>
+    <string name="titleDictionaryInfoActivity">Информация о словаре</string>
     
     <string name="inputHint">Введите слово</string>
     

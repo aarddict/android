@@ -90,7 +90,11 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
 	private Map<Article, ScrollXY> scrollPositionsH;
 	private Map<Article, ScrollXY> scrollPositionsV;
 	private boolean                saveScrollPos = true;
-    
+
+	private static final String FONTSIZE_START = "<div align=\"justify\"><font size=\"";
+	private static final String FONTSIZE_MIDDLE = "\">";
+	private static final String FONTSIZE_END = "</font></div>";
+	private int fontsize;
     
     static class AnimationAdapter implements AnimationListener {
 		public void onAnimationEnd(Animation animation) {}
@@ -106,10 +110,11 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
 
         if (DeviceInfo.EINK_SCREEN)	{
 			useAnimation = false;
-			N2EpdController.setGL16Mode(2);  // force full screen refresh when changing articles
 
 	    	setContentView(R.layout.eink_article_view);
 	        articleView = (ArticleView)findViewById(R.id.EinkArticleView);
+	        N2EpdController.n2MainActivity = this;      
+			EinkScreen.ResetController(2, articleView);  // force full screen refresh when changing articles
 		}
 		// Setup animations only on non-eink screens
 		else
@@ -141,6 +146,8 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
         Log.d(TAG, "use animation? " + useAnimation);
 
         timer = new Timer();
+
+		fontsize = 3;
         
         backItems = Collections.synchronizedList(new LinkedList<HistoryItem>());        
         
@@ -335,17 +342,16 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
     }
         
     private boolean zoomIn() {        
-        boolean zoomed = articleView.zoomIn();
-        float scale = articleView.getScale();
-        articleView.setInitialScale(Math.round(scale*100));
-        return zoomed;
+		fontsize++;
+		showCurrentArticle();
+		return true;
     }
     
     private boolean zoomOut() {
-        boolean zoomed = articleView.zoomOut();
-        float scale = articleView.getScale();
-        articleView.setInitialScale(Math.round(scale*100));
-        return zoomed;    	
+        if (fontsize == 1) return false;
+		fontsize--;
+		showCurrentArticle();
+		return true;
     }
         
     private void goBack() {
@@ -625,7 +631,7 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
 		        resetTitleToCurrent();		       
 		        Article a = backItems.get(backItems.size() - 1).article;
 		        Log.d(TAG, "Show article: " + a.text);        
-		        articleView.loadDataWithBaseURL("", wrap(a.text), "text/html", "utf-8", null);
+		        articleView.loadDataWithBaseURL("", new StringBuilder(FONTSIZE_START).append(fontsize).append(FONTSIZE_MIDDLE).append(wrap(a.text)).append(FONTSIZE_END).toString(), "text/html", "utf-8", null);
 			}
 		});
     }

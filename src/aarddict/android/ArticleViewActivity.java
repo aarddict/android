@@ -113,6 +113,7 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
 
 	    	setContentView(R.layout.eink_article_view);
 	        articleView = (ArticleView)findViewById(R.id.EinkArticleView);
+	        N2EpdController.n2MainActivity = this;      
 			EinkScreen.ResetController(2, articleView);  // force full screen refresh when changing articles
 		}
 		// Setup animations only on non-eink screens

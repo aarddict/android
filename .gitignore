@@ -2,3 +2,4 @@ eclipse-build
 gen
 bin
 project.properties
+lint.xml

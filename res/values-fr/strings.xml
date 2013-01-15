@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="appName">Aard Dictionary</string>
+    <string name="titleLookupActivity">%1$s - %2$s</string>
+    <string name="shortDictInfo">%1$s en %2$s, %3$s ouverts</string>
+    <string name="noDictionaries">&lt;h1>Aucun dictionnaire&lt;/h1> &lt;p>Téléchargez des dictionnaires sur &lt;a href=http://aarddict.org>http://aarddict.org&lt;/a>&lt;/p></string>
+    <string name="nothingFound">&lt;h1>Aucun résultat&lt;/h1></string>
+    <string name="about">&lt;big>%1$s %2$s&lt;/big> &lt;p>(C) 2012 Igor Tkach et les contributeurs&lt;/p> &lt;p>&lt;a href=http://aarddict.org>http://aarddict.org&lt;/a>&lt;/p></string>
+    <string name="flattrUrl">https://flattr.com/submit/auto?user_id=aarddict&amp;url=http://aarddict.org</string>
+    <string name="titleAbout">À propos</string>
+    <string name="titleError">Erreur</string>
+    <string name="titleVerifying">Vérification</string>
+    <string name="titleDictionariesActivity">%s - Dictionnaires</string>
+    <string name="titleDictionaryInfoActivity">Informations</string>
+    <string name="inputHint">Rechercher</string>
+    <string name="mnInfo">Dictionnaires</string>
+    <string name="mnAbout">À propos</string>
+    <string name="mnBack">Précédent</string>
+    <string name="mnNextArticle">Suivant</string>
+    <string name="mnViewOnline">Lecture en ligne</string>
+    <string name="mnNewLookup">Nouvelle recherche</string>
+    <string name="mnZoomIn">Zoom +</string>
+    <string name="mnZoomOut">Zoom -</string>
+    <string name="mnDictDetails">Informations</string>
+    <string name="mnDictVerify">Vérification</string>
+    <string name="mnDictRefresh">Scanner</string>
+    <string name="titleArticleViewActivity">%1$s - %2$s</string>
+    <string name="btnDismiss">Retour</string>
+    <string name="btnCancel">Annuler</string>
+    <string name="msgArticleNotFound">Article \"%s\" introuvable</string>
+    <string name="msgRedirectNotFound">Redirection \"%s\" introuvable</string>
+    <string name="msgTooManyRedirects">Trop de redirections vers \"%s\"</string>
+    <string name="msgErrorLoadingArticle">Une erreur est survenue durant le chargement de l\'article \"%s\"</string>
+    <string name="msgDataIntegrityVerified">"%1$s
+Intégrité des données vérifiée %2$s: %3$s"</string>
+    <string name="msgDataIntegrityNotVerified">"%s
+Intégrité des données non vérifiée"</string>
+    <string name="msgErrorVerifying">Une erreur est survenue durant la vérification %2$s: %2$s</string>
+    <string name="msgDictCorruped">%s est corrompu</string>
+    <string name="msgDictOk">%s est ok</string>
+    <string name="msgLooking">Recherche de dictionnaires...</string>
+    <string name="msgLoading">Chargement des dictionnaires...</string>
+    <string name="verifyOk">ok</string>
+    <string name="verifyCorrupted">corrompu</string>
+    <string name="tabDescription">Description</string>
+    <string name="tabCopyright">Copyright</string>
+    <string name="tabSource">Source</string>
+    <string name="tabLicense">Licence</string>
+    <string name="scanDevice">Scanner</string>
+    <string name="toastDictFileLoaded">Chargement du dictionnaire à partir de %s</string>
+    <string name="toastDictFileFailed">Impossible de charger le dictionnaire à partir de %s</string>
+</resources>

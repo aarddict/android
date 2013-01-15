@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="dictionaries">
+        <item quantity="other">%d dictionnaires</item>
+        <item quantity="one">%d dictionnaire</item>
+    </plurals>
+    <plurals name="articles">
+        <item quantity="other">%,d articles</item>
+        <item quantity="one">%d article</item>
+    </plurals>
+    <plurals name="volumes">
+        <item quantity="other">%d volumes</item>
+        <item quantity="one">%d volume</item>
+    </plurals>
+</resources>

@@ -4,29 +4,30 @@
       android:versionCode="13"
       android:versionName="1.4.1"
       android:installLocation="auto">
-    <uses-sdk android:minSdkVersion="3"/>
+    <uses-sdk android:minSdkVersion="7" android:targetSdkVersion="17"/>
     <supports-screens
         android:smallScreens="true"
         android:normalScreens="true"
         android:largeScreens="true"
         android:anyDensity="true" />
-    <application android:icon="@drawable/aarddict" 
-    			 android:label="@string/appName">    			 
-    	<activity android:name=".DictionariesActivity" 
-    			  android:label="@string/appName">
+    <application android:allowBackup="true"
+                android:icon="@drawable/aarddict" 
+                android:label="@string/appName">
+        <activity android:name=".DictionariesActivity" 
+            android:label="@string/appName">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />                
+                <category android:name="android.intent.category.DEFAULT" />
                 <data android:scheme="file" android:pathPattern=".*\\.aar"/>
-            </intent-filter>            
+            </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />                
+                <category android:name="android.intent.category.DEFAULT" />
                 <data android:scheme="file" android:mimeType="application/aar"/>
-            </intent-filter>                			  	
+            </intent-filter>
     	</activity>
     			 
-        <activity android:name=".LookupActivity" 
+        <activity android:name=".LookupActivity"
             android:configChanges="orientation">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -45,20 +46,20 @@
             android:taskAffinity="aarddict.external">
             <intent-filter>
                 <action android:name="android.intent.action.SEARCH" />
-            </intent-filter>                                                                        
+            </intent-filter>
         </activity>
         
         <activity android:name=".Article" 
             android:configChanges="orientation"
             android:excludeFromRecents="true"
-            android:taskAffinity="aarddict.external">            
+            android:taskAffinity="aarddict.external">
             <intent-filter>
                 <action android:name="android.intent.action.SEARCH" />
-            </intent-filter>                                                            
+            </intent-filter>
         </activity>
-                         
-        <activity android:name=".DictionaryInfoActivity"/>                      
-        <service android:name=".DictionaryService">        
+
+        <activity android:name=".DictionaryInfoActivity"/>
+        <service android:name=".DictionaryService">
         </service>
     </application>
 </manifest> 

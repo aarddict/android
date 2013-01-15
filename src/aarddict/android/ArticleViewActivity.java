@@ -114,15 +114,7 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
 		// Setup animations only on non-eink screens
 		else
 		{
-	        //Animation is broken before 2.1 - animation listener notified,
-	        //only sometimes so we can't use it
-	        try {
-	        	useAnimation = Integer.parseInt(Build.VERSION.SDK) > 6;
-	        }        
-	        catch (Exception e) {
-	        	Log.w(TAG, "Failed to parse SDK version string as int: " + Build.VERSION.SDK);	
-	        }
-
+	        useAnimation = true;
 	        fadeOutAnimation = new AlphaAnimation(1f, 0f);
 	        fadeOutAnimation.setDuration(600);
 	        fadeOutAnimation.setAnimationListener(new AnimationAdapter() {
@@ -136,9 +128,6 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
 	    	setContentView(R.layout.article_view);
 	    	articleView = (ArticleView)findViewById(R.id.ArticleView);    
 		}
-
-        Log.d(TAG, "Build.VERSION.SDK: " + Build.VERSION.SDK);
-        Log.d(TAG, "use animation? " + useAnimation);
 
         timer = new Timer();
         

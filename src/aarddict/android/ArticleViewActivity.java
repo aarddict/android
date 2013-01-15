@@ -44,6 +44,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.view.MenuItemCompat;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -184,6 +185,7 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
                 if (!restoreScrollPos()) {
                 	goToSection(section);
                 }
+                updateNextButtonVisibility();
             }
             
             @Override
@@ -395,8 +397,12 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
     final static int MENU_NEW_LOOKUP = 2;
     final static int MENU_ZOOM_IN = 3;
     final static int MENU_ZOOM_OUT = 4;
+    final static int MENU_NEXT = 5;
     
-    private MenuItem miViewOnline; 
+    
+    private MenuItem miViewOnline;
+
+    private MenuItem miNextArticle; 
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -404,19 +410,24 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
         menu.add(0, MENU_NEW_LOOKUP, 0, R.string.mnNewLookup).setIcon(android.R.drawable.ic_menu_search);        
         menu.add(0, MENU_ZOOM_OUT, 0, R.string.mnZoomOut).setIcon(R.drawable.ic_menu_zoom_out);
         menu.add(0, MENU_ZOOM_IN, 0, R.string.mnZoomIn).setIcon(R.drawable.ic_menu_zoom_in);
+        miNextArticle = menu.add(0, MENU_NEXT, 0, R.string.mnNext).setIcon(android.R.drawable.ic_media_next);
+        MenuItemCompat.setShowAsAction(miNextArticle, MenuItemCompat.SHOW_AS_ACTION_ALWAYS);
         return true;
     }
     
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
     	boolean enableViewOnline = false;
+    	boolean hasNextArticle = false;
         if (this.backItems.size() > 0) {
             HistoryItem historyItem = backItems.get(backItems.size() - 1);
             Article current = historyItem.article;
             Volume d = dictionaryService.getVolume(current.volumeId);
-            enableViewOnline = d.getArticleURLTemplate() != null;            
+            enableViewOnline = d.getArticleURLTemplate() != null;
+            hasNextArticle = historyItem.hasNext();
         }    	    
     	miViewOnline.setEnabled(enableViewOnline);
+    	miNextArticle.setVisible(hasNextArticle);
     	return true;
     }
     
@@ -434,6 +445,10 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
             break;
         case MENU_ZOOM_OUT:
             zoomOut();
+            break;
+        case MENU_NEXT:
+            Log.d("AA", "MENU_NEXT");
+            nextArticle();
             break;
         default:
             return super.onOptionsItemSelected(item);
@@ -620,7 +635,10 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
     }
         
     private void updateNextButtonVisibility() {
-    	if (currentHideNextButtonTask != null) {
+        if (android.os.Build.VERSION.SDK_INT >= 11) {
+            return;
+        }
+        if (currentHideNextButtonTask != null) {
     		currentHideNextButtonTask.cancel();
     		currentHideNextButtonTask = null;
     	}
@@ -651,7 +669,7 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
         		}
         	}; 
         	try {
-        		timer.schedule(currentHideNextButtonTask, 1800);        		
+        		timer.schedule(currentHideNextButtonTask, 1800);
         	}
         	catch (IllegalStateException e) {
             	//this may happen if orientation changes while users touches screen               	
@@ -711,12 +729,17 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
     
     private void setTitle(HistoryItem item) {		
 		StringBuilder title = new StringBuilder();
+		boolean hasNextArticle = false;
 		if (item.entries.size() > 1) {
 			title
 			.append(item.entryIndex + 1)
 			.append("/")
 			.append(item.entries.size())
 			.append(" ");
+			hasNextArticle = item.hasNext();
+		}
+		if (miNextArticle != null) {
+		    miNextArticle.setVisible(hasNextArticle);
 		}
 		Entry entry = item.current();
 		title.append(entry.title);

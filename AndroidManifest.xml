@@ -28,7 +28,7 @@
     	</activity>
     			 
         <activity android:name=".LookupActivity"
-            android:configChanges="orientation">
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|smallestScreenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -36,12 +36,12 @@
         </activity>
         
         <activity android:name=".ArticleViewActivity" 
-            android:configChanges="orientation">
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|smallestScreenSize">
         </activity>
 
 
         <activity android:name=".Lookup" 
-            android:configChanges="orientation" 
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|smallestScreenSize"
             android:excludeFromRecents="true"
             android:taskAffinity="aarddict.external">
             <intent-filter>
@@ -50,7 +50,7 @@
         </activity>
         
         <activity android:name=".Article" 
-            android:configChanges="orientation"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|smallestScreenSize"
             android:excludeFromRecents="true"
             android:taskAffinity="aarddict.external">
             <intent-filter>
@@ -58,7 +58,8 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".DictionaryInfoActivity"/>
+        <activity android:name=".DictionaryInfoActivity"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|smallestScreenSize"/>
         <service android:name=".DictionaryService">
         </service>
     </application>

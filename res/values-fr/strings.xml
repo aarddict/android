@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="appName">Aard Dictionary</string>
+    <string name="appName">Aard</string>
     <string name="titleLookupActivity">%1$s - %2$s</string>
     <string name="shortDictInfo">%1$s en %2$s, %3$s ouverts</string>
     <string name="noDictionaries">&lt;h1>Aucun dictionnaire&lt;/h1> &lt;p>Téléchargez des dictionnaires sur &lt;a href=http://aarddict.org>http://aarddict.org&lt;/a>&lt;/p></string>

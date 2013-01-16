@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     
-    <string name="appName">Аардик</string>
+    <string name="appName">Аард</string>
     <string name="titleLookupActivity">%1$s - %2$s</string>
     <string name="shortDictInfo">%1$s, %2$s, %3$s открыто</string>
     <plurals name="dictionaries">

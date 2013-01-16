@@ -93,5 +93,5 @@
     
     <string name="toastDictFileLoaded">Словарь из %s загружен</string>
     <string name="toastDictFileFailed">Не удалось загрузить словарь из %s</string>       
-    
+    <string name="mnNext">След. статья</string>
 </resources>

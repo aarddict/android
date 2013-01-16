@@ -49,4 +49,5 @@ Intégrité des données non vérifiée"</string>
     <string name="scanDevice">Scanner</string>
     <string name="toastDictFileLoaded">Chargement du dictionnaire à partir de %s</string>
     <string name="toastDictFileFailed">Impossible de charger le dictionnaire à partir de %s</string>
+    <string name="mnNext">Article suivant</string>
 </resources>

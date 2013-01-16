@@ -19,6 +19,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -58,6 +60,7 @@ import android.view.animation.Animation;
 import android.view.animation.Animation.AnimationListener;
 import android.webkit.JsResult;
 import android.webkit.WebChromeClient;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
@@ -139,9 +142,20 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
 				saveScrollPos(l, t);
 			}        	
         });
-        
-    	articleView.getSettings().setJavaScriptEnabled(true);
-        
+
+        WebSettings webViewSettings = articleView.getSettings();
+        webViewSettings.setJavaScriptEnabled(true);
+        if (android.os.Build.VERSION.SDK_INT >= 11) {
+            webViewSettings.setBuiltInZoomControls(true);
+            try {
+                Method setDisplayZoomControls = WebSettings.class.getMethod("setDisplayZoomControls", new Class[] { boolean.class });
+                try {
+                    setDisplayZoomControls.invoke(webViewSettings, false);
+                } catch (Exception e) {
+                }
+            } catch (NoSuchMethodException e) {
+            }
+        }    	
         articleView.addJavascriptInterface(new SectionMatcher(), "matcher");
                                 
         articleView.setWebChromeClient(new WebChromeClient(){

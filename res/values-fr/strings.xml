@@ -5,7 +5,7 @@
     <string name="shortDictInfo">%1$s en %2$s, %3$s ouverts</string>
     <string name="noDictionaries">&lt;h1>Aucun dictionnaire&lt;/h1> &lt;p>Téléchargez des dictionnaires sur &lt;a href=http://aarddict.org>http://aarddict.org&lt;/a>&lt;/p></string>
     <string name="nothingFound">&lt;h1>Aucun résultat&lt;/h1></string>
-    <string name="about">&lt;big>%1$s %2$s&lt;/big> &lt;p>(C) 2012 Igor Tkach et les contributeurs&lt;/p> &lt;p>&lt;a href=http://aarddict.org>http://aarddict.org&lt;/a>&lt;/p></string>
+    <string name="about">&lt;big>%1$s %2$s&lt;/big> &lt;p>(C) 2013 Igor Tkach et les contributeurs&lt;/p> &lt;p>&lt;a href=http://aarddict.org>http://aarddict.org&lt;/a>&lt;/p></string>
     <string name="flattrUrl">https://flattr.com/submit/auto?user_id=aarddict&amp;url=http://aarddict.org</string>
     <string name="titleAbout">À propos</string>
     <string name="titleError">Erreur</string>

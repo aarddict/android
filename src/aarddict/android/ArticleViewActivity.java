@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -94,7 +93,7 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
 	private Map<Article, ScrollXY> scrollPositionsH;
 	private Map<Article, ScrollXY> scrollPositionsV;
 	private boolean                saveScrollPos = true;
-    
+
     
     static class AnimationAdapter implements AnimationListener {
 		public void onAnimationEnd(Animation animation) {}
@@ -157,6 +156,7 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
             }
         }    	
         articleView.addJavascriptInterface(new SectionMatcher(), "matcher");
+        articleView.addJavascriptInterface(articleView, "scrollControl");
                                 
         articleView.setWebChromeClient(new WebChromeClient(){
             
@@ -285,7 +285,7 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
     private void scrollTo(int x, int y) {
     	saveScrollPos = false; 
     	Log.d(TAG, "Scroll to " + x + ", " + y);
-    	articleView.scrollTo(x, y);
+    	articleView.realScrollTo(x, y);
     	saveScrollPos = true;
     }
     

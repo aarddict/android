@@ -21,7 +21,7 @@ function headings(level)
 }
 
 function scrollToMatch(text) {
-	var comparators = matcher.getNumberOfComparators();	
+	var comparators = matcher.getNumberOfComparators();
 	for (var comparator = 0; comparator < comparators; comparator++) {
 		for (var j=1; j <=6; j++) {
 			var h = headings(j);
@@ -33,23 +33,16 @@ function scrollToMatch(text) {
 					return;
 				}
 			}
-		}		
+		}
 	}
-}	
+}
 
 
 function s(elementId) {
-    myScrollTo(document.getElementById(elementId));    
-    return false;
-}
-
-function myScrollTo(elem) {
-    alert("scroll to " + elem);    
-    var y = 0;
-    while (elem != null) {
-        y += elem.offsetTop;
-        elem = elem.offsetParent;
-    }
-    alert("y = " + y);
-    window.scrollTo(0, y);                 
+  var elem = document.getElementById(elementId);
+  if (elem) {
+    scrollControl.armScroll();
+    elem.scrollIntoView(true);
+  }
+  return false;
 }

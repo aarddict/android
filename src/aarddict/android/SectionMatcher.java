@@ -20,6 +20,7 @@ import java.util.Comparator;
 import aarddict.Entry;
 import aarddict.EntryComparators;
 import android.util.Log;
+import android.webkit.JavascriptInterface;
 
 
 final class SectionMatcher {
@@ -29,6 +30,7 @@ final class SectionMatcher {
     public SectionMatcher() {
     }
     
+    @JavascriptInterface
     public boolean match(String section, String candidate, int strength) {        
         Comparator<Entry> c = EntryComparators.ALL[strength];
         Entry e1 = new Entry(null, section.trim());
@@ -38,6 +40,7 @@ final class SectionMatcher {
         return result;
     }                
 
+    @JavascriptInterface
     public int getNumberOfComparators() {
         return EntryComparators.ALL.length;
     }

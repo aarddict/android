@@ -31,7 +31,7 @@
     <string name="about">    
         <![CDATA[
         <big>%1$s %2$s</big>
-        <p>(C) 2012 Igor Tkach and contributors</p>
+        <p>(C) 2013 Igor Tkach and contributors</p>
         <p><a href="http://aarddict.org">http://aarddict.org</a></p>
         ]]>    
     </string>

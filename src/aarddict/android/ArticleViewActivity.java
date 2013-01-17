@@ -157,7 +157,7 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
         }    	
         articleView.addJavascriptInterface(new SectionMatcher(), "matcher");
         articleView.addJavascriptInterface(articleView, "scrollControl");
-                                
+        
         articleView.setWebChromeClient(new WebChromeClient(){
             
             @Override
@@ -176,6 +176,11 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
                             
         articleView.setWebViewClient(new WebViewClient() {
         	
+            @Override
+            public void onScaleChanged(WebView view, float oldScale, float newScale) {
+                view.setInitialScale(Math.round(newScale*100));
+            }
+            
             @Override
             public void onPageFinished(WebView view, String url) {
                 Log.d(TAG, "Page finished: " + url);
@@ -340,17 +345,11 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
     }
         
     private boolean zoomIn() {        
-        boolean zoomed = articleView.zoomIn();
-        float scale = articleView.getScale();
-        articleView.setInitialScale(Math.round(scale*100));
-        return zoomed;
+        return articleView.zoomIn();
     }
     
     private boolean zoomOut() {
-        boolean zoomed = articleView.zoomOut();
-        float scale = articleView.getScale();
-        articleView.setInitialScale(Math.round(scale*100));
-        return zoomed;    	
+        return articleView.zoomOut();
     }
         
     private void goBack() {

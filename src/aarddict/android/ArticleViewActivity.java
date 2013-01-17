@@ -142,19 +142,7 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
 			}        	
         });
 
-        WebSettings webViewSettings = articleView.getSettings();
-        webViewSettings.setJavaScriptEnabled(true);
-        if (android.os.Build.VERSION.SDK_INT >= 11) {
-            webViewSettings.setBuiltInZoomControls(true);
-            try {
-                Method setDisplayZoomControls = WebSettings.class.getMethod("setDisplayZoomControls", new Class[] { boolean.class });
-                try {
-                    setDisplayZoomControls.invoke(webViewSettings, false);
-                } catch (Exception e) {
-                }
-            } catch (NoSuchMethodException e) {
-            }
-        }    	
+        articleView.getSettings().setJavaScriptEnabled(true);   	
         articleView.addJavascriptInterface(new SectionMatcher(), "matcher");
         articleView.addJavascriptInterface(articleView, "scrollControl");
         

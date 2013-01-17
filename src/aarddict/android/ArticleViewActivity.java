@@ -451,6 +451,7 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
         case MENU_VIEW_ONLINE:
             viewOnline();
             break;
+        case android.R.id.home:
         case MENU_NEW_LOOKUP:
             onSearchRequested();
             break;
@@ -833,6 +834,15 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
     	int initialScale = Math.round(scale*100);
     	Log.d(TAG, "Setting initial article view scale to " + initialScale);
     	articleView.setInitialScale(initialScale);
+    	if (android.os.Build.VERSION.SDK_INT >= 11){
+    	    try {
+                Method getActionBar = getClass().getMethod("getActionBar");
+                Object actionBar = getActionBar.invoke(this);
+                Method setDisplayHomeAsUpEnabled = actionBar.getClass().getMethod("setDisplayHomeAsUpEnabled", boolean.class);
+                setDisplayHomeAsUpEnabled.invoke(actionBar, true);
+            } catch (Exception e) {
+            }
+    	}
     }
     
     @Override

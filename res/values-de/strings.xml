@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    
+    <string name="appName">Aard</string>
+    <string name="titleLookupActivity">%1$s - %2$s</string>
+    <string name="shortDictInfo">%1$s: %2$s, %3$s geöffnet</string>
+    <plurals name="dictionaries">
+        <item quantity="one">%d Wörterbuch</item>
+        <item quantity="other">%d Wörterbücher</item>        
+    </plurals>    
+    <plurals name="articles">
+        <item quantity="one">%d Artikel</item>
+        <item quantity="other">%,d Artikel</item>        
+    </plurals>
+    <plurals name="volumes">
+        <item quantity="one">%d Band</item>
+        <item quantity="other">%d Bände</item>        
+    </plurals>
+    <string name="noDictionaries">
+        <![CDATA[
+        <h1>Keine Wörterbücher</h1>
+        <p>Hole Wörterbücher unter <a href="http://aarddict.org">http://aarddict.org</a></p>        
+        ]]>
+    </string>    
+    <string name="nothingFound">
+        <![CDATA[
+        <h1>Nichts gefunden</h1>
+        ]]>
+    </string>
+    
+    <string name="about">    
+        <![CDATA[
+        <big>%1$s %2$s</big>
+        <p>(C) 2013 Igor Tkach und andere</p>
+        <p><a href="http://aarddict.org">http://aarddict.org</a></p>
+        ]]>    
+    </string>
+    
+    <string name="titleAbout">Über</string>
+    <string name="titleError">Fehler</string>
+    <string name="titleVerifying">Überprüfe</string>    
+    <string name="titleDictionariesActivity">%s - Wörterbücher</string>
+    <string name="titleDictionaryInfoActivity">Wörterbuch-Info</string>
+    
+    <string name="inputHint">Tippen</string>
+    
+    <string name="mnInfo">Wörterbücher</string>
+    <string name="mnAbout">Über</string>
+    <string name="mnBack">ZUrück</string>
+    <string name="mnNextArticle">Weiter</string>
+    <string name="mnViewOnline">Online ansehen</string>
+    <string name="mnNewLookup">Neu nachschlagen</string>
+    <string name="mnZoomIn">Zoom +</string>
+    <string name="mnZoomOut">Zoom -</string>
+
+	<string name="mnDictDetails">Info</string>
+	<string name="mnDictVerify">Überprüfen</string>
+	<string name="mnDictRefresh">Gerät durchsuchen</string>
+
+    <string name="titleArticleViewActivity">%1$s - %2$s</string>
+    
+    <string name="btnDismiss">Schließen</string>
+    <string name="btnCancel">Abbrechen</string>
+    
+    <string name="msgArticleNotFound">Artikel \"%s\" nicht gefunden</string>
+    <string name="msgRedirectNotFound">Weiterleitung \"%s\" nicht gefunden</string>    
+    <string name="msgTooManyRedirects">Zu viele Weiterleitungen für \"%s\"</string>
+    <string name="msgErrorLoadingArticle">Fehler beim Laden des Artikels: \"%s\"</string>
+    
+    <string name="msgDataIntegrityVerified">%1$s\nDatenintegrität überprüft %2$s: %3$s</string>
+    <string name="msgDataIntegrityNotVerified">%s\nDatenintegrität nicht überprüft</string>
+    <string name="msgErrorVerifying">Fehler bei der Überprüfung %2$s: %2$s</string>
+    <string name="msgDictCorruped">%s ist beschädigt</string>    
+    <string name="msgDictOk">%s ist in Ordnung</string>
+    
+    <string name="msgLooking">Suche Wörterbücher...</string>    
+    <string name="msgLoading">Lade Wörterbücker...</string>
+    
+    <string name="verifyOk">ok</string>
+    <string name="verifyCorrupted">beschädigt</string>
+    
+    <string name="tabDescription">Beschreibung</string>
+    <string name="tabCopyright">Copyright</string>
+    <string name="tabSource">Quelle</string>
+    <string name="tabLicense">Lizenz</string>
+    
+    <string name="scanDevice">Gerät durchsuchen</string>
+    
+    <string name="toastDictFileLoaded">Wörterbuch von %s geladen</string>
+    <string name="toastDictFileFailed">Fehler beim Laden des Wörterbuches von %s</string>
+    <string name="mnNext">Weiter</string>
+</resources>

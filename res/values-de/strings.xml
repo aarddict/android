@@ -10,7 +10,7 @@
     </plurals>    
     <plurals name="articles">
         <item quantity="one">%d Artikel</item>
-        <item quantity="other">%,d Artikel</item>        
+        <item quantity="other">%d Artikel</item>        
     </plurals>
     <plurals name="volumes">
         <item quantity="one">%d Band</item>
@@ -46,7 +46,7 @@
     
     <string name="mnInfo">Wörterbücher</string>
     <string name="mnAbout">Über</string>
-    <string name="mnBack">ZUrück</string>
+    <string name="mnBack">Zurück</string>
     <string name="mnNextArticle">Weiter</string>
     <string name="mnViewOnline">Online ansehen</string>
     <string name="mnNewLookup">Neu nachschlagen</string>
@@ -74,7 +74,7 @@
     <string name="msgDictOk">%s ist in Ordnung</string>
     
     <string name="msgLooking">Suche Wörterbücher...</string>    
-    <string name="msgLoading">Lade Wörterbücker...</string>
+    <string name="msgLoading">Lade Wörterbücher...</string>
     
     <string name="verifyOk">ok</string>
     <string name="verifyCorrupted">beschädigt</string>

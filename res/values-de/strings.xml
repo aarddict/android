@@ -89,4 +89,5 @@
     <string name="toastDictFileLoaded">Wörterbuch von %s geladen</string>
     <string name="toastDictFileFailed">Fehler beim Laden des Wörterbuches von %s</string>
     <string name="mnNext">Weiter</string>
+    <string name="mnFindInPage">Suchen...</string>
 </resources>

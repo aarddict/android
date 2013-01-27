@@ -89,4 +89,5 @@
     <string name="toastDictFileLoaded">已从 %s 中载入了词典</string>
     <string name="toastDictFileFailed">从 %s 中载入词典失败</string>
     <string name="mnNext">下一篇文章中</string>
+    <string name="mnFindInPage">查找...</string>
 </resources>

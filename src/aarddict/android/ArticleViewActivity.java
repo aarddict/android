@@ -36,6 +36,7 @@ import aarddict.Entry;
 import aarddict.LookupWord;
 import aarddict.RedirectTooManyLevels;
 import aarddict.Volume;
+import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.app.SearchManager;
 import android.content.DialogInterface;
@@ -44,9 +45,11 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.view.MenuItemCompat;
 import android.util.Log;
+import android.view.ActionMode;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -59,7 +62,6 @@ import android.view.animation.Animation;
 import android.view.animation.Animation.AnimationListener;
 import android.webkit.JsResult;
 import android.webkit.WebChromeClient;
-import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
@@ -136,6 +138,17 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
         timer = new Timer();
         
         backItems = Collections.synchronizedList(new LinkedList<HistoryItem>());        
+        
+        if (android.os.Build.VERSION.SDK_INT >= 11) {
+            try {
+                showFindDialogMethod = articleView.getClass().getMethod(
+                        "showFindDialog", String.class, boolean.class);
+            } catch (NoSuchMethodException e1) {
+                Log.d(TAG, "showFindDialog method not found");
+            }
+            
+        }
+
         
         articleView.setOnScrollListener(new ArticleView.ScrollListener(){
 			public void onScroll(int l, int t, int oldl, int oldt) {
@@ -269,9 +282,24 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
 				}
 			}
 		);
+		
         setProgressBarVisibility(true);
     }
 
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    @Override
+    public void onActionModeStarted(ActionMode mode) {
+        super.onActionModeStarted(mode);
+        articleView.mustBeArmedToScroll = false;
+    }
+    
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    @Override
+    public void onActionModeFinished(ActionMode mode) {
+        super.onActionModeFinished(mode);
+        articleView.mustBeArmedToScroll = true;
+    }
+    
     private void scrollTo(ScrollXY s) {
     	scrollTo(s.x, s.y);
     }
@@ -400,14 +428,20 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
     final static int MENU_ZOOM_IN = 3;
     final static int MENU_ZOOM_OUT = 4;
     final static int MENU_NEXT = 5;
-    
+    final static int MENU_FIND_IN_PAGE = 6;
     
     private MenuItem miViewOnline;
 
-    private MenuItem miNextArticle; 
+    private MenuItem miNextArticle;
+
+    private Method showFindDialogMethod; 
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        if (showFindDialogMethod != null) {
+            MenuItem miFindInPage = menu.add(0, MENU_FIND_IN_PAGE, 0, R.string.mnFindInPage).setIcon(android.R.drawable.ic_menu_search);
+            MenuItemCompat.setShowAsAction(miFindInPage, MenuItemCompat.SHOW_AS_ACTION_ALWAYS);
+        }
         miViewOnline = menu.add(0, MENU_VIEW_ONLINE, 0, R.string.mnViewOnline).setIcon(android.R.drawable.ic_menu_view);
         menu.add(0, MENU_NEW_LOOKUP, 0, R.string.mnNewLookup).setIcon(android.R.drawable.ic_menu_search);        
         menu.add(0, MENU_ZOOM_OUT, 0, R.string.mnZoomOut).setIcon(R.drawable.ic_menu_zoom_out);
@@ -433,6 +467,16 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
     	return true;
     }
     
+    private void showFindDialog() {
+        if (showFindDialogMethod != null){
+            try {
+                showFindDialogMethod.invoke(articleView, "", true);
+            } catch (Exception e) {
+                Log.e(TAG, "", e);
+            }
+        }
+    }
+    
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -450,8 +494,10 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
             zoomOut();
             break;
         case MENU_NEXT:
-            Log.d("AA", "MENU_NEXT");
             nextArticle();
+            break;
+        case MENU_FIND_IN_PAGE:
+            showFindDialog();
             break;
         default:
             return super.onOptionsItemSelected(item);

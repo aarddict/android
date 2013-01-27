@@ -93,4 +93,5 @@
     <string name="toastDictFileLoaded">Loaded dictionary from %s</string>
     <string name="toastDictFileFailed">Failed to load dictionary from %s</string>
     <string name="mnNext">Next</string>
+    <string name="mnFindInPage">Find...</string>
 </resources>

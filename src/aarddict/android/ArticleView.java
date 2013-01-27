@@ -23,6 +23,7 @@ import android.webkit.WebView;
 class ArticleView extends WebView {
 
     private boolean scrollToArmed = false;
+    boolean mustBeArmedToScroll = true;
     
 	interface ScrollListener {
 		void onScroll(int l, int t, int oldl, int oldt);
@@ -63,7 +64,7 @@ class ArticleView extends WebView {
 	    //reliably prevents this. However, this also prevents programmatic
 	    //scrolling from JavaScript, so now JavaScript must call armScroll()
 	    //before calling any scrolling methods
-	    if (scrollToArmed) {
+	    if (!mustBeArmedToScroll || scrollToArmed) {
 	        super.scrollTo(x, y);
 	        scrollToArmed = false;
 	    }
@@ -77,4 +78,5 @@ class ArticleView extends WebView {
 	public void realScrollTo(int x, int y) {
 	    super.scrollTo(x, y);
 	}
+	
 }

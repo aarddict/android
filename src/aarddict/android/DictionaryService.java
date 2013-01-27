@@ -38,7 +38,6 @@ import java.util.UUID;
 import aarddict.Article;
 import aarddict.ArticleNotFound;
 import aarddict.Entry;
-import aarddict.Header;
 import aarddict.Library;
 import aarddict.Metadata;
 import aarddict.RedirectTooManyLevels;
@@ -274,6 +273,7 @@ public final class DictionaryService extends Service {
                 Intent notifyFailed = new Intent(DICT_OPEN_FAILED);
                 notifyFailed.putExtra("file", file.getAbsolutePath());
                 notifyFailed.putExtra("count", files.size());
+                notifyFailed.putExtra("reason", e.getMessage());
                 notifyFailed.putExtra("i", i);
                 sendBroadcast(notifyFailed);  
                 Thread.yield();

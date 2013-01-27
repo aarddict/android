@@ -100,6 +100,15 @@ abstract class BaseDictionaryActivity extends Activity {
                     if (openProgress != null) {
                         openProgress.incrementProgressBy(1); 
                     }
+                    if (a.equals(DictionaryService.DICT_OPEN_FAILED)) {
+                        String file = intent.getStringExtra("file");
+                        String reason = intent.getStringExtra("reason");
+                        String msg = getResources().getString(R.string.toastDictFileFailed, file == null ? "" : file);
+                        if (reason != null && !reason.equals("")) {
+                            msg += ": " + reason;
+                        }
+                        Toast.makeText(BaseDictionaryActivity.this, msg, Toast.LENGTH_SHORT).show();
+                    }
                 } else
                 if (a.equals(DictionaryService.OPEN_FINISHED)) {
                     if (openProgress != null) {                     

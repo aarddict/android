@@ -23,7 +23,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -45,6 +44,35 @@ import android.util.Log;
 
 public final class Volume extends AbstractList<Entry> {
 
+    static class FormatException extends Exception {
+
+        public FormatException(String detailMessage) {
+            super(detailMessage);
+        }
+        
+    }
+    
+    public final static class InvalidSignatureException extends FormatException {
+        public InvalidSignatureException() {
+            super("Not a dictionary file");
+        }};
+        
+    public final static class InvalidFormatVersionException extends FormatException {
+        public InvalidFormatVersionException() {
+            super("Invalid file format version");
+        }};
+        
+    public final static class MetadataTooBigException extends FormatException {
+        public MetadataTooBigException() {
+            super("Metadata is too big");
+        }};
+        
+    public final static class CorruptedFileException extends FormatException {
+
+        public CorruptedFileException() {
+            super("Corrupted file");
+        }};
+    
 	private final static String TAG = Volume.class.getName();
 	
     final static Charset UTF8 = Charset.forName("utf8");
@@ -63,14 +91,15 @@ public final class Volume extends AbstractList<Entry> {
     	mapper.getDeserializationConfig().set(org.codehaus.jackson.map.DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
     
-    public Volume(File file, File cacheDir, Map<UUID, Metadata> knownMeta) throws IOException {
+    public Volume(File file, File cacheDir, Map<UUID, Metadata> knownMeta) throws IOException, FormatException {
     	this.origFile = file;
         init(new RandomAccessFile(file, "r"), cacheDir, knownMeta);
     }
     
-    private void init(RandomAccessFile file, File cacheDir, Map<UUID, Metadata> knownMeta) throws IOException {
+    private void init(RandomAccessFile file, File cacheDir, Map<UUID, Metadata> knownMeta) throws IOException, FormatException {
         this.file = file;
         this.header = new Header(file);
+        this.assertFormat();
         this.sha1sum = header.sha1sum;
         if (knownMeta.containsKey(header.uuid)) {
         	this.metadata = knownMeta.get(header.uuid);  
@@ -106,6 +135,29 @@ public final class Volume extends AbstractList<Entry> {
             }                    
         }
         initArticleURLTemplate();        
+    }
+
+    private void assertFormat() throws FormatException, IOException {
+        Log.d(TAG, "Checking signature...");
+        if (!this.header.signature.equals("aard")) {
+            throw new InvalidSignatureException();
+        }
+        Log.d(TAG, "Checking format version...");
+        if (this.header.version != 1) {
+            throw new InvalidFormatVersionException();
+        }
+        Log.d(TAG, "Checking offsets sanity...");
+        long fileSize = file.length();
+        if (header.articleOffset > fileSize ||
+            header.index1Offset > fileSize ||
+            header.index2Offset > fileSize) {
+            throw new CorruptedFileException();
+        }
+        Log.d(TAG, "Checking metadata length sanity...");
+        if (header.metaLength > (1 << 23) ) {
+            throw new MetadataTooBigException();
+        }
+        Log.d(TAG, "Sanity check ok");
     }
 
     public String getId() {

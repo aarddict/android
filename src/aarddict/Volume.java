@@ -426,7 +426,18 @@ public final class Volume extends AbstractList<Entry> {
                s.append(String.format(" Vol. %s", this.header.volume));        
         return s.toString();
     }
-    
+
+    private static final char[] HEX_DIGITS = "0123456789abcdef".toCharArray();
+
+    public static String toHex(byte[] data) {
+        char[] chars = new char[data.length * 2];
+        for (int i = 0; i < data.length; i++) {
+            chars[i * 2] = HEX_DIGITS[(data[i] >> 4) & 0xf];
+            chars[i * 2 + 1] = HEX_DIGITS[data[i] & 0xf];
+        }
+        return new String(chars);
+    }
+
     public void verify(VerifyProgressListener listener) throws IOException, NoSuchAlgorithmException {    	
     	FileInputStream fis = new FileInputStream(origFile);
     	fis.skip(44);
@@ -443,8 +454,7 @@ public final class Volume extends AbstractList<Entry> {
     	}    	
     	fis.close();
     	if (proceed) {
-    		BigInteger b = new BigInteger(1, m.digest());
-    		String calculated = b.toString(16);
+    		String calculated = Volume.toHex(m.digest());
     		Log.d(TAG, "calculated: " + calculated + " actual: " + sha1sum);
     		listener.verified(this, calculated.equals(this.sha1sum));
     	}

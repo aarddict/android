@@ -10,6 +10,7 @@
         android:normalScreens="true"
         android:largeScreens="true"
         android:anyDensity="true" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"></uses-permission>
     <application android:allowBackup="true"
                 android:icon="@drawable/aarddict" 
                 android:label="@string/appName">

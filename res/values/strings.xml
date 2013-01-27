@@ -36,7 +36,7 @@
         ]]>    
     </string>
     
-    <string name="flattrUrl">
+    <string name="flattrUrl" translatable="false">
         <![CDATA[https://flattr.com/submit/auto?user_id=aarddict&url=http://aarddict.org]]>
     </string>
     

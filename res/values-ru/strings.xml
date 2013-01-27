@@ -47,8 +47,7 @@
     <string name="titleDictionaryInfoActivity">Информация о словаре</string>
     
     <string name="inputHint">Введите слово</string>
-    
-    <string name="mnRefresh">Обновить</string>
+
     <string name="mnInfo">Словари</string>
     <string name="mnAbout">О программе</string>
     <string name="mnBack">Вернуться</string>

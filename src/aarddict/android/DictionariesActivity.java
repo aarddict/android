@@ -146,8 +146,7 @@ public final class DictionariesActivity extends BaseDictionaryActivity {
 				messageView.setVisibility(View.GONE);
 				scanSDButton.setVisibility(View.GONE);
 				listView.setVisibility(View.VISIBLE);
-				dataAdapter = new DictListAdapter(dictionaryService
-						.getVolumes());
+				dataAdapter = new DictListAdapter(dictionaryService.getVolumes());
 				listView.setAdapter(dataAdapter);
 				listView.setOnItemClickListener(dataAdapter);
 				listView.setOnItemLongClickListener(dataAdapter);

@@ -139,6 +139,21 @@ Dictionary for Android issue tracker`_.
 Changes
 =======
 
+1.5.0
+-----
+
+- Updated look for Android 4.x (:android-issue:`51`)
+
+- Improved Nook support (:android-issue:`53`)
+
+- French translation (:android-issue:`52`)
+
+- Fixed crash on orientation change when verifying data integrity
+  (:android-issue:`44`)
+
+- Navigating back to article restores scroll position again (was
+  broken on Android 4.1 and newer) (:android-issue:`49`)
+
 1.4.1
 -----
 

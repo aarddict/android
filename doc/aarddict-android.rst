@@ -123,9 +123,13 @@ Contributors
 
 - Chinese translation by `bbs.goapk.com`_
 
+- French translation by Riad Benchoucha
+
+- German translation by dliw_
+
 .. _SDict Viewer: http://sdictviewer.sourceforge.net
 .. _bbs.goapk.com: http://bbs.goapk.com
-
+.. _dliw: https://github.com/dliw
 
 Reporting Issues
 ================
@@ -138,6 +142,17 @@ Dictionary for Android issue tracker`_.
 
 Changes
 =======
+
+1.6.0
+-----
+
+- Find text in article (:android-issue:`47`)
+- German translation (:android-issue:`57`, :android-issue:`58`)
+- Fixed verification incorrectly failing for some good files
+  (:android-issue:`56`)
+- Fixed crash on attempt to open some corrupted dictionary files
+  (:android-issue:`50`, :android-issue:`54`)
+
 
 1.5.0
 -----

@@ -1,5 +1,5 @@
 /* This file is part of Aard Dictionary for Android <http://aarddict.org>.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.
@@ -9,7 +9,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License <http://www.gnu.org/licenses/gpl-3.0.txt>
  * for more details.
- * 
+ *
  * Copyright (C) 2010 Igor Tkach
 */
 
@@ -81,15 +81,15 @@ public final class Header {
         this.articleLengthFormat = file.readUTF8(2);
         specLen += 2;
         this.articleLengthSpec = this.articleLengthFormat.charAt(1);
-        
+
         this.index1ItemSize = calcSize(this.index1ItemFormat);
-        
+
         this.index1Offset = specLen + this.metaLength;
         this.index2Offset = this.index1Offset + this.indexCount*this.index1ItemSize;
         this.keyPointerSpec = this.index1ItemFormat.charAt(1);
         this.articlePointerSpec = this.index1ItemFormat.charAt(2);
     }
-    
+
     static Map<Character, Integer> structSizes = new HashMap<Character, Integer>() {
                                                    {
                                                        put('h', 2);
@@ -102,7 +102,7 @@ public final class Header {
                                                        put('Q', 8);
                                                    }
                                                };
-    
+
     static int calcSize(String structSpec) {
         int size = 0;
         int length = structSpec.length();

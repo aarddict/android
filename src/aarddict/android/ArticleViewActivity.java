@@ -1,5 +1,5 @@
 /* This file is part of Aard Dictionary for Android <http://aarddict.org>.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.
@@ -9,7 +9,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License <http://www.gnu.org/licenses/gpl-3.0.txt>
  * for more details.
- * 
+ *
  * Copyright (C) 2010 Igor Tkach
 */
 
@@ -78,7 +78,7 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
 
     public static final int NOOK_KEY_PREV_RIGHT = 94;
     public static final int NOOK_KEY_NEXT_RIGHT = 95;
-    
+
     private ArticleView         articleView;
     private String              sharedCSS;
     private String              mediawikiSharedCSS;
@@ -89,56 +89,56 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
     private Timer               timer;
     private TimerTask           currentTask;
     private TimerTask           currentHideNextButtonTask;
-    private AlphaAnimation 		fadeOutAnimation;
-    private boolean 			useAnimation = false;        
-    
-	private Map<Article, ScrollXY> scrollPositionsH;
-	private Map<Article, ScrollXY> scrollPositionsV;
-	private boolean                saveScrollPos = true;
+    private AlphaAnimation              fadeOutAnimation;
+    private boolean                     useAnimation = false;
 
-    
+        private Map<Article, ScrollXY> scrollPositionsH;
+        private Map<Article, ScrollXY> scrollPositionsV;
+        private boolean                saveScrollPos = true;
+
+
     static class AnimationAdapter implements AnimationListener {
-		public void onAnimationEnd(Animation animation) {}
-		public void onAnimationRepeat(Animation animation) {}
-		public void onAnimationStart(Animation animation) {}    	
+                public void onAnimationEnd(Animation animation) {}
+                public void onAnimationRepeat(Animation animation) {}
+                public void onAnimationStart(Animation animation) {}
     }
-    
+
     @Override
     void initUI() {
-    	this.scrollPositionsH = Collections.synchronizedMap(new HashMap<Article, ScrollXY>());
-    	this.scrollPositionsV = Collections.synchronizedMap(new HashMap<Article, ScrollXY>());
-        loadAssets();                
+        this.scrollPositionsH = Collections.synchronizedMap(new HashMap<Article, ScrollXY>());
+        this.scrollPositionsV = Collections.synchronizedMap(new HashMap<Article, ScrollXY>());
+        loadAssets();
 
-        if (DeviceInfo.EINK_SCREEN)	{
-			useAnimation = false;
+        if (DeviceInfo.EINK_SCREEN)     {
+                        useAnimation = false;
 
-	    	setContentView(R.layout.eink_article_view);
-	        articleView = (ArticleView)findViewById(R.id.EinkArticleView);
-	        N2EpdController.n2MainActivity = this;      
-			EinkScreen.ResetController(2, articleView);  // force full screen refresh when changing articles
-		}
-		// Setup animations only on non-eink screens
-		else
-		{
-	        useAnimation = true;
-	        fadeOutAnimation = new AlphaAnimation(1f, 0f);
-	        fadeOutAnimation.setDuration(600);
-	        fadeOutAnimation.setAnimationListener(new AnimationAdapter() {
-	        	public void onAnimationEnd(Animation animation) {
-	        		Button nextButton = (Button)findViewById(R.id.NextButton);
-	        		nextButton.setVisibility(Button.GONE);
-	        	}
-	        });
+                setContentView(R.layout.eink_article_view);
+                articleView = (ArticleView)findViewById(R.id.EinkArticleView);
+                N2EpdController.n2MainActivity = this;
+                        EinkScreen.ResetController(2, articleView);  // force full screen refresh when changing articles
+                }
+                // Setup animations only on non-eink screens
+                else
+                {
+                useAnimation = true;
+                fadeOutAnimation = new AlphaAnimation(1f, 0f);
+                fadeOutAnimation.setDuration(600);
+                fadeOutAnimation.setAnimationListener(new AnimationAdapter() {
+                        public void onAnimationEnd(Animation animation) {
+                                Button nextButton = (Button)findViewById(R.id.NextButton);
+                                nextButton.setVisibility(Button.GONE);
+                        }
+                });
 
-	    	getWindow().requestFeature(Window.FEATURE_PROGRESS);
-	    	setContentView(R.layout.article_view);
-	    	articleView = (ArticleView)findViewById(R.id.ArticleView);    
-		}
+                getWindow().requestFeature(Window.FEATURE_PROGRESS);
+                setContentView(R.layout.article_view);
+                articleView = (ArticleView)findViewById(R.id.ArticleView);
+                }
 
         timer = new Timer();
-        
-        backItems = Collections.synchronizedList(new LinkedList<HistoryItem>());        
-        
+
+        backItems = Collections.synchronizedList(new LinkedList<HistoryItem>());
+
         if (android.os.Build.VERSION.SDK_INT >= 11) {
             try {
                 showFindDialogMethod = articleView.getClass().getMethod(
@@ -146,54 +146,54 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
             } catch (NoSuchMethodException e1) {
                 Log.d(TAG, "showFindDialog method not found");
             }
-            
+
         }
 
-        
+
         articleView.setOnScrollListener(new ArticleView.ScrollListener(){
-			public void onScroll(int l, int t, int oldl, int oldt) {
-				saveScrollPos(l, t);
-			}        	
+                        public void onScroll(int l, int t, int oldl, int oldt) {
+                                saveScrollPos(l, t);
+                        }
         });
 
-        articleView.getSettings().setJavaScriptEnabled(true);   	
+        articleView.getSettings().setJavaScriptEnabled(true);
         articleView.addJavascriptInterface(new SectionMatcher(), "matcher");
         articleView.addJavascriptInterface(articleView, "scrollControl");
-        
+
         articleView.setWebChromeClient(new WebChromeClient(){
-            
+
             @Override
             public boolean onJsAlert(WebView view, String url, String message,
-            		JsResult result) {            	
-            	Log.d(TAG + ".js", String.format("[%s]: %s", url, message));
-            	result.cancel();
-            	return true;
+                        JsResult result) {
+                Log.d(TAG + ".js", String.format("[%s]: %s", url, message));
+                result.cancel();
+                return true;
             }
-            
+
             public void onProgressChanged(WebView view, int newProgress) {
                 Log.d(TAG, "Progress: " + newProgress);
-                setProgress(5000 + newProgress * 50);                
+                setProgress(5000 + newProgress * 50);
             }
         });
-                            
+
         articleView.setWebViewClient(new WebViewClient() {
-        	
+
             @Override
             public void onScaleChanged(WebView view, float oldScale, float newScale) {
                 view.setInitialScale(Math.round(newScale*100));
             }
-            
+
             @Override
             public void onPageFinished(WebView view, String url) {
                 Log.d(TAG, "Page finished: " + url);
                 currentTask = null;
                 String section = null;
-                                                
+
                 if (url.contains("#")) {
-                	LookupWord lookupWord = LookupWord.splitWord(url);                    
+                        LookupWord lookupWord = LookupWord.splitWord(url);
                     section = lookupWord.section;
                     if (backItems.size() > 0) {
-                    	HistoryItem currentHistoryItem = backItems.get(backItems.size() - 1); 
+                        HistoryItem currentHistoryItem = backItems.get(backItems.size() - 1);
                         HistoryItem h = new HistoryItem(currentHistoryItem);
                         h.article.section = section;
                         backItems.add(h);
@@ -204,85 +204,85 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
                     section = current.section;
                 }
                 if (!restoreScrollPos()) {
-                	goToSection(section);
+                        goToSection(section);
                 }
                 updateNextButtonVisibility();
             }
-            
+
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, final String url) {
                 Log.d(TAG, "URL clicked: " + url);
-                String urlLower = url.toLowerCase(); 
+                String urlLower = url.toLowerCase();
                 if (urlLower.startsWith("http://") ||
                     urlLower.startsWith("https://") ||
                     urlLower.startsWith("ftp://") ||
                     urlLower.startsWith("sftp://") ||
                     urlLower.startsWith("mailto:")) {
-                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, 
-                                                Uri.parse(url)); 
-                    startActivity(browserIntent);                                         
+                    Intent browserIntent = new Intent(Intent.ACTION_VIEW,
+                                                Uri.parse(url));
+                    startActivity(browserIntent);
                 }
                 else {
-                	if (currentTask == null) {
-                		currentTask = new TimerTask() {							
-							public void run() {
-								try {
-									Article currentArticle = backItems.get(backItems.size() - 1).article;
-									try {
-									    Iterator<Entry> currentIterator = dictionaryService.followLink(url, currentArticle.volumeId);
-	                                    List<Entry> result = new ArrayList<Entry>();
-	                                    while (currentIterator.hasNext() && result.size() < 20) {
-	                                        result.add(currentIterator.next());
-	                                    }                                   
-	                                    showNext(new HistoryItem(result));									    
-									}
-									catch (ArticleNotFound e) {
-									    showMessage(getString(R.string.msgArticleNotFound, e.word.toString()));
-									}
-								}								
-								catch (Exception e) {
-									StringBuilder msgBuilder = new StringBuilder("There was an error following link ")
-									.append("\"").append(url).append("\"");
-									if (e.getMessage() != null) {
-										msgBuilder.append(": ").append(e.getMessage());
-									}									
-									final String msg = msgBuilder.toString(); 
-									Log.e(TAG, msg, e);
-									showError(msg);
-								}
-							}
-						};
-						try {
-						    timer.schedule(currentTask, 0);
-						}
-						catch (Exception e) {
-						    Log.d(TAG, "Failed to schedule task", e);
-						}
-                	}                	
+                        if (currentTask == null) {
+                                currentTask = new TimerTask() {
+                                                        public void run() {
+                                                                try {
+                                                                        Article currentArticle = backItems.get(backItems.size() - 1).article;
+                                                                        try {
+                                                                            Iterator<Entry> currentIterator = dictionaryService.followLink(url, currentArticle.volumeId);
+                                            List<Entry> result = new ArrayList<Entry>();
+                                            while (currentIterator.hasNext() && result.size() < 20) {
+                                                result.add(currentIterator.next());
+                                            }
+                                            showNext(new HistoryItem(result));
+                                                                        }
+                                                                        catch (ArticleNotFound e) {
+                                                                            showMessage(getString(R.string.msgArticleNotFound, e.word.toString()));
+                                                                        }
+                                                                }
+                                                                catch (Exception e) {
+                                                                        StringBuilder msgBuilder = new StringBuilder("There was an error following link ")
+                                                                        .append("\"").append(url).append("\"");
+                                                                        if (e.getMessage() != null) {
+                                                                                msgBuilder.append(": ").append(e.getMessage());
+                                                                        }
+                                                                        final String msg = msgBuilder.toString();
+                                                                        Log.e(TAG, msg, e);
+                                                                        showError(msg);
+                                                                }
+                                                        }
+                                                };
+                                                try {
+                                                    timer.schedule(currentTask, 0);
+                                                }
+                                                catch (Exception e) {
+                                                    Log.d(TAG, "Failed to schedule task", e);
+                                                }
+                        }
                 }
                 return true;
             }
         });
         final Button nextButton = (Button)findViewById(R.id.NextButton);
         nextButton.getBackground().setAlpha(180);
-        nextButton.setOnClickListener(new View.OnClickListener() {			
-			public void onClick(View v) {
-				if (nextButton.getVisibility() == View.VISIBLE) {
-					updateNextButtonVisibility();
-					nextArticle();
-					updateNextButtonVisibility();
-				}											
-			}
-		});
-		articleView.setOnTouchListener(
-			new View.OnTouchListener() {				
-				public boolean onTouch(View v, MotionEvent event) {
-					updateNextButtonVisibility();
-					return false;
-				}
-			}
-		);
-		
+        nextButton.setOnClickListener(new View.OnClickListener() {
+                        public void onClick(View v) {
+                                if (nextButton.getVisibility() == View.VISIBLE) {
+                                        updateNextButtonVisibility();
+                                        nextArticle();
+                                        updateNextButtonVisibility();
+                                }
+                        }
+                });
+                articleView.setOnTouchListener(
+                        new View.OnTouchListener() {
+                                public boolean onTouch(View v, MotionEvent event) {
+                                        updateNextButtonVisibility();
+                                        return false;
+                                }
+                        }
+                );
+
         setProgressBarVisibility(true);
     }
 
@@ -292,51 +292,51 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
         super.onActionModeStarted(mode);
         articleView.mustBeArmedToScroll = false;
     }
-    
+
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     @Override
     public void onActionModeFinished(ActionMode mode) {
         super.onActionModeFinished(mode);
         articleView.mustBeArmedToScroll = true;
     }
-    
+
     private void scrollTo(ScrollXY s) {
-    	scrollTo(s.x, s.y);
+        scrollTo(s.x, s.y);
     }
-    
+
     private void scrollTo(int x, int y) {
-    	saveScrollPos = false; 
-    	Log.d(TAG, "Scroll to " + x + ", " + y);
-    	articleView.realScrollTo(x, y);
-    	saveScrollPos = true;
+        saveScrollPos = false;
+        Log.d(TAG, "Scroll to " + x + ", " + y);
+        articleView.realScrollTo(x, y);
+        saveScrollPos = true;
     }
-    
+
     private void goToSection(String section) {
-    	Log.d(TAG, "Go to section " + section);
-    	if (section == null || section.trim().equals("")) {
-    		scrollTo(0, 0);
-    	}
-    	else {
-    		articleView.loadUrl(String.format("javascript:scrollToMatch(\"%s\")", section));
-    	}
-    }    
-    
+        Log.d(TAG, "Go to section " + section);
+        if (section == null || section.trim().equals("")) {
+                scrollTo(0, 0);
+        }
+        else {
+                articleView.loadUrl(String.format("javascript:scrollToMatch(\"%s\")", section));
+        }
+    }
+
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         switch (keyCode) {
             case KeyEvent.KEYCODE_BACK:
-                goBack();   
+                goBack();
                 break;
-		    case NOOK_KEY_PREV_LEFT:
-		    case NOOK_KEY_PREV_RIGHT:
+                    case NOOK_KEY_PREV_LEFT:
+                    case NOOK_KEY_PREV_RIGHT:
             case KeyEvent.KEYCODE_VOLUME_UP:
                 if (!articleView.pageUp(false)) {
                     goBack();
                 }
                 break;
             case KeyEvent.KEYCODE_VOLUME_DOWN:
-		    case NOOK_KEY_NEXT_LEFT:
-		    case NOOK_KEY_NEXT_RIGHT:
+                    case NOOK_KEY_NEXT_LEFT:
+                    case NOOK_KEY_NEXT_RIGHT:
                 if (!articleView.pageDown(false)) {
                     nextArticle();
                 };
@@ -346,10 +346,10 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
         }
         return true;
     }
-    
+
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
-    	//eat key ups corresponding to key downs so that volume keys don't beep
+        //eat key ups corresponding to key downs so that volume keys don't beep
     switch (keyCode) {
         case KeyEvent.KEYCODE_BACK:
         case KeyEvent.KEYCODE_VOLUME_UP:
@@ -360,82 +360,82 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
         }
         return true;
     }
-        
-    private boolean zoomIn() {        
+
+    private boolean zoomIn() {
         return articleView.zoomIn();
     }
-    
+
     private boolean zoomOut() {
         return articleView.zoomOut();
     }
-        
+
     private void goBack() {
         if (backItems.size() == 1) {
             finish();
-        }        
-    	if (currentTask != null) {
-    		return;
-    	}
+        }
+        if (currentTask != null) {
+                return;
+        }
         if (backItems.size() > 1) {
-            HistoryItem current = backItems.remove(backItems.size() - 1); 
+            HistoryItem current = backItems.remove(backItems.size() - 1);
             HistoryItem prev = backItems.get(backItems.size() - 1);
-            
-            Article prevArticle = prev.article; 
+
+            Article prevArticle = prev.article;
             if (prevArticle.equalsIgnoreSection(current.article)) {
-            	resetTitleToCurrent();
-            	if (!prevArticle.sectionEquals(current.article) && !restoreScrollPos()) {
-            		goToSection(prevArticle.section);
-            	}
-            }   
+                resetTitleToCurrent();
+                if (!prevArticle.sectionEquals(current.article) && !restoreScrollPos()) {
+                        goToSection(prevArticle.section);
+                }
+            }
             else {
-            	showCurrentArticle();
+                showCurrentArticle();
             }
         }
     }
-            
+
     private void nextArticle() {
-    	HistoryItem current = backItems.get(backItems.size() - 1);
-    	if (current.hasNext()) {
-    		showNext(current);
-    	}
+        HistoryItem current = backItems.get(backItems.size() - 1);
+        if (current.hasNext()) {
+                showNext(current);
+        }
     }
 
     @Override
     public boolean onSearchRequested() {
         Intent intent = getIntent();
         if (intent != null && intent.getAction() != null && intent.getAction().equals(Intent.ACTION_SEARCH)) {
-	    	Intent next = new Intent();
-	        next.setClass(this, LookupActivity.class);
-	    	next.setAction(Intent.ACTION_SEARCH);
-	      	next.putExtra(SearchManager.QUERY, intent.getStringExtra("query"));
-	      	startActivity(next);
+                Intent next = new Intent();
+                next.setClass(this, LookupActivity.class);
+                next.setAction(Intent.ACTION_SEARCH);
+                next.putExtra(SearchManager.QUERY, intent.getStringExtra("query"));
+                startActivity(next);
         }
         finish();
         return true;
     }
-    
+
     public boolean onKeyLongPress(int keyCode, KeyEvent event) {
-    	if (keyCode == KeyEvent.KEYCODE_SEARCH){
-    		finish();
-    		return true;
-    	}
-    	return super.onKeyLongPress(keyCode, event);
+        if (keyCode == KeyEvent.KEYCODE_SEARCH){
+                finish();
+                return true;
+        }
+        return super.onKeyLongPress(keyCode, event);
     }
 
-    
+
     final static int MENU_VIEW_ONLINE = 1;
     final static int MENU_NEW_LOOKUP = 2;
     final static int MENU_ZOOM_IN = 3;
     final static int MENU_ZOOM_OUT = 4;
     final static int MENU_NEXT = 5;
     final static int MENU_FIND_IN_PAGE = 6;
-    
+
     private MenuItem miViewOnline;
 
     private MenuItem miNextArticle;
 
-    private Method showFindDialogMethod; 
-    
+    private Method showFindDialogMethod;
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         if (showFindDialogMethod != null) {
@@ -443,30 +443,30 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
             MenuItemCompat.setShowAsAction(miFindInPage, MenuItemCompat.SHOW_AS_ACTION_ALWAYS);
         }
         miViewOnline = menu.add(0, MENU_VIEW_ONLINE, 0, R.string.mnViewOnline).setIcon(android.R.drawable.ic_menu_view);
-        menu.add(0, MENU_NEW_LOOKUP, 0, R.string.mnNewLookup).setIcon(android.R.drawable.ic_menu_search);        
+        menu.add(0, MENU_NEW_LOOKUP, 0, R.string.mnNewLookup).setIcon(android.R.drawable.ic_menu_search);
         menu.add(0, MENU_ZOOM_OUT, 0, R.string.mnZoomOut).setIcon(R.drawable.ic_menu_zoom_out);
         menu.add(0, MENU_ZOOM_IN, 0, R.string.mnZoomIn).setIcon(R.drawable.ic_menu_zoom_in);
         miNextArticle = menu.add(0, MENU_NEXT, 0, R.string.mnNext).setIcon(android.R.drawable.ic_media_next);
         MenuItemCompat.setShowAsAction(miNextArticle, MenuItemCompat.SHOW_AS_ACTION_ALWAYS);
         return true;
     }
-    
+
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-    	boolean enableViewOnline = false;
-    	boolean hasNextArticle = false;
+        boolean enableViewOnline = false;
+        boolean hasNextArticle = false;
         if (this.backItems.size() > 0) {
             HistoryItem historyItem = backItems.get(backItems.size() - 1);
             Article current = historyItem.article;
             Volume d = dictionaryService.getVolume(current.volumeId);
             enableViewOnline = d.getArticleURLTemplate() != null;
             hasNextArticle = historyItem.hasNext();
-        }    	    
-    	miViewOnline.setEnabled(enableViewOnline);
-    	miNextArticle.setVisible(hasNextArticle);
-    	return true;
+        }
+        miViewOnline.setEnabled(enableViewOnline);
+        miNextArticle.setVisible(hasNextArticle);
+        return true;
     }
-    
+
     private void showFindDialog() {
         if (showFindDialogMethod != null){
             try {
@@ -476,7 +476,7 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
             }
         }
     }
-    
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -504,297 +504,297 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
         }
         return true;
     }
-        
+
     private void viewOnline() {
-        if (this.backItems.size() > 0) {            
+        if (this.backItems.size() > 0) {
             Article current = this.backItems.get(this.backItems.size() - 1).article;
             Volume d = dictionaryService.getVolume(current.volumeId);
             String url = d == null ? null : d.getArticleURL(current.title);
             if (url != null) {
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, 
-                        Uri.parse(url)); 
-                startActivity(browserIntent);                                         
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW,
+                        Uri.parse(url));
+                startActivity(browserIntent);
             }
         }
     }
-    
+
     private void showArticle(String volumeId, long articlePointer, String word, String section) {
         Log.d(TAG, "word: " + word);
         Log.d(TAG, "dictionaryId: " + volumeId);
         Log.d(TAG, "articlePointer: " + articlePointer);
-        Log.d(TAG, "section: " + section);                       
-        Volume d = dictionaryService.getVolume(volumeId);        
+        Log.d(TAG, "section: " + section);
+        Volume d = dictionaryService.getVolume(volumeId);
         Entry entry = new Entry(d.getId(), word, articlePointer);
-        entry.section = section;        
+        entry.section = section;
         this.showArticle(entry);
     }
-    
-    private void showArticle(Entry entry) {        
+
+    private void showArticle(Entry entry) {
         List<Entry> result = new ArrayList<Entry>();
         result.add(entry);
-        
+
         try {
-            Iterator<Entry> currentIterator = dictionaryService.followLink(entry.title, entry.volumeId);            
+            Iterator<Entry> currentIterator = dictionaryService.followLink(entry.title, entry.volumeId);
             while (currentIterator.hasNext() && result.size() < 20) {
                 Entry next = currentIterator.next();
                 if (!next.equals(entry)) {
                     result.add(next);
                 }
-            }                                                                                    
+            }
         }
         catch (ArticleNotFound e) {
             Log.d(TAG, String.format("Article \"%s\" not found - unexpected", e.word));
-        }        
+        }
         showNext(new HistoryItem(result));
-    }    
+    }
 
     private Map<Article, ScrollXY> getScrollPositions() {
-		int orientation = getWindowManager().getDefaultDisplay().getOrientation();
-		switch (orientation) {
-			case Surface.ROTATION_0:
-			case Surface.ROTATION_180:
-				return scrollPositionsV;
-			default:
-				return scrollPositionsH;
-		}
+                int orientation = getWindowManager().getDefaultDisplay().getOrientation();
+                switch (orientation) {
+                        case Surface.ROTATION_0:
+                        case Surface.ROTATION_180:
+                                return scrollPositionsV;
+                        default:
+                                return scrollPositionsH;
+                }
     }
-    
+
     private void saveScrollPos(int x, int y) {
-    	if (!saveScrollPos) {
-    		//Log.d(TAG, "Not saving scroll position (disabled)");
-    		return;
-    	}
-    	if (backItems.size() > 0) {
-	    	Article a = backItems.get(backItems.size() - 1).article;
-	    	Map<Article, ScrollXY> positions = getScrollPositions();
-	    	ScrollXY s = positions.get(a);
-	    	if (s == null) {
-		    	s = new ScrollXY(x, y);
-		    	positions.put(a, s);
-	    	}
-	    	else {
-	    		s.x = x;
-	    		s.y = y;
-	    	}
-	    	//Log.d(TAG, String.format("Saving scroll position %s for %s", s, a.title));
-	    	getScrollPositions().put(a, s);    	
-    	}
+        if (!saveScrollPos) {
+                //Log.d(TAG, "Not saving scroll position (disabled)");
+                return;
+        }
+        if (backItems.size() > 0) {
+                Article a = backItems.get(backItems.size() - 1).article;
+                Map<Article, ScrollXY> positions = getScrollPositions();
+                ScrollXY s = positions.get(a);
+                if (s == null) {
+                        s = new ScrollXY(x, y);
+                        positions.put(a, s);
+                }
+                else {
+                        s.x = x;
+                        s.y = y;
+                }
+                //Log.d(TAG, String.format("Saving scroll position %s for %s", s, a.title));
+                getScrollPositions().put(a, s);
+        }
     }
-    
+
     private boolean restoreScrollPos() {
-    	if (backItems.size() > 0) { 
-	    	Article a = backItems.get(backItems.size() - 1).article;    	
-	    	ScrollXY s = getScrollPositions().get(a);
-	    	if (s == null) {
-	    		return false;
-	    	}
-	    	scrollTo(s);
-	    	return true;
-    	}
-    	return false;
+        if (backItems.size() > 0) {
+                Article a = backItems.get(backItems.size() - 1).article;
+                ScrollXY s = getScrollPositions().get(a);
+                if (s == null) {
+                        return false;
+                }
+                scrollTo(s);
+                return true;
+        }
+        return false;
     }
-    
+
     private void showNext(HistoryItem item_) {
-    	final HistoryItem item = new HistoryItem(item_);
-    	final Entry entry = item.next();
-    	runOnUiThread(new Runnable() {
-			public void run() {
-				setTitle(item);
-				setProgress(1000);
-			}
-		});    	
-    	currentTask = new TimerTask() {
-			public void run() {
-		        try {
-			        Article a = dictionaryService.getArticle(entry);			        			        
-			        try {
-			            a = dictionaryService.redirect(a);
-			            item.article = new Article(a);
-			        }            
-			        catch (ArticleNotFound e) {
-			            showMessage(getString(R.string.msgRedirectNotFound, e.word.toString()));
-			            return;
-			        }
-			        catch (RedirectTooManyLevels e) {
-			            showMessage(getString(R.string.msgTooManyRedirects, a.getRedirect()));
-			            return;
-			        }
-			        catch (Exception e) {
-			        	Log.e(TAG, "Redirect failed", e);
-			            showError(getString(R.string.msgErrorLoadingArticle, a.title));
-			            return;
-			        }
-			        
-			        HistoryItem oldCurrent = null;
-			        if (!backItems.isEmpty())
-			        	oldCurrent = backItems.get(backItems.size() - 1);
-			        
-			        backItems.add(item);
-			        
-			        if (oldCurrent != null) {
-			        	HistoryItem newCurrent = item;
-			            if (newCurrent.article.equalsIgnoreSection(oldCurrent.article)) {
-			                
-			            	final String section = oldCurrent.article.sectionEquals(newCurrent.article) ? null : newCurrent.article.section;
-			            	
-			            	runOnUiThread(new Runnable() {								
-								public void run() {
-									resetTitleToCurrent();
-									if (section != null) {
-									    goToSection(section);
-									}
-									setProgress(10000);
-									currentTask = null;
-								}
-							});			                
-			            }   
-			            else {
-			            	showCurrentArticle();
-			            }			        	
-			        }
-			        else {
-			        	showCurrentArticle();
-			        }			        			        							
-		        }
-		        catch (Exception e) {
-		            String msg = getString(R.string.msgErrorLoadingArticle, entry.title);
-		        	Log.e(TAG, msg, e);
-		        	showError(msg);
-		        }
-			}
-    	};
-    	try {
-    	    timer.schedule(currentTask, 0);
-    	}
-    	catch (Exception e) {
-    	    Log.d(TAG, "Failed to schedule task", e);
-    	}
+        final HistoryItem item = new HistoryItem(item_);
+        final Entry entry = item.next();
+        runOnUiThread(new Runnable() {
+                        public void run() {
+                                setTitle(item);
+                                setProgress(1000);
+                        }
+                });
+        currentTask = new TimerTask() {
+                        public void run() {
+                        try {
+                                Article a = dictionaryService.getArticle(entry);
+                                try {
+                                    a = dictionaryService.redirect(a);
+                                    item.article = new Article(a);
+                                }
+                                catch (ArticleNotFound e) {
+                                    showMessage(getString(R.string.msgRedirectNotFound, e.word.toString()));
+                                    return;
+                                }
+                                catch (RedirectTooManyLevels e) {
+                                    showMessage(getString(R.string.msgTooManyRedirects, a.getRedirect()));
+                                    return;
+                                }
+                                catch (Exception e) {
+                                        Log.e(TAG, "Redirect failed", e);
+                                    showError(getString(R.string.msgErrorLoadingArticle, a.title));
+                                    return;
+                                }
+
+                                HistoryItem oldCurrent = null;
+                                if (!backItems.isEmpty())
+                                        oldCurrent = backItems.get(backItems.size() - 1);
+
+                                backItems.add(item);
+
+                                if (oldCurrent != null) {
+                                        HistoryItem newCurrent = item;
+                                    if (newCurrent.article.equalsIgnoreSection(oldCurrent.article)) {
+
+                                        final String section = oldCurrent.article.sectionEquals(newCurrent.article) ? null : newCurrent.article.section;
+
+                                        runOnUiThread(new Runnable() {
+                                                                public void run() {
+                                                                        resetTitleToCurrent();
+                                                                        if (section != null) {
+                                                                            goToSection(section);
+                                                                        }
+                                                                        setProgress(10000);
+                                                                        currentTask = null;
+                                                                }
+                                                        });
+                                    }
+                                    else {
+                                        showCurrentArticle();
+                                    }
+                                }
+                                else {
+                                        showCurrentArticle();
+                                }
+                        }
+                        catch (Exception e) {
+                            String msg = getString(R.string.msgErrorLoadingArticle, entry.title);
+                                Log.e(TAG, msg, e);
+                                showError(msg);
+                        }
+                        }
+        };
+        try {
+            timer.schedule(currentTask, 0);
+        }
+        catch (Exception e) {
+            Log.d(TAG, "Failed to schedule task", e);
+        }
     }
-        
+
     private void showCurrentArticle() {
-    	runOnUiThread(new Runnable() {			
-			public void run() {		        
-		        setProgress(5000);
-		        resetTitleToCurrent();		       
-		        Article a = backItems.get(backItems.size() - 1).article;
-		        Log.d(TAG, "Show article: " + a.text);        
-		        articleView.loadDataWithBaseURL("", wrap(a.text), "text/html", "utf-8", null);
-			}
-		});
+        runOnUiThread(new Runnable() {
+                        public void run() {
+                        setProgress(5000);
+                        resetTitleToCurrent();
+                        Article a = backItems.get(backItems.size() - 1).article;
+                        Log.d(TAG, "Show article: " + a.text);
+                        articleView.loadDataWithBaseURL("", wrap(a.text), "text/html", "utf-8", null);
+                        }
+                });
     }
-        
+
     private void updateNextButtonVisibility() {
         if (android.os.Build.VERSION.SDK_INT >= 11) {
             return;
         }
         if (currentHideNextButtonTask != null) {
-    		currentHideNextButtonTask.cancel();
-    		currentHideNextButtonTask = null;
-    	}
-    	boolean hasNextArticle = false;
+                currentHideNextButtonTask.cancel();
+                currentHideNextButtonTask = null;
+        }
+        boolean hasNextArticle = false;
         if (backItems.size() > 0) {
             HistoryItem historyItem = backItems.get(backItems.size() - 1);
             hasNextArticle = historyItem.hasNext();
         }
         final Button nextButton = (Button)findViewById(R.id.NextButton);
         if (hasNextArticle) {
-        	if (nextButton.getVisibility() == View.GONE){
-        		nextButton.setVisibility(View.VISIBLE);
-        	}        	
-        	currentHideNextButtonTask = new TimerTask() {			
-        		@Override
-        		public void run() {
-        			runOnUiThread(new Runnable() {					
-        				public void run() {
-        	        		if (useAnimation) {
-        	        			nextButton.startAnimation(fadeOutAnimation);
-        	        		}
-        	        		else {
-        	        			nextButton.setVisibility(View.GONE);
-        	        		}
-        					currentHideNextButtonTask = null;
-        				}
-        			});			
-        		}
-        	}; 
-        	try {
-        		timer.schedule(currentHideNextButtonTask, 1800);
-        	}
-        	catch (IllegalStateException e) {
-            	//this may happen if orientation changes while users touches screen               	
-            	Log.d(TAG, "Failed to schedule \"Next\" button hide", e);        		
-        	}
-        }        
+                if (nextButton.getVisibility() == View.GONE){
+                        nextButton.setVisibility(View.VISIBLE);
+                }
+                currentHideNextButtonTask = new TimerTask() {
+                        @Override
+                        public void run() {
+                                runOnUiThread(new Runnable() {
+                                        public void run() {
+                                        if (useAnimation) {
+                                                nextButton.startAnimation(fadeOutAnimation);
+                                        }
+                                        else {
+                                                nextButton.setVisibility(View.GONE);
+                                        }
+                                                currentHideNextButtonTask = null;
+                                        }
+                                });
+                        }
+                };
+                try {
+                        timer.schedule(currentHideNextButtonTask, 1800);
+                }
+                catch (IllegalStateException e) {
+                //this may happen if orientation changes while users touches screen
+                Log.d(TAG, "Failed to schedule \"Next\" button hide", e);
+                }
+        }
         else {
-        	nextButton.setVisibility(View.GONE);
+                nextButton.setVisibility(View.GONE);
         }
     }
-        
+
     private void showMessage(final String message) {
-    	runOnUiThread(new Runnable() {
-			public void run() {
-		    	currentTask = null;
-		    	setProgress(10000);
-		    	resetTitleToCurrent();
-		        Toast.makeText(ArticleViewActivity.this, message, Toast.LENGTH_LONG).show();
-		        if (backItems.isEmpty()) {
-		            finish();
-		        }        				
-			}
-		});
+        runOnUiThread(new Runnable() {
+                        public void run() {
+                        currentTask = null;
+                        setProgress(10000);
+                        resetTitleToCurrent();
+                        Toast.makeText(ArticleViewActivity.this, message, Toast.LENGTH_LONG).show();
+                        if (backItems.isEmpty()) {
+                            finish();
+                        }
+                        }
+                });
     }
 
     private void showError(final String message) {
-    	runOnUiThread(new Runnable() {
-			public void run() {
-		    	currentTask = null;
-		    	setProgress(10000);
-		    	resetTitleToCurrent();
-		        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(ArticleViewActivity.this);
-		        dialogBuilder.setTitle(R.string.titleError).setMessage(message).setNeutralButton(R.string.btnDismiss, new OnClickListener() {            
-		            public void onClick(DialogInterface dialog, int which) {
-		                dialog.dismiss();
-		                if (backItems.isEmpty()) {
-		                    finish();
-		                }
-		            }
-		        });
-		        dialogBuilder.show();
-			}
-		});    	
+        runOnUiThread(new Runnable() {
+                        public void run() {
+                        currentTask = null;
+                        setProgress(10000);
+                        resetTitleToCurrent();
+                        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(ArticleViewActivity.this);
+                        dialogBuilder.setTitle(R.string.titleError).setMessage(message).setNeutralButton(R.string.btnDismiss, new OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                                if (backItems.isEmpty()) {
+                                    finish();
+                                }
+                            }
+                        });
+                        dialogBuilder.show();
+                        }
+                });
     }
-    
-        
+
+
     private void setTitle(CharSequence articleTitle, CharSequence dictTitle) {
-    	setTitle(getString(R.string.titleArticleViewActivity, articleTitle, dictTitle));
-    }        
-    
-    private void resetTitleToCurrent() {    	    		
-    	if (!backItems.isEmpty()) {
-    		HistoryItem current = backItems.get(backItems.size() - 1);
-    		setTitle(current);
-    	}
+        setTitle(getString(R.string.titleArticleViewActivity, articleTitle, dictTitle));
     }
-    
-    private void setTitle(HistoryItem item) {		
-		StringBuilder title = new StringBuilder();
-		boolean hasNextArticle = false;
-		if (item.entries.size() > 1) {
-			title
-			.append(item.entryIndex + 1)
-			.append("/")
-			.append(item.entries.size())
-			.append(" ");
-			hasNextArticle = item.hasNext();
-		}
-		if (miNextArticle != null) {
-		    miNextArticle.setVisible(hasNextArticle);
-		}
-		Entry entry = item.current();
-		title.append(entry.title);
-		setTitle(title, dictionaryService.getDisplayTitle(entry.volumeId));    	
+
+    private void resetTitleToCurrent() {
+        if (!backItems.isEmpty()) {
+                HistoryItem current = backItems.get(backItems.size() - 1);
+                setTitle(current);
+        }
     }
-    
+
+    private void setTitle(HistoryItem item) {
+                StringBuilder title = new StringBuilder();
+                boolean hasNextArticle = false;
+                if (item.entries.size() > 1) {
+                        title
+                        .append(item.entryIndex + 1)
+                        .append("/")
+                        .append(item.entries.size())
+                        .append(" ");
+                        hasNextArticle = item.hasNext();
+                }
+                if (miNextArticle != null) {
+                    miNextArticle.setVisible(hasNextArticle);
+                }
+                Entry entry = item.current();
+                title.append(entry.title);
+                setTitle(title, dictionaryService.getDisplayTitle(entry.volumeId));
+    }
+
     private String wrap(String articleText) {
         return new StringBuilder("<html>")
         .append("<head>")
@@ -804,14 +804,14 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
         .append(this.js)
         .append("</head>")
         .append("<body>")
-        .append("<div id=\"globalWrapper\">")        
+        .append("<div id=\"globalWrapper\">")
         .append(articleText)
         .append("</div>")
         .append("</body>")
         .append("</html>")
         .toString();
     }
-    
+
     private String wrapCSS(String css) {
         return String.format("<style type=\"text/css\">%s</style>", css);
     }
@@ -819,7 +819,7 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
     private String wrapJS(String js) {
         return String.format("<script type=\"text/javascript\">%s</script>", js);
     }
-    
+
     private void loadAssets() {
         try {
             this.sharedCSS = wrapCSS(readFile("shared.css"));
@@ -829,9 +829,9 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
         }
         catch (IOException e) {
             Log.e(TAG, "Failed to load assets", e);
-        }        
+        }
     }
-    
+
     private String readFile(String name) throws IOException {
         final char[] buffer = new char[0x1000];
         StringBuilder out = new StringBuilder();
@@ -847,62 +847,62 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
         return out.toString();
     }
 
-    
+
     @Override
     protected void onPause() {
-    	super.onPause();
-    	SharedPreferences prefs = getPreferences(MODE_PRIVATE);
-    	Editor e = prefs.edit();
-    	e.putFloat("articleView.scale", articleView.getScale());
-    	boolean success = e.commit();
-    	if (!success) {
-    		Log.w(TAG, "Failed to save article view scale pref");
-    	}
+        super.onPause();
+        SharedPreferences prefs = getPreferences(MODE_PRIVATE);
+        Editor e = prefs.edit();
+        e.putFloat("articleView.scale", articleView.getScale());
+        boolean success = e.commit();
+        if (!success) {
+                Log.w(TAG, "Failed to save article view scale pref");
+        }
     }
-    
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-    	super.onCreate(savedInstanceState);
-    	SharedPreferences prefs = getPreferences(MODE_PRIVATE);    	
-    	float scale = prefs.getFloat("articleView.scale", 1.0f);
-    	int initialScale = Math.round(scale*100);
-    	Log.d(TAG, "Setting initial article view scale to " + initialScale);
-    	articleView.setInitialScale(initialScale);
-    	if (android.os.Build.VERSION.SDK_INT >= 11){
-    	    try {
+        super.onCreate(savedInstanceState);
+        SharedPreferences prefs = getPreferences(MODE_PRIVATE);
+        float scale = prefs.getFloat("articleView.scale", 1.0f);
+        int initialScale = Math.round(scale*100);
+        Log.d(TAG, "Setting initial article view scale to " + initialScale);
+        articleView.setInitialScale(initialScale);
+        if (android.os.Build.VERSION.SDK_INT >= 11){
+            try {
                 Method getActionBar = getClass().getMethod("getActionBar");
                 Object actionBar = getActionBar.invoke(this);
                 Method setDisplayHomeAsUpEnabled = actionBar.getClass().getMethod("setDisplayHomeAsUpEnabled", boolean.class);
                 setDisplayHomeAsUpEnabled.invoke(actionBar, true);
             } catch (Exception e) {
             }
-    	}
+        }
     }
-    
+
     @Override
     protected void onDestroy() {
-    	super.onDestroy();
-    	timer.cancel();
-    	scrollPositionsH.clear();
-    	scrollPositionsV.clear();
-    	backItems.clear();
+        super.onDestroy();
+        timer.cancel();
+        scrollPositionsH.clear();
+        scrollPositionsV.clear();
+        backItems.clear();
     }
 
     @Override
     void onDictionaryServiceReady() {
-    	if (this.backItems.isEmpty()) {
-	        final Intent intent = getIntent();	        
-	        if (intent != null && intent.getAction() != null && intent.getAction().equals(Intent.ACTION_SEARCH)) {
-	            final String word = intent.getStringExtra("query");
-	            
-	            if (currentTask != null) {
-	                currentTask.cancel();	                
-	            }
-	            
-	            currentTask = new TimerTask() {                    
+        if (this.backItems.isEmpty()) {
+                final Intent intent = getIntent();
+                if (intent != null && intent.getAction() != null && intent.getAction().equals(Intent.ACTION_SEARCH)) {
+                    final String word = intent.getStringExtra("query");
+
+                    if (currentTask != null) {
+                        currentTask.cancel();
+                    }
+
+                    currentTask = new TimerTask() {
                     @Override
                     public void run() {
-                        setProgress(500);                                      
+                        setProgress(500);
                         Log.d(TAG, "intent.getDataString(): " + intent.getDataString());
                         Iterator<Entry> results = dictionaryService.lookup(word);
                         Log.d(TAG, "Looked up " + word );
@@ -912,48 +912,48 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
                             showArticle(entry);
                         }
                         else {
-                        	onSearchRequested();
+                                onSearchRequested();
                         }
                     }
                 };
-	            
+
                 try {
                     timer.schedule(currentTask, 0);
                 }
                 catch (Exception e) {
                     Log.d(TAG, "Failed to schedule task", e);
                     showError(getString(R.string.msgErrorLoadingArticle, word));
-                }	            
-	        }
-	        else {
-	            String word = intent.getStringExtra("word");                
-	            String section = intent.getStringExtra("section");	        
-	            String volumeId = intent.getStringExtra("volumeId");
-	            long articlePointer = intent.getLongExtra("articlePointer", -1);
-	            dictionaryService.setPreferred(volumeId);
-	            showArticle(volumeId, articlePointer, word, section);
-	        }
-    	}
-    	else {
-    		showCurrentArticle();    		
-    	}
-    }    
-    
+                }
+                }
+                else {
+                    String word = intent.getStringExtra("word");
+                    String section = intent.getStringExtra("section");
+                    String volumeId = intent.getStringExtra("volumeId");
+                    long articlePointer = intent.getLongExtra("articlePointer", -1);
+                    dictionaryService.setPreferred(volumeId);
+                    showArticle(volumeId, articlePointer, word, section);
+                }
+        }
+        else {
+                showCurrentArticle();
+        }
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-    	super.onSaveInstanceState(outState);
-    	outState.putSerializable("backItems", new LinkedList(backItems));
-    	outState.putSerializable("scrollPositionsH", new HashMap(scrollPositionsH));
-    	outState.putSerializable("scrollPositionsV", new HashMap(scrollPositionsV));    	
+        super.onSaveInstanceState(outState);
+        outState.putSerializable("backItems", new LinkedList(backItems));
+        outState.putSerializable("scrollPositionsH", new HashMap(scrollPositionsH));
+        outState.putSerializable("scrollPositionsV", new HashMap(scrollPositionsV));
     }
-    
+
     @SuppressWarnings("unchecked")
-	@Override
+        @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
-    	super.onRestoreInstanceState(savedInstanceState);
-    	backItems = Collections.synchronizedList((List)savedInstanceState.getSerializable("backItems"));
-    	scrollPositionsH = Collections.synchronizedMap((Map)savedInstanceState.getSerializable("scrollPositionsH"));
-    	scrollPositionsV = Collections.synchronizedMap((Map)savedInstanceState.getSerializable("scrollPositionsV"));
-    }	
+        super.onRestoreInstanceState(savedInstanceState);
+        backItems = Collections.synchronizedList((List)savedInstanceState.getSerializable("backItems"));
+        scrollPositionsH = Collections.synchronizedMap((Map)savedInstanceState.getSerializable("scrollPositionsH"));
+        scrollPositionsV = Collections.synchronizedMap((Map)savedInstanceState.getSerializable("scrollPositionsV"));
+    }
 }

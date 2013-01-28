@@ -1,5 +1,5 @@
 /* This file is part of Aard Dictionary for Android <http://aarddict.org>.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.
@@ -9,7 +9,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License <http://www.gnu.org/licenses/gpl-3.0.txt>
  * for more details.
- * 
+ *
  * Copyright (C) 2010 Igor Tkach
 */
 
@@ -30,7 +30,7 @@ final class RandomAccessFile extends java.io.RandomAccessFile {
     public RandomAccessFile(String fileName, String mode) throws FileNotFoundException {
         super(fileName, mode);
     }
-    
+
     public final long readUnsignedInt() throws IOException {
         int ch1 = this.read();
         int ch2 = this.read();
@@ -54,7 +54,7 @@ final class RandomAccessFile extends java.io.RandomAccessFile {
             throw new EOFException();
         return ((long) (ch1 << 56) + (ch2 << 48) + (ch3 << 40) + (ch4 << 32) + (ch5 << 24) + (ch6 << 16) + (ch7 << 8) + (ch8 << 0)) & 0xFFFFFFFFFFFFFFFFL;
     }
-    
+
     public final String readUTF8(int length) throws IOException {
         byte[] s = new byte[length];
         this.read(s);
@@ -66,7 +66,7 @@ final class RandomAccessFile extends java.io.RandomAccessFile {
         this.read(s);
         return Volume.uuid(s);
     }
-    
+
     public final long readSpec(char spec) throws IOException {
         if (spec == 'L' || spec == 'I') {
             return readUnsignedInt();

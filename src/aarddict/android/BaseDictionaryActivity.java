@@ -1,5 +1,5 @@
 /* This file is part of Aard Dictionary for Android <http://aarddict.org>.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.
@@ -9,7 +9,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License <http://www.gnu.org/licenses/gpl-3.0.txt>
  * for more details.
- * 
+ *
  * Copyright (C) 2010 Igor Tkach
 */
 
@@ -29,20 +29,20 @@ import android.view.Window;
 import android.widget.Toast;
 
 abstract class BaseDictionaryActivity extends Activity {
-    
+
     private final static String         TAG        = BaseDictionaryActivity.class
                                                    .getName();
-    
+
     protected final static String ACTION_NO_DICTIONARIES = "aarddict.android.ACTION_NO_DICTIONARIES";
-    
-    protected BroadcastReceiver   broadcastReceiver;    
+
+    protected BroadcastReceiver   broadcastReceiver;
     protected DictionaryService dictionaryService;
-    
-    
+
+
     private ServiceConnection connection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
             dictionaryService = ((DictionaryService.LocalBinder)service).getService();
-            Log.d(TAG, "Service connected: " + dictionaryService);            
+            Log.d(TAG, "Service connected: " + dictionaryService);
             onDictionaryServiceConnected();
         }
 
@@ -63,12 +63,12 @@ abstract class BaseDictionaryActivity extends Activity {
         intentFilter.addAction(DictionaryService.OPEN_FINISHED);
         intentFilter.addAction(DictionaryService.OPEN_STARTED);
         intentFilter.addAction(DictionaryService.OPENED_DICT);
-                       
+
         broadcastReceiver = new BroadcastReceiver() {
-        
+
             ProgressDialog discoveryProgress;
             ProgressDialog openProgress;
-            
+
             @Override
             public void onReceive(Context context, Intent intent) {
                 String a = intent.getAction();
@@ -84,9 +84,9 @@ abstract class BaseDictionaryActivity extends Activity {
                     if (discoveryProgress != null) {
                         discoveryProgress.dismiss();
                         discoveryProgress = null;
-                    }                   
+                    }
                 } else
-                if (a.equals(DictionaryService.OPEN_STARTED)) { 
+                if (a.equals(DictionaryService.OPEN_STARTED)) {
                     Log.d(TAG, "dictionary open started");
                     int count = intent.getIntExtra("count", 0);
                     if (openProgress == null) {
@@ -95,10 +95,10 @@ abstract class BaseDictionaryActivity extends Activity {
                     openProgress.setMax(count);
                     openProgress.show();
                 } else
-                if (a.equals(DictionaryService.DICT_OPEN_FAILED) || 
+                if (a.equals(DictionaryService.DICT_OPEN_FAILED) ||
                         a.equals(DictionaryService.OPENED_DICT)) {
                     if (openProgress != null) {
-                        openProgress.incrementProgressBy(1); 
+                        openProgress.incrementProgressBy(1);
                     }
                     if (a.equals(DictionaryService.DICT_OPEN_FAILED)) {
                         String file = intent.getStringExtra("file");
@@ -111,17 +111,17 @@ abstract class BaseDictionaryActivity extends Activity {
                     }
                 } else
                 if (a.equals(DictionaryService.OPEN_FINISHED)) {
-                    if (openProgress != null) {                     
+                    if (openProgress != null) {
                         openProgress.dismiss();
                         openProgress = null;
                     }
                     onDictionaryOpenFinished();
-                }                               
+                }
             }
         };
-        registerReceiver(broadcastReceiver, intentFilter);        
+        registerReceiver(broadcastReceiver, intentFilter);
     }
-          
+
     protected void onCreate(android.os.Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (android.os.Build.VERSION.SDK_INT < 11) {
@@ -134,51 +134,51 @@ abstract class BaseDictionaryActivity extends Activity {
         }
         Intent dictServiceIntent = new Intent(this, DictionaryService.class);
         startService(dictServiceIntent);
-        bindService(dictServiceIntent, connection, 0);        
+        bindService(dictServiceIntent, connection, 0);
     };
-            
+
     abstract void initUI();
-    
-    void onDictionaryServiceConnected() {    	    	
-		if (dictionaryService.getDictionaries().isEmpty()) {
-	        new Thread(new Runnable() {				
-				public void run() {
-					dictionaryService.openDictionaries();
-					Log.d(TAG, 
-							String.format("After openDictionaries() we have %d dictionaries", 
-									dictionaryService.getDictionaries().size()));
-					if (dictionaryService.getDictionaries().isEmpty()) {
-						runOnUiThread(new Runnable() {							
-							public void run() {
-								Intent next = new Intent();
-								next.setAction(ACTION_NO_DICTIONARIES);
-								next.setClass(getApplicationContext(), DictionariesActivity.class);
-								Log.d(TAG, "No dictionaries, starting Dictionaries activity");
-								startActivity(next);
-								finish();
-							}
-						});
-					} else {
-						runOnUiThread(new Runnable() {								
-							public void run() {
-								onDictionaryServiceReady();
-							}
-						});    						
-					}
-				}
-			}).start();
-		}
-		else {
-			onDictionaryServiceReady();
-		}
+
+    void onDictionaryServiceConnected() {
+                if (dictionaryService.getDictionaries().isEmpty()) {
+                new Thread(new Runnable() {
+                                public void run() {
+                                        dictionaryService.openDictionaries();
+                                        Log.d(TAG,
+                                                        String.format("After openDictionaries() we have %d dictionaries",
+                                                                        dictionaryService.getDictionaries().size()));
+                                        if (dictionaryService.getDictionaries().isEmpty()) {
+                                                runOnUiThread(new Runnable() {
+                                                        public void run() {
+                                                                Intent next = new Intent();
+                                                                next.setAction(ACTION_NO_DICTIONARIES);
+                                                                next.setClass(getApplicationContext(), DictionariesActivity.class);
+                                                                Log.d(TAG, "No dictionaries, starting Dictionaries activity");
+                                                                startActivity(next);
+                                                                finish();
+                                                        }
+                                                });
+                                        } else {
+                                                runOnUiThread(new Runnable() {
+                                                        public void run() {
+                                                                onDictionaryServiceReady();
+                                                        }
+                                                });
+                                        }
+                                }
+                        }).start();
+                }
+                else {
+                        onDictionaryServiceReady();
+                }
     };
-    
+
     abstract void onDictionaryServiceReady();
     void onDictionaryOpenFinished(){};
-            
+
     protected void onDestroy() {
         super.onDestroy();
         unregisterReceiver(broadcastReceiver);
         unbindService(connection);
-    }    
+    }
 }

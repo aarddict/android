@@ -12,8 +12,8 @@
         android:anyDensity="true" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"></uses-permission>
     <application android:allowBackup="true"
-                android:icon="@drawable/aarddict" 
-                android:label="@string/appName">
+                 android:icon="@drawable/aarddict"
+                 android:label="@string/appName">
         <activity android:name=".DictionariesActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|smallestScreenSize"
             android:label="@string/appName">
@@ -27,8 +27,8 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:scheme="file" android:mimeType="application/aar"/>
             </intent-filter>
-    	</activity>
-    			 
+        </activity>
+
         <activity android:name=".LookupActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|smallestScreenSize">
             <intent-filter>
@@ -36,13 +36,13 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        
-        <activity android:name=".ArticleViewActivity" 
+
+        <activity android:name=".ArticleViewActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|smallestScreenSize">
         </activity>
 
 
-        <activity android:name=".Lookup" 
+        <activity android:name=".Lookup"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|smallestScreenSize"
             android:excludeFromRecents="true"
             android:taskAffinity="aarddict.external">
@@ -50,8 +50,8 @@
                 <action android:name="android.intent.action.SEARCH" />
             </intent-filter>
         </activity>
-        
-        <activity android:name=".Article" 
+
+        <activity android:name=".Article"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|smallestScreenSize"
             android:excludeFromRecents="true"
             android:taskAffinity="aarddict.external">
@@ -61,8 +61,8 @@
         </activity>
 
         <activity android:name=".DictionaryInfoActivity"
-            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|smallestScreenSize"/>
+                  android:configChanges="keyboard|keyboardHidden|orientation|screenSize|smallestScreenSize"/>
         <service android:name=".DictionaryService">
         </service>
     </application>
-</manifest> 
+</manifest>

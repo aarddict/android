@@ -1,5 +1,5 @@
 /* This file is part of Aard Dictionary for Android <http://aarddict.org>.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.
@@ -9,7 +9,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License <http://www.gnu.org/licenses/gpl-3.0.txt>
  * for more details.
- * 
+ *
  * Copyright (C) 2010 Igor Tkach
 */
 
@@ -49,92 +49,92 @@ public final class Volume extends AbstractList<Entry> {
         public FormatException(String detailMessage) {
             super(detailMessage);
         }
-        
+
     }
-    
+
     public final static class InvalidSignatureException extends FormatException {
         public InvalidSignatureException() {
             super("Not a dictionary file");
         }};
-        
+
     public final static class InvalidFormatVersionException extends FormatException {
         public InvalidFormatVersionException() {
             super("Invalid file format version");
         }};
-        
+
     public final static class MetadataTooBigException extends FormatException {
         public MetadataTooBigException() {
             super("Metadata is too big");
         }};
-        
+
     public final static class CorruptedFileException extends FormatException {
 
         public CorruptedFileException() {
             super("Corrupted file");
         }};
-    
-	private final static String TAG = Volume.class.getName();
-	
+
+        private final static String TAG = Volume.class.getName();
+
     final static Charset UTF8 = Charset.forName("utf8");
-   
+
     public Metadata  metadata;
     public Header    header;
     RandomAccessFile file;
     String           sha1sum;
 
-	private File origFile;
+        private File origFile;
 
-	private String articleURLTemplate;
-    
+        private String articleURLTemplate;
+
     static ObjectMapper mapper = new ObjectMapper();
     static {
-    	mapper.getDeserializationConfig().set(org.codehaus.jackson.map.DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        mapper.getDeserializationConfig().set(org.codehaus.jackson.map.DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
-    
+
     public Volume(File file, File cacheDir, Map<UUID, Metadata> knownMeta) throws IOException, FormatException {
-    	this.origFile = file;
+        this.origFile = file;
         init(new RandomAccessFile(file, "r"), cacheDir, knownMeta);
     }
-    
+
     private void init(RandomAccessFile file, File cacheDir, Map<UUID, Metadata> knownMeta) throws IOException, FormatException {
         this.file = file;
         this.header = new Header(file);
         this.assertFormat();
         this.sha1sum = header.sha1sum;
         if (knownMeta.containsKey(header.uuid)) {
-        	this.metadata = knownMeta.get(header.uuid);  
+                this.metadata = knownMeta.get(header.uuid);
         } else {
-            String uuidStr = header.uuid.toString();            
+            String uuidStr = header.uuid.toString();
             File metadataCacheFile = new File(cacheDir, uuidStr);
             if (metadataCacheFile.exists()) {
-            	try {
-            		long t0 = System.currentTimeMillis();
-            		this.metadata = mapper.readValue(metadataCacheFile, Metadata.class);
-            		knownMeta.put(header.uuid, this.metadata);
-            		Log.d(TAG, format("Loaded meta for %s from cache in %s", metadataCacheFile.getName(), (System.currentTimeMillis() - t0)));
-            	}
-	        	catch(Exception e) {
-	        		Log.e(TAG, format("Failed to restore meta from cache file %s ", metadataCacheFile.getName()), e);
-	        	}            	
+                try {
+                        long t0 = System.currentTimeMillis();
+                        this.metadata = mapper.readValue(metadataCacheFile, Metadata.class);
+                        knownMeta.put(header.uuid, this.metadata);
+                        Log.d(TAG, format("Loaded meta for %s from cache in %s", metadataCacheFile.getName(), (System.currentTimeMillis() - t0)));
+                }
+                        catch(Exception e) {
+                                Log.e(TAG, format("Failed to restore meta from cache file %s ", metadataCacheFile.getName()), e);
+                        }
             }
             if (this.metadata == null) {
-            	long t0 = System.currentTimeMillis();
-            	byte[] rawMeta = new byte[(int) header.metaLength];
-            	file.read(rawMeta);
-            	String metadataStr = decompress(rawMeta);
-            	this.metadata = mapper.readValue(metadataStr, Metadata.class);
-            	Log.d(TAG, format("Read meta for in %s", header.uuid, (System.currentTimeMillis() - t0)));
-            	knownMeta.put(header.uuid, this.metadata);
-            	try {
-            		mapper.writeValue(metadataCacheFile, this.metadata);
-            		Log.d(TAG, format("Wrote metadata to cache file %s", metadataCacheFile.getName()));
-            	}
-            	catch (IOException e) {
-            		Log.e(TAG, format("Failed to write metadata to cache file %s", metadataCacheFile.getName()), e);
-            	}            	
-            }                    
+                long t0 = System.currentTimeMillis();
+                byte[] rawMeta = new byte[(int) header.metaLength];
+                file.read(rawMeta);
+                String metadataStr = decompress(rawMeta);
+                this.metadata = mapper.readValue(metadataStr, Metadata.class);
+                Log.d(TAG, format("Read meta for in %s", header.uuid, (System.currentTimeMillis() - t0)));
+                knownMeta.put(header.uuid, this.metadata);
+                try {
+                        mapper.writeValue(metadataCacheFile, this.metadata);
+                        Log.d(TAG, format("Wrote metadata to cache file %s", metadataCacheFile.getName()));
+                }
+                catch (IOException e) {
+                        Log.e(TAG, format("Failed to write metadata to cache file %s", metadataCacheFile.getName()), e);
+                }
+            }
         }
-        initArticleURLTemplate();        
+        initArticleURLTemplate();
     }
 
     private void assertFormat() throws FormatException, IOException {
@@ -163,11 +163,11 @@ public final class Volume extends AbstractList<Entry> {
     public String getId() {
         return sha1sum;
     }
-    
+
     public UUID getDictionaryId() {
-    	return header.uuid;
+        return header.uuid;
     }
-    
+
     @Override
     public int hashCode() {
         return sha1sum.hashCode();
@@ -192,10 +192,10 @@ public final class Volume extends AbstractList<Entry> {
     }
 
     public String toString() {
-        return String.format("%s %s/%s(%s)", this.metadata.title, this.header.volume, 
+        return String.format("%s %s/%s(%s)", this.metadata.title, this.header.volume,
                 this.header.of, this.sha1sum);
     };
-    
+
     IndexItem readIndexItem(long i) throws IOException {
         Header h = this.header;
         long pos = h.index1Offset + i * h.index1ItemSize;
@@ -216,12 +216,12 @@ public final class Volume extends AbstractList<Entry> {
         return f.readUTF8(keyLength);
     }
 
-    Map <Long, Article> articleCache = new WeakHashMap<Long, Article>(20);    
-    
+    Map <Long, Article> articleCache = new WeakHashMap<Long, Article>(20);
+
     Article readArticle(long pointer) throws IOException {
-    	Article a = articleCache.get(pointer);
-    	if (a != null)
-    		return a;
+        Article a = articleCache.get(pointer);
+        if (a != null)
+                return a;
         Header h = this.header;
         long pos = h.articleOffset + pointer;
         RandomAccessFile f = this.file;
@@ -240,12 +240,12 @@ public final class Volume extends AbstractList<Entry> {
     }
 
     static Iterator<Entry> EMPTY_ITERATOR = new ArrayList<Entry>().iterator();
-    
+
     Iterator<Entry> lookup(final LookupWord lookupWord, final Comparator<Entry> comparator) {
         if (lookupWord.isEmpty()) {
             return EMPTY_ITERATOR;
-        }    	
-        
+        }
+
         final String section = lookupWord.section;
         final Entry lookupEntry = new Entry(this.getId(), lookupWord.word);
         final int initialIndex = binarySearch(this, lookupEntry, comparator);
@@ -282,60 +282,60 @@ public final class Volume extends AbstractList<Entry> {
 
         return iterator;
     }
-    
+
     public String getArticleURL(String title) {
-    	String template = getArticleURLTemplate();
-    	if (template != null) {
-    		return template.replace("$1", title);
-    	}
-    	return null;
+        String template = getArticleURLTemplate();
+        if (template != null) {
+                return template.replace("$1", title);
+        }
+        return null;
     }
-    
+
     public String getArticleURLTemplate() {
-    	return articleURLTemplate;
+        return articleURLTemplate;
     }
-        
+
     private void initArticleURLTemplate() {
-    	String[] serverAndArticlePath = getServerAndArticlePath();
-    	String server = serverAndArticlePath[0];
-    	String articlePath = serverAndArticlePath[1];
-    	if (server != null && articlePath != null) {
-    	    if (server.startsWith("//")) {
-    	        //broken server url in metadata, missing schema, assume http
-    	        server = "http:"+server;
-    	    }
-    		articleURLTemplate = server + articlePath;
-    	}
-    	else {
-    		Log.d(TAG, "Not enough metadata to generate article url template");
-    	}
+        String[] serverAndArticlePath = getServerAndArticlePath();
+        String server = serverAndArticlePath[0];
+        String articlePath = serverAndArticlePath[1];
+        if (server != null && articlePath != null) {
+            if (server.startsWith("//")) {
+                //broken server url in metadata, missing schema, assume http
+                server = "http:"+server;
+            }
+                articleURLTemplate = server + articlePath;
+        }
+        else {
+                Log.d(TAG, "Not enough metadata to generate article url template");
+        }
     }
-    
+
     @SuppressWarnings("unchecked")
     private String[] getServerAndArticlePath() {
-    	String[] result = new String[]{null, null};
-    	if (metadata.siteinfo != null){
-        	Map <String, Object> general = (Map <String, Object>)this.metadata.siteinfo.get("general");
-        	if (general != null) {
-        		Object server = general.get("server");
-        		Object articlePath = general.get("articlepath");
-        		if (server != null)
-        			result[0] = server.toString();
-        		if (articlePath != null)
-        			result[1] = articlePath.toString();
-        	}
-    	}    	
-    	return result;
+        String[] result = new String[]{null, null};
+        if (metadata.siteinfo != null){
+                Map <String, Object> general = (Map <String, Object>)this.metadata.siteinfo.get("general");
+                if (general != null) {
+                        Object server = general.get("server");
+                        Object articlePath = general.get("articlepath");
+                        if (server != null)
+                                result[0] = server.toString();
+                        if (articlePath != null)
+                                result[1] = articlePath.toString();
+                }
+        }
+        return result;
     }
-    
-    Map <Integer, Entry> entryCache = new WeakHashMap<Integer, Entry>(100);        
-    
+
+    Map <Integer, Entry> entryCache = new WeakHashMap<Integer, Entry>(100);
+
     @Override
-    public Entry get(int index) {    	
-    	Entry entry = entryCache.get(index);    	
-    	if (entry != null) {
-    		return entry;
-    	}
+    public Entry get(int index) {
+        Entry entry = entryCache.get(index);
+        if (entry != null) {
+                return entry;
+        }
         try {
             IndexItem indexItem = readIndexItem(index);
             String title = readKey(indexItem.keyPointer);
@@ -368,9 +368,9 @@ public final class Volume extends AbstractList<Entry> {
     }
 
     static String decompress(byte[] bytes) {
-    	String type = null;
-    	long t0 = System.currentTimeMillis();
-        try {        	
+        String type = null;
+        long t0 = System.currentTimeMillis();
+        try {
             String result = decompressZlib(bytes);
             type = "zlib";
             return result;
@@ -387,9 +387,9 @@ public final class Volume extends AbstractList<Entry> {
                 return result;
             }
         }
-    	finally {
-    		Log.d(TAG, "Decompressed " + type + " in " + (System.currentTimeMillis() - t0));
-    	}
+        finally {
+                Log.d(TAG, "Decompressed " + type + " in " + (System.currentTimeMillis() - t0));
+        }
     }
 
     static String decompressZlib(byte[] bytes) throws IOException, DataFormatException {
@@ -411,7 +411,7 @@ public final class Volume extends AbstractList<Entry> {
 
     static String decompressBz2(byte[] bytes) throws IOException {
         BZip2CompressorInputStream in = new BZip2CompressorInputStream(new ByteArrayInputStream(bytes));
-    	
+
         int n = 0;
         ByteArrayOutputStream out = new ByteArrayOutputStream(bytes.length*5);
         byte[] buf = new byte[1024];
@@ -454,11 +454,11 @@ public final class Volume extends AbstractList<Entry> {
         }
         return lo;
     }
-    
+
     public CharSequence getDisplayTitle() {
-    	return getDisplayTitle(true);
+        return getDisplayTitle(true);
     }
-    
+
     public CharSequence getDisplayTitle(boolean withVolumeNumber) {
         StringBuilder s = new StringBuilder(this.metadata.title);
         if (this.metadata.lang != null) {
@@ -471,11 +471,11 @@ public final class Volume extends AbstractList<Entry> {
             else {
                 if (this.metadata.index_language != null && this.metadata.article_language != null) {
                     s.append(String.format(" (%s-%s)", this.metadata.index_language, this.metadata.article_language));
-                }        	
-            }            
+                }
+            }
         }
-        if (this.header.of > 1 && withVolumeNumber) 
-               s.append(String.format(" Vol. %s", this.header.volume));        
+        if (this.header.of > 1 && withVolumeNumber)
+               s.append(String.format(" Vol. %s", this.header.volume));
         return s.toString();
     }
 
@@ -490,25 +490,25 @@ public final class Volume extends AbstractList<Entry> {
         return new String(chars);
     }
 
-    public void verify(VerifyProgressListener listener) throws IOException, NoSuchAlgorithmException {    	
-    	FileInputStream fis = new FileInputStream(origFile);
-    	fis.skip(44);
-    	byte[] buff = new byte[1 << 16];    	
-    	MessageDigest m = MessageDigest.getInstance("SHA-1");
-    	int readCount;
-    	long totalReadCount = 0;    	
-    	double totalBytes = origFile.length() - 44;
-    	boolean proceed = true;
-    	while ((readCount=fis.read(buff)) != -1) {
-    		m.update(buff, 0, readCount);
-    		totalReadCount += readCount;
-    		proceed = listener.updateProgress(this, totalReadCount/totalBytes);    		
-    	}    	
-    	fis.close();
-    	if (proceed) {
-    		String calculated = Volume.toHex(m.digest());
-    		Log.d(TAG, "calculated: " + calculated + " actual: " + sha1sum);
-    		listener.verified(this, calculated.equals(this.sha1sum));
-    	}
-    }    
+    public void verify(VerifyProgressListener listener) throws IOException, NoSuchAlgorithmException {
+        FileInputStream fis = new FileInputStream(origFile);
+        fis.skip(44);
+        byte[] buff = new byte[1 << 16];
+        MessageDigest m = MessageDigest.getInstance("SHA-1");
+        int readCount;
+        long totalReadCount = 0;
+        double totalBytes = origFile.length() - 44;
+        boolean proceed = true;
+        while ((readCount=fis.read(buff)) != -1) {
+                m.update(buff, 0, readCount);
+                totalReadCount += readCount;
+                proceed = listener.updateProgress(this, totalReadCount/totalBytes);
+        }
+        fis.close();
+        if (proceed) {
+                String calculated = Volume.toHex(m.digest());
+                Log.d(TAG, "calculated: " + calculated + " actual: " + sha1sum);
+                listener.verified(this, calculated.equals(this.sha1sum));
+        }
+    }
 }

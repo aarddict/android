@@ -40,7 +40,7 @@ corresponding article.
 
 .. image:: aarddict-android-1.1-lookup.png
    :scale: 50
-   
+
 If more than one article is available with the same or similar title
 `Next` button appears in the bottom right corner on screen touch. Same
 applies when user follows a link from an article: article from the
@@ -59,7 +59,7 @@ another application, closing `Article View` will return user to that
 application instead.
 
 Use `Zoom In` and `Zoom Out` menu items in `Article View` activity to
-adjust article's text size. 
+adjust article's text size.
 
 Use device's volume control buttons to scroll article text and to
 navigate to next/previous article. Volume down button will navigate to
@@ -72,7 +72,7 @@ dictionary's metadata includes server URL as is usually the case with
 Wikipedia, Wiktionary, Wikiquote and such).
 
 View list of currently open dictionaries by opening menu in `Lookup`
-activity and tapping `Dictionaries`. 
+activity and tapping `Dictionaries`.
 
 .. image:: aarddict-android-1.4-dictionaries.png
    :scale: 50
@@ -126,7 +126,7 @@ Contributors
 .. _SDict Viewer: http://sdictviewer.sourceforge.net
 .. _bbs.goapk.com: http://bbs.goapk.com
 
- 
+
 Reporting Issues
 ================
 
@@ -170,7 +170,7 @@ Changes
 -----
 
 - Fix crash on Android 4.0 when swiping out from list of recent apps
-  (:android-issue:`26`) 
+  (:android-issue:`26`)
 
 
 1.3.0
@@ -200,7 +200,7 @@ Changes
 ---
 
 - Save/restore current article and history on orientation change
-  (:android-issue:`8`) 
+  (:android-issue:`8`)
 
 - Keep article scroll positions (:android-issue:`11`)
 
@@ -215,15 +215,15 @@ Changes
 ---
 
 - Do not scan SD card automatically on initial application startup
-  (:android-issue:`1`). 
- 
+  (:android-issue:`1`).
+
 - More lookup results are loaded as user scrolls ("More" button is
-  removed). 
+  removed).
 
 - Fixed article view not properly updating on Next/Back navigation
   (:android-issue:`3`).
   This was an issue only on Android 2.x: handling gestures breaks
-  WebView, so swipe and long press gestures had to be removed. 
+  WebView, so swipe and long press gestures had to be removed.
 
 - Keep article view scale between lookups and when navigating.
 
@@ -232,7 +232,7 @@ Changes
 
 - Preformatted text (``<pre>`` elements) in articles was all hidden, now
   fixed. This due to bug in WebKit's implementation of ``:empty``
-  pseudo-class.   
+  pseudo-class.
 
 - Allow moving the application to SD Card (Android 2.2)
 

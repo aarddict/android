@@ -199,7 +199,7 @@ public final class DictionariesActivity extends BaseDictionaryActivity {
                 Timer timer = new Timer();
                 long TIME_UPDATE_PERIOD = 60 * 1000;
 
-                @SuppressWarnings("unchecked")
+                @SuppressWarnings({ "unchecked", "rawtypes" })
                 public DictListAdapter(Map<UUID, List<Volume>> volumes) {
                         this.volumes = new ArrayList();
                         this.volumes.addAll(volumes.values());

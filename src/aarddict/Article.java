@@ -45,7 +45,7 @@ public final class Article implements Serializable {
         this.redirectedFromTitle = that.redirectedFromTitle;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     static Article fromJsonStr(String serializedArticle) throws IOException {
         Object[] articleTuple = Volume.mapper.readValue(serializedArticle, Object[].class);
         Article article = new Article();

@@ -321,7 +321,7 @@ public final class DictionaryService extends Service {
         String absolutePath = dir.getAbsolutePath();
         if (excludedScanDirs.contains(absolutePath)) {
             Log.d(TAG, String.format("%s is excluded", absolutePath));
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
         boolean symlink = false;
         try {
@@ -334,12 +334,12 @@ public final class DictionaryService extends Service {
 
         if (symlink) {
             Log.d(TAG, String.format("%s is a symlink", absolutePath));
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
 
         if (dir.isHidden()) {
             Log.d(TAG, String.format("%s is hidden", absolutePath));
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
         Log.d(TAG, "Scanning " + absolutePath);
         List<File> candidates = new ArrayList<File>();
@@ -403,7 +403,7 @@ public final class DictionaryService extends Service {
         return library.getVolume(volumeId).getDisplayTitle();
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public Map<UUID, List<Volume>> getVolumes() {
         Map<UUID, List<Volume>> result = new LinkedHashMap();
         for (Volume d : library) {

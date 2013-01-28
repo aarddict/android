@@ -939,7 +939,7 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
         }
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
@@ -948,7 +948,7 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
         outState.putSerializable("scrollPositionsV", new HashMap(scrollPositionsV));
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
         @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);

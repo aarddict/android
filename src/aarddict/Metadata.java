@@ -47,7 +47,7 @@ public final class Metadata {
 
     private Map<String, String> interwikiMap;
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     Map<String, String> getInterwikiMap() {
         if (interwikiMap == null) {
             interwikiMap = new HashMap<String, String>();

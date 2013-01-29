@@ -459,7 +459,7 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
             HistoryItem historyItem = backItems.get(backItems.size() - 1);
             Article current = historyItem.article;
             Volume d = dictionaryService.getVolume(current.volumeId);
-            enableViewOnline = d.getArticleURLTemplate() != null;
+            enableViewOnline = d != null && d.getArticleURLTemplate() != null;
             hasNextArticle = historyItem.hasNext();
         }
         miViewOnline.setEnabled(enableViewOnline);

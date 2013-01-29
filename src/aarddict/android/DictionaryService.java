@@ -61,15 +61,15 @@ public final class DictionaryService extends Service {
         }
     }
 
-        private final static String TAG = "aarddict.android.DictionaryService";
+    private final static String TAG                = "aarddict.android.DictionaryService";
 
-        public final static String DISCOVERY_STARTED = TAG + ".DISCOVERY_STARTED";
-        public final static String DISCOVERY_FINISHED = TAG + ".DISCOVERY_FINISHED";
-        public final static String OPEN_STARTED = TAG + ".OPEN_STARTED";
-        public final static String OPENED_DICT = TAG + ".OPENED_DICT";
-        public final static String CLOSED_DICT = TAG + ".CLOSED_DICT";
-        public final static String DICT_OPEN_FAILED = TAG + ".DICT_OPEN_FAILED";
-        public final static String OPEN_FINISHED = TAG + ".OPEN_FINISHED";
+    public final static String  DISCOVERY_STARTED  = TAG + ".DISCOVERY_STARTED";
+    public final static String  DISCOVERY_FINISHED = TAG + ".DISCOVERY_FINISHED";
+    public final static String  OPEN_STARTED       = TAG + ".OPEN_STARTED";
+    public final static String  OPENED_DICT        = TAG + ".OPENED_DICT";
+    public final static String  CLOSED_DICT        = TAG + ".CLOSED_DICT";
+    public final static String  DICT_OPEN_FAILED   = TAG + ".DICT_OPEN_FAILED";
+    public final static String  OPEN_FINISHED      = TAG + ".OPEN_FINISHED";
 
     private Library             library;
 

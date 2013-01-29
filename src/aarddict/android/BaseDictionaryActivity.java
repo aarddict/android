@@ -107,7 +107,7 @@ abstract class BaseDictionaryActivity extends Activity {
                         if (reason != null && !reason.equals("")) {
                             msg += ": " + reason;
                         }
-                        Toast.makeText(BaseDictionaryActivity.this, msg, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(BaseDictionaryActivity.this, msg, Toast.LENGTH_LONG).show();
                     }
                 } else
                 if (a.equals(DictionaryService.OPEN_FINISHED)) {

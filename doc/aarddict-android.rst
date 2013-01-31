@@ -143,6 +143,11 @@ Dictionary for Android issue tracker`_.
 Changes
 =======
 
+1.6.1
+-----
+
+- Fix crash on Android 4.2 (:android-issue:`59`)
+
 1.6.0
 -----
 

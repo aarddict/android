@@ -19,7 +19,7 @@
     <string name="noDictionaries">
         <![CDATA[
         <h1>Keine Wörterbücher</h1>
-        <p>Hole Wörterbücher unter <a href="http://aarddict.org">http://aarddict.org</a></p>        
+        <p>Lade Wörterbücher unter <a href="http://aarddict.org">http://aarddict.org</a></p>        
         ]]>
     </string>    
     <string name="nothingFound">

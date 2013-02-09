@@ -43,7 +43,7 @@ public class EinkArticleView extends ArticleView {
         if (newy < 0) {
             newy = 0;
         }
-        articleView.scrollTo(0, newy);
+        articleView.realScrollTo(0, newy);
 
         partial = true;
         return true;
@@ -60,7 +60,7 @@ public class EinkArticleView extends ArticleView {
             newy = hmax;
         }
         if (cury != newy) {
-            articleView.scrollTo(0, newy);
+            articleView.realScrollTo(0, newy);
         }
 
         partial = true;

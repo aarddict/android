@@ -143,6 +143,11 @@ Dictionary for Android issue tracker`_.
 Changes
 =======
 
+1.6.2
+-----
+
+- Fix Page Up/Page Down on e-ink devices (:android-issue:`60`)
+
 1.6.1
 -----
 

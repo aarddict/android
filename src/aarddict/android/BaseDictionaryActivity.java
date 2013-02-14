@@ -100,7 +100,8 @@ abstract class BaseDictionaryActivity extends Activity {
                     if (openProgress != null) {
                         openProgress.incrementProgressBy(1);
                     }
-                    if (a.equals(DictionaryService.DICT_OPEN_FAILED)) {
+                    if (a.equals(DictionaryService.DICT_OPEN_FAILED) && 
+                            intent.getBooleanExtra("displayErrorMessage", true)) {
                         String file = intent.getStringExtra("file");
                         String reason = intent.getStringExtra("reason");
                         String msg = getResources().getString(R.string.toastDictFileFailed, file == null ? "" : file);

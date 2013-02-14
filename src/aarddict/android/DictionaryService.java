@@ -147,7 +147,16 @@ public final class DictionaryService extends Service {
                 for (String path : dictionaryFileNames) {
                         candidates.add(new File(path));
                 }
-                open(candidates);
+                Map<File, Exception> errors = open(candidates);
+                boolean saveFileNames = false;
+                for (File file : errors.keySet()) {
+                    String fileName = file.getAbsolutePath();
+                    Log.d(TAG, "Removing file name from dictionary file names: " + fileName);
+                    saveFileNames = dictionaryFileNames.remove(fileName);
+                }
+                if (saveFileNames) {
+                    saveDictFileList();
+                }
                 Log.d(TAG, "dictionaries opened in " + (System.currentTimeMillis() - t0));
         }
 
@@ -184,7 +193,7 @@ public final class DictionaryService extends Service {
         private final class DeleteObserver extends FileObserver {
 
             private Set<String> dictFilesToWatch;
-        private String dir;
+            private String dir;
 
             DeleteObserver(String dir) {
                 super(dir, DELETE);
@@ -270,10 +279,12 @@ public final class DictionaryService extends Service {
             }
             catch (Exception e) {
                 Log.e(TAG, "Failed to open " + file, e);
+                boolean displayErrorMessage =  !(e instanceof java.io.FileNotFoundException);
                 Intent notifyFailed = new Intent(DICT_OPEN_FAILED);
                 notifyFailed.putExtra("file", file.getAbsolutePath());
                 notifyFailed.putExtra("count", files.size());
                 notifyFailed.putExtra("reason", e.getMessage());
+                notifyFailed.putExtra("displayErrorMessage", displayErrorMessage);
                 notifyFailed.putExtra("i", i);
                 sendBroadcast(notifyFailed);
                 Thread.yield();

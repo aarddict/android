@@ -143,6 +143,11 @@ Dictionary for Android issue tracker`_.
 Changes
 =======
 
+1.6.3
+-----
+
+- Silently forget removed dictionary files (:android-issue:`62`)
+
 1.6.2
 -----
 

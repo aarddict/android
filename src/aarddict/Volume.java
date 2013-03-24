@@ -259,13 +259,18 @@ public final class Volume extends AbstractList<Entry> {
             }
 
             private void prepareNext() {
-                Entry matchedEntry = get(index);
-                nextEntry = (0 == comparator.compare(matchedEntry, lookupEntry)) ? matchedEntry : null;
-                index++;
+                if (index < header.indexCount) {
+                    Entry matchedEntry = get(index);
+                    nextEntry = (0 == comparator.compare(matchedEntry, lookupEntry)) ? matchedEntry : null;
+                    index++;
+                }
+                else {
+                    nextEntry = null;
+                }
             }
 
             public boolean hasNext() {
-                return nextEntry != null && index < header.indexCount - 1;
+                return nextEntry != null;
             }
 
             public Entry next() {

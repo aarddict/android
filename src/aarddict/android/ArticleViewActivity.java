@@ -403,12 +403,23 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
     @Override
     public boolean onSearchRequested() {
         Intent intent = getIntent();
-        if (intent != null && intent.getAction() != null && intent.getAction().equals(Intent.ACTION_SEARCH)) {
+        String action = intent == null ? null : intent.getAction();
+        if (action != null) {
+            String word = null;
+            if (action.equals(Intent.ACTION_SEARCH)) {
+                word = intent.getStringExtra("query");
+            }
+            else
+            if (action.equals(Intent.ACTION_SEND)) {
+                word = intent.getStringExtra(Intent.EXTRA_TEXT);
+            }
+            if (word != null) {
                 Intent next = new Intent();
                 next.setClass(this, LookupActivity.class);
                 next.setAction(Intent.ACTION_SEARCH);
-                next.putExtra(SearchManager.QUERY, intent.getStringExtra("query"));
+                next.putExtra(SearchManager.QUERY, word);
                 startActivity(next);
+            }
         }
         finish();
         return true;
@@ -892,38 +903,51 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
     void onDictionaryServiceReady() {
         if (this.backItems.isEmpty()) {
                 final Intent intent = getIntent();
-                if (intent != null && intent.getAction() != null && intent.getAction().equals(Intent.ACTION_SEARCH)) {
-                    final String word = intent.getStringExtra("query");
-
-                    if (currentTask != null) {
-                        currentTask.cancel();
+                if (intent != null && intent.getAction() != null) {
+                    String action = intent.getAction();
+                    String _word = null;
+                    if (action.equals(Intent.ACTION_SEARCH)) {
+                        _word = intent.getStringExtra("query");
+                    }
+                    else
+                    if (action.equals(Intent.ACTION_SEND)) {
+                        _word = intent.getStringExtra(Intent.EXTRA_TEXT);
                     }
 
-                    currentTask = new TimerTask() {
-                    @Override
-                    public void run() {
-                        setProgress(500);
-                        Log.d(TAG, "intent.getDataString(): " + intent.getDataString());
-                        Iterator<Entry> results = dictionaryService.lookup(word);
-                        Log.d(TAG, "Looked up " + word );
-                        if (results.hasNext()) {
-                            currentTask = null;
-                            Entry entry = results.next();
-                            showArticle(entry);
+                    final String word = _word;
+
+                    if (word != null) {
+
+                        if (currentTask != null) {
+                            currentTask.cancel();
                         }
-                        else {
-                                onSearchRequested();
+
+                        currentTask = new TimerTask() {
+                            @Override
+                            public void run() {
+                                setProgress(500);
+                                Log.d(TAG, "intent.getDataString(): " + intent.getDataString());
+                                Iterator<Entry> results = dictionaryService.lookup(word);
+                                Log.d(TAG, "Looked up " + word );
+                                if (results.hasNext()) {
+                                    currentTask = null;
+                                    Entry entry = results.next();
+                                    showArticle(entry);
+                                }
+                                else {
+                                    onSearchRequested();
+                                }
+                            }
+                        };
+
+                        try {
+                            timer.schedule(currentTask, 0);
+                        }
+                        catch (Exception e) {
+                            Log.d(TAG, "Failed to schedule task", e);
+                            showError(getString(R.string.msgErrorLoadingArticle, word));
                         }
                     }
-                };
-
-                try {
-                    timer.schedule(currentTask, 0);
-                }
-                catch (Exception e) {
-                    Log.d(TAG, "Failed to schedule task", e);
-                    showError(getString(R.string.msgErrorLoadingArticle, word));
-                }
                 }
                 else {
                     String word = intent.getStringExtra("word");

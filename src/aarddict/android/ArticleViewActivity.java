@@ -926,15 +926,22 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
                             @Override
                             public void run() {
                                 setProgress(500);
+                                String currentWord = word;
                                 Log.d(TAG, "intent.getDataString(): " + intent.getDataString());
-                                Iterator<Entry> results = dictionaryService.lookup(word);
-                                Log.d(TAG, "Looked up " + word );
-                                if (results.hasNext()) {
-                                    currentTask = null;
-                                    Entry entry = results.next();
-                                    showArticle(entry);
+                                while (currentWord.length() > 0) {
+                                    Iterator<Entry> results = dictionaryService.lookup(currentWord);
+                                    Log.d(TAG, "Looked up " + word );
+                                    if (results.hasNext()) {
+                                        currentTask = null;
+                                        Entry entry = results.next();
+                                        showArticle(entry);
+                                        break;
+                                    }
+                                    else {
+                                        currentWord = currentWord.substring(0, currentWord.length() - 1);
+                                    }
                                 }
-                                else {
+                                if (currentWord.length() == 0) {
                                     onSearchRequested();
                                 }
                             }

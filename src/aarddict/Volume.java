@@ -465,7 +465,14 @@ public final class Volume extends AbstractList<Entry> {
     }
 
     public CharSequence getDisplayTitle(boolean withVolumeNumber) {
-        StringBuilder s = new StringBuilder(this.metadata.title);
+        String title;
+        if (this.metadata.title == null) {
+            title = this.origFile.getName();
+        }
+        else {
+            title = this.metadata.title;
+        }
+        StringBuilder s = new StringBuilder(title);
         if (this.metadata.lang != null) {
             s.append(String.format(" (%s)", this.metadata.lang));
         }

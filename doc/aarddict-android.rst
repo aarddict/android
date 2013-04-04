@@ -111,6 +111,28 @@ new dictionaries. Select `Scan Device` menu item in `Dictionaries` to
 do this. Alternatively, new dictionaries can be opened from a file
 manager.
 
+Initiating Lookup from Other Applications
+=========================================
+Many applications implement `Share` action so that selected text can
+be sent to other applications. Since version 1.6.4 Aard Dictionary
+should appear in the list of applications that can receive shared
+text.
+
+Alternatively, word lookup may be initiated
+directly in Aard Dictionary with the following:
+
+.. code-block:: java
+
+   Intent intent = new Intent();
+   intent.setClassName("aarddict.android", "Article");
+   intent.setAction(Intent.ACTION_SEARCH);
+   intent.putExtra(SearchManager.QUERY, word);
+   startActivity(intent);
+
+This should take user immediately to the article with best matching
+title, or to look up screen if nothing found so that user has a chance
+to modify entry.
+
 
 Contributors
 ============

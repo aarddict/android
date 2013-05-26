@@ -35,11 +35,7 @@
 <p><a href="http://aarddict.org">http://aarddict.org</a></p>
 ]]>
     </string>
-    
-    <string name="flattrUrl" translatable="false">
-        <![CDATA[https://flattr.com/submit/auto?user_id=aarddict&url=http://aarddict.org]]>
-    </string>
-    
+        
     <string name="titleAbout">Informazioni</string>
     <string name="titleError">Errore</string>
     <string name="titleVerifying">Verifica</string>
@@ -69,7 +65,7 @@
     <string name="msgArticleNotFound">Articolo \"%s\" non trovato</string>
     <string name="msgRedirectNotFound">Redirect \"%s\" non trovato</string>
     <string name="msgTooManyRedirects">Troppi redirect per \"%s\"</string>
-    <string name="msgErrorLoadingArticle">C'è stato un errore nel caricare l'articolo \"%s\"</string>
+    <string name="msgErrorLoadingArticle">C\'è stato un errore nel caricare l\'articolo \"%s\"</string>
     
     <string name="msgDataIntegrityVerified">%1$s\nIntegrità dei dati verificata %2$s: %3$s</string>
     <string name="msgDataIntegrityNotVerified">%s\nIntegrità dei dati non verificata</string>

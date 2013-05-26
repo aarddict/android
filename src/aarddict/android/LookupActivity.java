@@ -296,24 +296,10 @@ public class LookupActivity extends BaseDictionaryActivity {
         textView.setMovementMethod(LinkMovementMethod.getInstance());
         textView.setText(Html.fromHtml(getString(R.string.about, getString(R.string.appName), versionName)));
 
-        ImageView btnFlattr = new ImageView(this);
-        btnFlattr.setImageResource(R.drawable.flattr);
-        btnFlattr.setPadding(5, 5, 5, 5);
-        btnFlattr.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT,
-                                                                                                        ViewGroup.LayoutParams.WRAP_CONTENT));
-        btnFlattr.setOnClickListener(new View.OnClickListener() {
-                        public void onClick(View v) {
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW,
-                        Uri.parse(getString(R.string.flattrUrl)));
-                startActivity(browserIntent);
-                        }
-                });
-
         LinearLayout textViewLayout = new LinearLayout(this);
         textViewLayout.setOrientation(LinearLayout.VERTICAL);
         textViewLayout.setPadding(0, 0, 0, 10);
         textViewLayout.addView(textView);
-        textViewLayout.addView(btnFlattr);
 
         layout.addView(logo);
         layout.addView(textViewLayout);

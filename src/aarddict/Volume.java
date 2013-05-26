@@ -40,6 +40,7 @@ import java.util.zip.Inflater;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.codehaus.jackson.map.ObjectMapper;
 
+import android.net.Uri;
 import android.util.Log;
 
 public final class Volume extends AbstractList<Entry> {
@@ -291,7 +292,7 @@ public final class Volume extends AbstractList<Entry> {
     public String getArticleURL(String title) {
         String template = getArticleURLTemplate();
         if (template != null) {
-                return template.replace("$1", title);
+                return template.replace("$1", Uri.encode(title));
         }
         return null;
     }

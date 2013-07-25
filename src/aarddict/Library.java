@@ -11,7 +11,7 @@
  * for more details.
  *
  * Copyright (C) 2010 Igor Tkach
-*/
+ */
 
 package aarddict;
 
@@ -30,30 +30,30 @@ import android.util.Log;
 
 public final class Library extends ArrayList<Volume> {
 
-        int maxRedirectLevels = 5;
+    int                         maxRedirectLevels = 5;
 
-        private final static String TAG = Library.class.getName();
+    private final static String TAG               = Library.class.getName();
 
-        public Iterator<Entry> followLink(final String word, String fromVolumeId) throws ArticleNotFound {
-                Log.d(TAG, String.format("Follow link \"%s\", %s", word,
-                                fromVolumeId));
-                Volume fromDict = getVolume(fromVolumeId);
-                Metadata fromMeta = fromDict.metadata;
+    public Iterator<Entry> followLink(final String word, String fromVolumeId)
+            throws ArticleNotFound {
+        Log.d(TAG, String.format("Follow link \"%s\", %s", word, fromVolumeId));
+        Volume fromDict = getVolume(fromVolumeId);
+        Metadata fromMeta = fromDict.metadata;
 
-                LookupWord lookupWord = LookupWord.splitWord(word);
-                Log.d(TAG, lookupWord.toString());
-                String nameSpace = lookupWord.nameSpace;
+        LookupWord lookupWord = LookupWord.splitWord(word);
+        Log.d(TAG, lookupWord.toString());
+        String nameSpace = lookupWord.nameSpace;
 
-                Log.d(TAG, String.format("Name space: %s", nameSpace));
-                Map<String, String> interwikiMap = fromMeta.getInterwikiMap();
-                String nsServerUrl = interwikiMap.get(nameSpace);
-                List<UUID> matchingDicts = findMatchingDicts(nsServerUrl);
-                if (matchingDicts.isEmpty())
-                    matchingDicts.add(fromDict.getDictionaryId());
+        Log.d(TAG, String.format("Name space: %s", nameSpace));
+        Map<String, String> interwikiMap = fromMeta.getInterwikiMap();
+        String nsServerUrl = interwikiMap.get(nameSpace);
+        List<UUID> matchingDicts = findMatchingDicts(nsServerUrl);
+        if (matchingDicts.isEmpty())
+            matchingDicts.add(fromDict.getDictionaryId());
 
         if (nsServerUrl == null) {
-            //namespace did not resolve into server url,
-            //maybe it's not a name space, just article title with ":" in it
+            // namespace did not resolve into server url,
+            // maybe it's not a name space, just article title with ":" in it
             lookupWord.mergeNameSpace();
         }
 
@@ -62,9 +62,8 @@ public final class Library extends ArrayList<Volume> {
         if (lookupWord.word != null) {
             if (lookupWord.word.length() == 1)
                 comparators = EntryComparators.EXACT;
-            else
-                if (lookupWord.word.length() == 2)
-                    comparators = EntryComparators.EXACT_IGNORE_CASE;
+            else if (lookupWord.word.length() == 2)
+                comparators = EntryComparators.EXACT_IGNORE_CASE;
         }
 
         final List<Volume> dicts = new ArrayList<Volume>(this);
@@ -77,98 +76,96 @@ public final class Library extends ArrayList<Volume> {
         MatchIterator result = new MatchIterator(dicts, comparators, lookupWord);
         if (result.hasNext()) {
             return result;
-        }
-        else {
+        } else {
             throw new ArticleNotFound(lookupWord);
         }
-        }
+    }
 
-        private List<UUID> findMatchingDicts(String serverUrl) {
-                Log.d(TAG, "Looking for dictionary with server url "
-                                + serverUrl);
-                Set<UUID> seen = new HashSet<UUID>();
-                List<UUID> result = new ArrayList<UUID>();
-                if (serverUrl == null) {
-                Log.d(TAG, "Server url is null");
-                        return result;
-                }
-                for (Volume d : this) {
-                        String articleURLTemplate = d.getArticleURLTemplate();
-                        Log.d(TAG, "Looking at article url template: "
-                                        + articleURLTemplate);
-                        if (articleURLTemplate != null
-                                        && serverUrl.equals(articleURLTemplate)) {
-                                Log.d(TAG, String.format(
-                                                "Dictionary with server url %s found: %s", serverUrl, d
-                                                                .getDictionaryId()));
-                                if (!seen.contains(d.getDictionaryId()))
-                                    result.add(d.getDictionaryId());
-                        }
-                }
-                if (result.isEmpty()) {
+    private List<UUID> findMatchingDicts(String serverUrl) {
+        Log.d(TAG, "Looking for dictionary with server url " + serverUrl);
+        Set<UUID> seen = new HashSet<UUID>();
+        List<UUID> result = new ArrayList<UUID>();
+        if (serverUrl == null) {
+            Log.d(TAG, "Server url is null");
+            return result;
+        }
+        for (Volume d : this) {
+            String articleURLTemplate = d.getArticleURLTemplate();
+            Log.d(TAG, "Looking at article url template: " + articleURLTemplate);
+            if (articleURLTemplate != null
+                    && serverUrl.equals(articleURLTemplate)) {
                 Log.d(TAG, String.format(
-                                "Dictionary with server url %s not found", serverUrl));
-                }
-                return result;
+                        "Dictionary with server url %s found: %s", serverUrl,
+                        d.getDictionaryId()));
+                if (!seen.contains(d.getDictionaryId()))
+                    result.add(d.getDictionaryId());
+            }
+        }
+        if (result.isEmpty()) {
+            Log.d(TAG, String.format("Dictionary with server url %s not found",
+                    serverUrl));
+        }
+        return result;
+    }
+
+    public Iterator<Entry> bestMatch(String word) {
+        LookupWord lookupWord = LookupWord.splitWord(word);
+        // best match is used with human input,
+        // assume ":" is never used as namespace separator
+        lookupWord.mergeNameSpace();
+        return new MatchIterator(EntryComparators.ALL, this, lookupWord);
+    }
+
+    public Article getArticle(Entry e) throws IOException {
+        Volume d = getVolume(e.volumeId);
+        Article a = d.readArticle(e.articlePointer);
+        a.title = e.title;
+        a.section = e.section;
+        return a;
+    }
+
+    Article redirect(Article article, int level) throws RedirectTooManyLevels,
+            ArticleNotFound, IOException {
+        if (level > maxRedirectLevels) {
+            throw new RedirectTooManyLevels();
         }
 
-        public Iterator<Entry> bestMatch(String word) {
-                LookupWord lookupWord = LookupWord.splitWord(word);
-                //best match is used with human input,
-                //assume ":" is never used as namespace separator
-                lookupWord.mergeNameSpace();
-                return new MatchIterator(EntryComparators.ALL, this, lookupWord);
+        if (!article.isRedirect()) {
+            return article;
         }
 
-        public Article getArticle(Entry e) throws IOException {
-                Volume d = getVolume(e.volumeId);
-                Article a = d.readArticle(e.articlePointer);
-                a.title = e.title;
-                a.section = e.section;
-                return a;
+        Iterator<Entry> result = followLink(article.getRedirect(),
+                article.volumeId);
+        Entry redirectEntry = result.next();
+        Article redirectArticle = getArticle(redirectEntry);
+        return redirect(redirectArticle, level + 1);
+    }
+
+    public Article redirect(Article article) throws RedirectTooManyLevels,
+            ArticleNotFound, IOException {
+        Article result = redirect(article, 0);
+        if (result != article) {
+            result.redirectedFromTitle = article.title;
         }
+        return result;
+    }
 
-        Article redirect(Article article, int level)
-            throws RedirectTooManyLevels, ArticleNotFound, IOException {
-                if (level > maxRedirectLevels) {
-                        throw new RedirectTooManyLevels();
-                }
+    public Volume getVolume(String volumeId) {
 
-                if (!article.isRedirect()) {
-                        return article;
-                }
-
-            Iterator<Entry> result = followLink(article.getRedirect(), article.volumeId);
-            Entry redirectEntry = result.next();
-            Article redirectArticle = getArticle(redirectEntry);
-            return redirect(redirectArticle, level + 1);
+        for (Volume d : this) {
+            if (d.sha1sum.equals(volumeId)) {
+                return d;
+            }
         }
+        return null;
+    }
 
-        public Article redirect(Article article)
-            throws RedirectTooManyLevels, ArticleNotFound, IOException {
-                Article result = redirect(article, 0);
-                if (result != article) {
-                        result.redirectedFromTitle = article.title;
-                }
-                return result;
+    public void makeFirst(String volumeId) {
+        Volume d = getVolume(volumeId);
+        if (d != null) {
+            Comparator<Volume> c = new PreferredDictionaryComparator(
+                    d.getDictionaryId());
+            Collections.sort(this, c);
         }
-
-        public Volume getVolume(String volumeId) {
-
-                for (Volume d : this) {
-                        if (d.sha1sum.equals(volumeId)) {
-                                return d;
-                        }
-                }
-                return null;
-        }
-
-        public void makeFirst(String volumeId) {
-                Volume d = getVolume(volumeId);
-                if (d != null) {
-                        Comparator<Volume> c = new PreferredDictionaryComparator(d
-                                        .getDictionaryId());
-                        Collections.sort(this, c);
-                }
-        }
+    }
 }

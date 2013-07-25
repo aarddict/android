@@ -11,7 +11,7 @@
  * for more details.
  *
  * Copyright (C) 2010 Igor Tkach
-*/
+ */
 
 package aarddict;
 
@@ -24,24 +24,25 @@ import java.util.Set;
 
 public final class MatchIterator implements Iterator<Entry> {
 
-        public static int MAX_FROM_VOL = 50;
+    public static int     MAX_FROM_VOL    = 50;
 
     Entry                 next;
     int                   currentVolCount = 0;
     Set<Entry>            seen            = new HashSet<Entry>();
     List<Iterator<Entry>> iterators       = new ArrayList<Iterator<Entry>>();
 
-    MatchIterator(Iterable<Volume> dictionaries, Comparator<Entry>[] comparators, LookupWord word) {
+    MatchIterator(Iterable<Volume> dictionaries,
+            Comparator<Entry>[] comparators, LookupWord word) {
         for (Volume vol : dictionaries) {
-                for (Comparator<Entry> c : comparators) {
+            for (Comparator<Entry> c : comparators) {
                 iterators.add(vol.lookup(word, c));
             }
         }
         prepareNext();
     }
 
-
-    MatchIterator(Comparator<Entry>[] comparators, Iterable<Volume> dictionaries, LookupWord word) {
+    MatchIterator(Comparator<Entry>[] comparators,
+            Iterable<Volume> dictionaries, LookupWord word) {
         for (Comparator<Entry> c : comparators) {
             for (Volume vol : dictionaries) {
                 iterators.add(vol.lookup(word, c));
@@ -58,19 +59,16 @@ public final class MatchIterator implements Iterator<Entry> {
                 if (!seen.contains(next)) {
                     seen.add(next);
                     currentVolCount++;
-                }
-                else {
+                } else {
                     next = null;
                     prepareNext();
                 }
-            }
-            else {
+            } else {
                 currentVolCount = 0;
                 iterators.remove(0);
                 prepareNext();
             }
-        }
-        else {
+        } else {
             next = null;
         }
     }

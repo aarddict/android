@@ -22,12 +22,16 @@ import com.ibm.icu.text.Collator;
 
 public class EntryComparator implements Comparator<Entry> {
 
-        final static Locale ROOT_LOCALE = new Locale("", "", "");
+    final static Locale ROOT_LOCALE = new Locale("", "", "");
 
     Collator collator;
 
     EntryComparator(int strength) {
-        collator = Collator.getInstance(ROOT_LOCALE);
+        try {
+            collator = (Collator)Collator.getInstance(ROOT_LOCALE).clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
         collator.setStrength(strength);
     }
 

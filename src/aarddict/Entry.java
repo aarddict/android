@@ -25,7 +25,7 @@ public final class Entry implements Serializable {
     public String     title;
     public String     section;
     public long       articlePointer;
-    public String         volumeId;
+    public String     volumeId;
 
     public Entry(String volumeId, String title) {
         this(volumeId, title, -1);

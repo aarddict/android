@@ -73,7 +73,8 @@ public final class Library extends ArrayList<Volume> {
             Collections.sort(dicts.subList(i, dicts.size()), c);
         }
 
-        MatchIterator result = new MatchIterator(dicts, comparators, lookupWord);
+        MatchIterator result = new MatchIterator(comparators, dicts, lookupWord);
+        
         if (result.hasNext()) {
             return result;
         } else {

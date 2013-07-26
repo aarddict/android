@@ -30,17 +30,7 @@ public final class MatchIterator implements Iterator<Entry> {
     int                   currentVolCount = 0;
     Set<Entry>            seen            = new HashSet<Entry>();
     List<Iterator<Entry>> iterators       = new ArrayList<Iterator<Entry>>();
-
-    MatchIterator(Iterable<Volume> dictionaries,
-            Comparator<Entry>[] comparators, LookupWord word) {
-        for (Volume vol : dictionaries) {
-            for (Comparator<Entry> c : comparators) {
-                iterators.add(vol.lookup(word, c));
-            }
-        }
-        prepareNext();
-    }
-
+    
     MatchIterator(Comparator<Entry>[] comparators,
             Iterable<Volume> dictionaries, LookupWord word) {
         for (Comparator<Entry> c : comparators) {

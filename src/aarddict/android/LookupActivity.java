@@ -384,7 +384,7 @@ public class LookupActivity extends BaseDictionaryActivity {
                     @Override
                     public void run() {
                         Log.d(TAG, "running lookup task for " + textToLookup + " in " + Thread.currentThread());
-                        if (textToLookup.equals(editText.getText())) {
+                        if (textToLookup.toString().equals(editText.getText().toString())) {
                             doLookup(textToLookup);
                         }
                     }

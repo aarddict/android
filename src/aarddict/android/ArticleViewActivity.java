@@ -183,12 +183,6 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
         articleView.setWebViewClient(new WebViewClient() {
 
             @Override
-            public void onScaleChanged(WebView view, float oldScale,
-                    float newScale) {
-                view.setInitialScale(Math.round(newScale * 100));
-            }
-
-            @Override
             public void onPageFinished(WebView view, String url) {
                 Log.d(TAG, "Page finished: " + url);
                 currentTask = null;
@@ -371,11 +365,45 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
     }
 
     private boolean zoomIn() {
-        return articleView.zoomIn();
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+            return textZoomIn();
+        }
+        else {
+            return articleView.zoomIn();
+        }
+    }
+
+    @TargetApi(android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH)
+    private boolean textZoomIn() {
+        int newZoom = articleView.getSettings().getTextZoom() + 20;
+        if (newZoom <= 200) {
+            articleView.getSettings().setTextZoom(newZoom);
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 
     private boolean zoomOut() {
-        return articleView.zoomOut();
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+            return textZoomOut();
+        }
+        else {
+            return articleView.zoomOut();
+        }
+    }
+
+    @TargetApi(android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH)
+    private boolean textZoomOut() {
+        int newZoom = articleView.getSettings().getTextZoom() - 20;
+        if (newZoom >= 40) {
+            articleView.getSettings().setTextZoom(newZoom);
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 
     private void goBack() {
@@ -828,8 +856,11 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
     }
 
     private String wrap(String articleText) {
-        return new StringBuilder("<html>").append("<head>")
-                .append(this.sharedCSS).append(this.mediawikiSharedCSS)
+        StringBuilder sb = new StringBuilder("<html>").append("<head>");
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+            sb.append("<meta name='viewport' content='width=device-width, initial-scale=1.0, user-scalable=0'/>");
+        }
+        return sb.append(this.sharedCSS).append(this.mediawikiSharedCSS)
                 .append(this.mediawikiMonobookCSS).append(this.js)
                 .append("</head>").append("<body>")
                 .append("<div id=\"globalWrapper\">").append(articleText)
@@ -875,23 +906,33 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        SharedPreferences prefs = getPreferences(MODE_PRIVATE);
-        Editor e = prefs.edit();
-        e.putFloat("articleView.scale", articleView.getScale());
-        boolean success = e.commit();
-        if (!success) {
-            Log.w(TAG, "Failed to save article view scale pref");
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+            saveTextZoomPref();
+        }
+        else {
+            SharedPreferences prefs = getPreferences(MODE_PRIVATE);
+            Editor e = prefs.edit();
+            e.putFloat("articleView.scale", articleView.getScale());
+            boolean success = e.commit();
+            if (!success) {
+                Log.w(TAG, "Failed to save article view scale pref");
+            }
         }
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        SharedPreferences prefs = getPreferences(MODE_PRIVATE);
-        float scale = prefs.getFloat("articleView.scale", 1.0f);
-        int initialScale = Math.round(scale * 100);
-        Log.d(TAG, "Setting initial article view scale to " + initialScale);
-        articleView.setInitialScale(initialScale);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+            applyTextZoomPref();
+        }
+        else {
+            SharedPreferences prefs = getPreferences(MODE_PRIVATE);
+            float scale = prefs.getFloat("articleView.scale", 1.0f);
+            int initialScale = Math.round(scale * 100);
+            Log.d(TAG, "Setting initial article view scale to " + initialScale);
+            articleView.setInitialScale(initialScale);
+        }
         if (android.os.Build.VERSION.SDK_INT >= 11) {
             try {
                 Method getActionBar = getClass().getMethod("getActionBar");
@@ -901,6 +942,25 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
                 setDisplayHomeAsUpEnabled.invoke(actionBar, true);
             } catch (Exception e) {
             }
+        }
+    }
+
+    @TargetApi(android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH)
+    private void applyTextZoomPref() {
+        SharedPreferences prefs = getPreferences(MODE_PRIVATE);
+        int textZoom = prefs.getInt("articleView.textZoom", 100);
+        articleView.getSettings().setTextZoom(textZoom);
+    }
+
+    @TargetApi(android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH)
+    private void saveTextZoomPref() {
+        SharedPreferences prefs = getPreferences(MODE_PRIVATE);
+        int textZoom = articleView.getSettings().getTextZoom();
+        Editor e = prefs.edit();
+        e.putInt("articleView.textZoom", textZoom);
+        boolean success = e.commit();
+        if (!success) {
+            Log.w(TAG, "Failed to save article view text zoom pref");
         }
     }
 

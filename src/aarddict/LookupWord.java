@@ -57,12 +57,18 @@ public class LookupWord {
     }
 
     static LookupWord splitWordAsURI(String word) throws URISyntaxException {
-                URI uri = new URI(word);
-                String nameSpace = uri.getScheme();
-                String lookupWord = uri.getSchemeSpecificPart();
-                lookupWord = lookupWord.replace("_", " ");
-                String section = uri.getFragment();
-                return new LookupWord(nameSpace, lookupWord, section);
+        URI uri;
+        try {
+            uri = new URI(word);
+        }
+        catch (URISyntaxException e) {
+            uri = new URI(word.replace(" ", "%20"));
+        }
+        String nameSpace = uri.getScheme();
+        String lookupWord = uri.getSchemeSpecificPart();
+        lookupWord = lookupWord.replace("_", " ");
+        String section = uri.getFragment();
+        return new LookupWord(nameSpace, lookupWord, section);
     }
 
     static LookupWord splitWordSimple(String word) {

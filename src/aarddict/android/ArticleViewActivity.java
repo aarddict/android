@@ -206,6 +206,7 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
                     goToSection(section);
                 }
                 updateNextButtonVisibility();
+                articleView.armScroll();
             }
 
             @Override
@@ -407,25 +408,31 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
     }
 
     private void goBack() {
-        if (backItems.size() == 1) {
-            finish();
-        }
-        if (currentTask != null) {
+        if (articleView.canGoBack()) {
+            articleView.goBack();
             return;
         }
-        if (backItems.size() > 1) {
-            HistoryItem current = backItems.remove(backItems.size() - 1);
-            HistoryItem prev = backItems.get(backItems.size() - 1);
+        else {
+            if (backItems.size() == 1) {
+                finish();
+            }
+            if (currentTask != null) {
+                return;
+            }
+            if (backItems.size() > 1) {
+                HistoryItem current = backItems.remove(backItems.size() - 1);
+                HistoryItem prev = backItems.get(backItems.size() - 1);
 
-            Article prevArticle = prev.article;
-            if (prevArticle.equalsIgnoreSection(current.article)) {
-                resetTitleToCurrent();
-                if (!prevArticle.sectionEquals(current.article)
-                        && !restoreScrollPos()) {
-                    goToSection(prevArticle.section);
+                Article prevArticle = prev.article;
+                if (prevArticle.equalsIgnoreSection(current.article)) {
+                    resetTitleToCurrent();
+                    if (!prevArticle.sectionEquals(current.article)
+                            && !restoreScrollPos()) {
+                        goToSection(prevArticle.section);
+                    }
+                } else {
+                    showCurrentArticle();
                 }
-            } else {
-                showCurrentArticle();
             }
         }
     }

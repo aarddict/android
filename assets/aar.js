@@ -21,22 +21,34 @@ function headings(level)
 }
 
 function scrollToMatch(text) {
-	var comparators = matcher.getNumberOfComparators();
-	for (var comparator = 0; comparator < comparators; comparator++) {
-		for (var j=1; j <=6; j++) {
-			var h = headings(j);
-			for (var k=0; k < h.length; k++) {
-				heading = h[k];
-				headingText = heading[0];
-				if (matcher.match(headingText, text, comparator)) {
-				    myScrollTo(heading[1]);
-					return;
-				}
-			}
-		}
-	}
-}
+    var elem = document.getElementById(text);
+    var y = 0;
 
+    while (elem != null) {
+        y += elem.offsetTop;
+        elem = elem.offsetParent;
+    }
+
+    if (y != 0) {
+        scrollControl.scrollTo(0, y);
+        return;
+    } else {
+	    var comparators = matcher.getNumberOfComparators();
+	    for (var comparator = 0; comparator < comparators; comparator++) {
+		    for (var j=1; j <=6; j++) {
+			    var h = headings(j);
+			    for (var k=0; k < h.length; k++) {
+				    heading = h[k];
+				    headingText = heading[0];
+				    if (matcher.match(headingText, text, comparator)) {
+				        myScrollTo(heading[1]);
+					    return;
+				    }
+			    }
+		    }
+	    }
+    }
+}
 
 function s(elementId) {
   var elem = document.getElementById(elementId);

@@ -218,7 +218,8 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
                         || urlLower.startsWith("https://")
                         || urlLower.startsWith("ftp://")
                         || urlLower.startsWith("sftp://")
-                        || urlLower.startsWith("mailto:")) {
+                        || urlLower.startsWith("mailto:")
+                        || urlLower.startsWith("tel:")) {
                     Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri
                             .parse(url));
                     startActivity(browserIntent);

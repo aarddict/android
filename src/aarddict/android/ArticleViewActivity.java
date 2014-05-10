@@ -660,6 +660,7 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
     }
 
     private void showNext(HistoryItem item_) {
+        articleView.clearHistory();
         final HistoryItem item = new HistoryItem(item_);
         final Entry entry = item.next();
         runOnUiThread(new Runnable() {

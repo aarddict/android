@@ -69,6 +69,8 @@ import android.widget.Toast;
 
 public class ArticleViewActivity extends BaseDictionaryActivity {
 
+    private static final String BASE_URL = "aard://A/";
+
     private final static String    TAG                 = ArticleViewActivity.class
                                                                .getName();
 
@@ -210,20 +212,11 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
             }
 
             @Override
-            public boolean shouldOverrideUrlLoading(WebView view,
-                    final String url) {
-                Log.d(TAG, "URL clicked: " + url);
-                String urlLower = url.toLowerCase();
-                if (urlLower.startsWith("http://")
-                        || urlLower.startsWith("https://")
-                        || urlLower.startsWith("ftp://")
-                        || urlLower.startsWith("sftp://")
-                        || urlLower.startsWith("mailto:")
-                        || urlLower.startsWith("tel:")) {
-                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri
-                            .parse(url));
-                    startActivity(browserIntent);
-                } else {
+            public boolean shouldOverrideUrlLoading(WebView view, String origUrl) {
+                Log.d(TAG, "URL clicked: " + origUrl);
+                final String url;
+                if (origUrl.startsWith(BASE_URL)) {
+                    url = origUrl.substring(BASE_URL.length());
                     if (currentTask == null) {
                         currentTask = new TimerTask() {
                             public void run() {
@@ -265,6 +258,17 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
                         } catch (Exception e) {
                             Log.d(TAG, "Failed to schedule task", e);
                         }
+                    }
+                }
+                else {
+                    try {
+                        Uri uri = Uri.parse(origUrl);
+                        Intent browserIntent = new Intent(Intent.ACTION_VIEW, uri);
+                        startActivity(browserIntent);
+                    }
+                    catch (Exception e) {
+                        Toast.makeText(ArticleViewActivity.this, String.format("Failed to parse URL %s", origUrl),
+                                Toast.LENGTH_SHORT).show();
                     }
                 }
                 return true;
@@ -409,31 +413,25 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
     }
 
     private void goBack() {
-        if (articleView.canGoBack()) {
-            articleView.goBack();
+        if (backItems.size() == 1) {
+            finish();
+        }
+        if (currentTask != null) {
             return;
         }
-        else {
-            if (backItems.size() == 1) {
-                finish();
-            }
-            if (currentTask != null) {
-                return;
-            }
-            if (backItems.size() > 1) {
-                HistoryItem current = backItems.remove(backItems.size() - 1);
-                HistoryItem prev = backItems.get(backItems.size() - 1);
+        if (backItems.size() > 1) {
+            HistoryItem current = backItems.remove(backItems.size() - 1);
+            HistoryItem prev = backItems.get(backItems.size() - 1);
 
-                Article prevArticle = prev.article;
-                if (prevArticle.equalsIgnoreSection(current.article)) {
-                    resetTitleToCurrent();
-                    if (!prevArticle.sectionEquals(current.article)
-                            && !restoreScrollPos()) {
-                        goToSection(prevArticle.section);
-                    }
-                } else {
-                    showCurrentArticle();
+            Article prevArticle = prev.article;
+            if (prevArticle.equalsIgnoreSection(current.article)) {
+                resetTitleToCurrent();
+                if (!prevArticle.sectionEquals(current.article)
+                        && !restoreScrollPos()) {
+                    goToSection(prevArticle.section);
                 }
+            } else {
+                showCurrentArticle();
             }
         }
     }
@@ -660,7 +658,6 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
     }
 
     private void showNext(HistoryItem item_) {
-        articleView.clearHistory();
         final HistoryItem item = new HistoryItem(item_);
         final Entry entry = item.next();
         runOnUiThread(new Runnable() {
@@ -744,7 +741,7 @@ public class ArticleViewActivity extends BaseDictionaryActivity {
                 resetTitleToCurrent();
                 Article a = backItems.get(backItems.size() - 1).article;
                 Log.d(TAG, "Show article: " + a.text);
-                articleView.loadDataWithBaseURL("", wrap(a.text), "text/html",
+                articleView.loadDataWithBaseURL(BASE_URL, wrap(a.text), "text/html",
                         "utf-8", null);
             }
         });
